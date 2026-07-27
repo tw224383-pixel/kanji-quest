@@ -3,15 +3,39 @@
 import { useUser } from "../../hooks/useUser";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/Button";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 export default function AchievementsPage() {
   const { userData, loading } = useUser();
   const router = useRouter();
+  const [gradeBossLevel, setGradeBossLevel] = useState(1);
+  const [gradeDamage, setGradeDamage] = useState(0);
+
+  useEffect(() => {
+    const fetchGradeStats = async () => {
+      if (!userData) return;
+      try {
+        const ref = doc(db, "globalStats", "raidBoss_" + userData.grade);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          setGradeBossLevel(snap.data().level || 1);
+          // 累計ダメージの記録はまだないので、とりあえず仮で0にしておく
+          // もし追加する場合は、全体のキル数(level-1)から大まかなダメージを計算可能
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchGradeStats();
+  }, [userData]);
 
   if (loading || !userData) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   const titleCount = userData.titles?.length || 0;
   const avatarCount = userData.avatars?.length || 0;
+  const bossesKilled = gradeBossLevel - 1;
 
   const personalAchievements = [
     // XP (Levels)
@@ -59,21 +83,14 @@ export default function AchievementsPage() {
       name: "はじめての勝利",
       desc: "学年全体でレイドボスを1体たおした！",
       icon: "🎉",
-      unlocked: true // Mocked
+      unlocked: bossesKilled >= 1
     },
     {
       id: "g_ten_kills",
       name: "ボスキラー軍団",
       desc: "学年全体でレイドボスを10体たおした！",
       icon: "🔥",
-      unlocked: true // Mocked
-    },
-    {
-      id: "g_1m_damage",
-      name: "100万ダメージ突破",
-      desc: "学年の累計ダメージが1,000,000を超えた！",
-      icon: "💯",
-      unlocked: false // Mocked
+      unlocked: bossesKilled >= 10
     }
   ];
 
