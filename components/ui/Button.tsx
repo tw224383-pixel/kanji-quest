@@ -1,11 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 import { ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 import clsx from "clsx";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends Omit<HTMLMotionProps<"button">, "ref"> {
   children: ReactNode;
   variant?: "primary" | "secondary" | "danger" | "outline" | "ghost" | "fun";
   size?: "sm" | "md" | "lg";
