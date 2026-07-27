@@ -51,7 +51,23 @@ export function useUser() {
         const docRef = doc(db, "users", currentUser.uid);
         const unsubDoc = onSnapshot(docRef, (docSnap) => {
           if (docSnap.exists()) {
-            setUserData(docSnap.data() as UserData);
+            const data = docSnap.data();
+            setUserData({
+              name: data.name || "名無し",
+              xp: data.xp || 0,
+              pt: data.pt || 0,
+              effects: data.effects || ["default"],
+              grade: data.grade || 1,
+              mistakeIds: data.mistakeIds || [],
+              masteredIds: data.masteredIds || [],
+              titles: data.titles || ["見習い"],
+              equippedTitle: data.equippedTitle || "見習い",
+              avatars: data.avatars || ["👦"],
+              equippedAvatar: data.equippedAvatar || "👦",
+              theme: data.theme || "default",
+              totalDamage: data.totalDamage || 0,
+              equippedEffect: data.equippedEffect || ""
+            });
           } else {
             // default
             setUserData({ 
