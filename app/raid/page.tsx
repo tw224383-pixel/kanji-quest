@@ -6,46 +6,82 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp } from "../../lib/raidLogic";
+import { collection, query, orderBy, limit, getDocs, doc, onSnapshot } from "firebase/firestore";
+import { db, auth } from "../../lib/firebase";
 
 type GradeData = {
   grade: number;
-  bossLevel: number;
-  hpPercent: number;
+  hp: number;
+  level: number;
+  maxHp: number;
 };
 
 export default function RaidPage() {
   const { userData } = useUser();
-  const [mockData, setMockData] = useState<GradeData[]>([]);
+  const [otherGrades, setOtherGrades] = useState<GradeData[]>([]);
+  const [topRanking, setTopRanking] = useState<{name: string, damage: number, isUser: boolean}[]>([]);
 
   useEffect(() => {
-    // Generate static-looking mock data based on grade so it doesn't change randomly every render
-    const data: GradeData[] = [];
+    // Listen to all raid bosses for other grades
+    const unsubs: (() => void)[] = [];
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    
+    // Initialize default array
+    setOtherGrades(Array.from({length: 6}, (_, i) => ({
+      grade: i + 1,
+      hp: getRaidBossMaxHp(1),
+      level: 1,
+      maxHp: getRaidBossMaxHp(1)
+    })).filter(x => x.grade !== userData?.grade));
+
     for (let i = 1; i <= 6; i++) {
-      if (i === userData?.grade) continue; // Skip user's own grade
+      if (i === userData?.grade) continue;
       
-      data.push({
-        grade: i,
-        bossLevel: Math.min(10, i + 2), // 1st grade: ~3, 2nd: ~4, 3rd: ~5, etc.
-        hpPercent: 10 + (i * 15) % 80, // Random but stable looking percentage
+      const ref = doc(db, "globalStats", "raidBoss_" + i);
+      const unsub = onSnapshot(ref, (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          const dbMonth = data.month || currentMonth;
+          if (dbMonth === currentMonth) {
+            setOtherGrades(prev => {
+              const next = [...prev];
+              const idx = next.findIndex(x => x.grade === i);
+              if (idx !== -1) {
+                const level = data.level || 1;
+                const hp = data.hp !== undefined ? data.hp : getRaidBossMaxHp(level);
+                next[idx] = { grade: i, hp, level, maxHp: getRaidBossMaxHp(level) };
+              }
+              return next.sort((a, b) => a.grade - b.grade);
+            });
+          }
+        }
       });
+      unsubs.push(unsub);
     }
-    setMockData(data.sort((a, b) => a.grade - b.grade)); // Sort by grade directly
+    return () => unsubs.forEach(fn => fn());
   }, [userData?.grade]);
 
-  // Generate Top 3 Mock Data, injecting the user if they have enough damage
-  const getTopRanking = () => {
-    let ranking = [
-      { name: "伝説のゆうしゃ", damage: 15420, isUser: false },
-      { name: "漢字マスターA", damage: 12050, isUser: false },
-      { name: "炎のせんし", damage: 9800, isUser: false },
-    ];
-    if (userData && userData.totalDamage > 0) {
-      ranking.push({ name: userData.name, damage: userData.totalDamage, isUser: true });
-    }
-    ranking = ranking.sort((a, b) => b.damage - a.damage).slice(0, 3);
-    return ranking;
-  };
-  const topRanking = getTopRanking();
+  // Fetch Top 3 Damage Ranking from Firestore
+  useEffect(() => {
+    const fetchTopRanking = async () => {
+      try {
+        const q = query(collection(db, "users"), orderBy("totalDamage", "desc"), limit(3));
+        const snap = await getDocs(q);
+        const ranking = snap.docs.map(docSnap => {
+          const data = docSnap.data();
+          return {
+            name: data.name || "名無し",
+            damage: data.totalDamage || 0,
+            isUser: docSnap.id === auth.currentUser?.uid
+          };
+        });
+        setTopRanking(ranking);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchTopRanking();
+  }, []);
 
   const currentMonth = new Date().getMonth() + 1;
 
@@ -89,9 +125,9 @@ export default function RaidPage() {
         <h2 className="text-lg font-bold text-slate-700 mb-4 border-b-2 border-slate-200 pb-2">📊 他の学年の戦況</h2>
         
         <div className="space-y-6">
-          {mockData.map((d, index) => {
-            let currentBossIcon = getRaidBossIcon(d.bossLevel);
-            let currentBossName = getRaidBossName(d.bossLevel);
+          {otherGrades.map((d, index) => {
+            let currentBossIcon = getRaidBossIcon(d.level);
+            let currentBossName = getRaidBossName(d.level);
             if (currentMonth === 10) {
               currentBossIcon = "🎃";
               currentBossName = "ハロウィン " + currentBossName;
@@ -99,6 +135,8 @@ export default function RaidPage() {
               currentBossIcon = "⛄";
               currentBossName = "スノーマン " + currentBossName;
             }
+            
+            const hpPercent = d.maxHp > 0 ? Math.max(0, (d.hp / d.maxHp) * 100) : 0;
 
             return (
             <motion.div 
@@ -117,24 +155,24 @@ export default function RaidPage() {
                   </div>
                 </div>
                 <div className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-full text-sm">
-                  Lv.{d.bossLevel}
+                  Lv.{d.level}
                 </div>
               </div>
               
               <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
                 <span>ボスHP</span>
-                <span>{d.hpPercent}%</span>
+                <span>{hpPercent.toFixed(1)}%</span>
               </div>
               <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
                 <motion.div 
                   className="h-full bg-gradient-to-r from-red-500 to-rose-400"
                   initial={{ width: "100%" }}
-                  animate={{ width: `${d.hpPercent}%` }}
+                  animate={{ width: `${hpPercent}%` }}
                   transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
                 />
               </div>
               
-              {d.hpPercent < 20 && (
+              {hpPercent < 20 && (
                 <div className="mt-2 text-xs font-bold text-amber-600 animate-pulse text-right">
                   もうすぐ討伐！🔥
                 </div>

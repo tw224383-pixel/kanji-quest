@@ -46,14 +46,14 @@ import { db } from "./firebase";
 import { doc, getDoc, runTransaction } from "firebase/firestore";
 import { storage } from "./storage";
 
-export async function dealDamageToRaidBoss(damage: number) {
+export async function dealDamageToRaidBoss(damage: number, grade: number) {
   if (damage <= 0) return;
   const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
   if (storage.isGuest()) {
-    let level = parseInt(localStorage.getItem("kq_raid_level") || "1", 10);
-    let hp = parseInt(localStorage.getItem("kq_raid_hp") || getRaidBossMaxHp(1).toString(), 10);
-    const month = localStorage.getItem("kq_raid_month") || currentMonth;
+    let level = parseInt(localStorage.getItem("kq_raid_level_" + grade) || "1", 10);
+    let hp = parseInt(localStorage.getItem("kq_raid_hp_" + grade) || getRaidBossMaxHp(1).toString(), 10);
+    const month = localStorage.getItem("kq_raid_month_" + grade) || currentMonth;
 
     if (month !== currentMonth) {
       level = 1;
@@ -69,12 +69,12 @@ export async function dealDamageToRaidBoss(damage: number) {
       hp = 0;
     }
 
-    localStorage.setItem("kq_raid_level", level.toString());
-    localStorage.setItem("kq_raid_hp", hp.toString());
-    localStorage.setItem("kq_raid_month", currentMonth);
+    localStorage.setItem("kq_raid_level_" + grade, level.toString());
+    localStorage.setItem("kq_raid_hp_" + grade, hp.toString());
+    localStorage.setItem("kq_raid_month_" + grade, currentMonth);
   } else {
     try {
-      const ref = doc(db, "globalStats", "raidBoss");
+      const ref = doc(db, "globalStats", "raidBoss_" + grade);
       await runTransaction(db, async (transaction) => {
         const docSnap = await transaction.get(ref);
         let data = docSnap.exists() ? docSnap.data() : { level: 1, hp: getRaidBossMaxHp(1), month: currentMonth };

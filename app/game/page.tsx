@@ -191,7 +191,7 @@ export default function GamePage() {
       // レイドボスにダメージを与える
       if (finalXP > 0) {
         const { dealDamageToRaidBoss } = await import("../../lib/raidLogic");
-        await dealDamageToRaidBoss(finalXP);
+        await dealDamageToRaidBoss(finalXP, userData?.grade || 1);
       }
     }
   };

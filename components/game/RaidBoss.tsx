@@ -20,17 +20,18 @@ export function RaidBoss() {
   // Local sync
   useEffect(() => {
     if (isGuest) {
+      const grade = userData?.grade || 1;
       const handleGuestUpdate = () => {
-        let localLv = parseInt(localStorage.getItem("kq_raid_level") || "1", 10);
-        let localHp = parseInt(localStorage.getItem("kq_raid_hp") || getRaidBossMaxHp(1).toString(), 10);
-        const month = localStorage.getItem("kq_raid_month") || currentMonth;
+        let localLv = parseInt(localStorage.getItem("kq_raid_level_" + grade) || "1", 10);
+        let localHp = parseInt(localStorage.getItem("kq_raid_hp_" + grade) || getRaidBossMaxHp(1).toString(), 10);
+        const month = localStorage.getItem("kq_raid_month_" + grade) || currentMonth;
         
         if (month !== currentMonth) {
           localLv = 1;
           localHp = getRaidBossMaxHp(1);
-          localStorage.setItem("kq_raid_level", "1");
-          localStorage.setItem("kq_raid_hp", localHp.toString());
-          localStorage.setItem("kq_raid_month", currentMonth);
+          localStorage.setItem("kq_raid_level_" + grade, "1");
+          localStorage.setItem("kq_raid_hp_" + grade, localHp.toString());
+          localStorage.setItem("kq_raid_month_" + grade, currentMonth);
         }
 
         setLevel(localLv);
@@ -47,7 +48,8 @@ export function RaidBoss() {
         clearInterval(interval);
       };
     } else if (user) {
-      const ref = doc(db, "globalStats", "raidBoss");
+      const grade = userData?.grade || 1;
+      const ref = doc(db, "globalStats", "raidBoss_" + grade);
       const unsub = onSnapshot(ref, (snap) => {
         if (snap.exists()) {
           const data = snap.data();
