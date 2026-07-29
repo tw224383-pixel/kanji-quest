@@ -81,7 +81,16 @@ export default function TopPage() {
           grade: grade, // 学年を保存
           effects: ["default"],
         });
-         return (
+        storage.clearGuest();
+        router.push("/home");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError("エラーがおきました。なまえかすうじがちがうかも？");
+    }
+  };
+
+  return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 relative bg-cover bg-center bg-fixed bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]">
       <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
       
