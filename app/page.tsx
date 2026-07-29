@@ -184,15 +184,4 @@ export default function TopPage() {
       </motion.div>
     </main>
   );
-}-8"></div>
-
-        <Button onClick={handleGuest} type="button" variant="outline" className="w-full text-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300">
-          とうろくしないで あそぶ
-        </Button>
-        <p className="text-sm text-center text-emerald-800/70 mt-3 font-bold">
-          ※ ゲストも がくねん はえらんでね！
-        </p>
-      </motion.div>
-    </main>
-  );
 }
