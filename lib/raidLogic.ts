@@ -28,16 +28,16 @@ export function getRaidBossIcon(level: number): string {
 }
 
 export function getRaidBossImagePath(level: number): string {
-  if (level <= 1) return "/kanji-math-quest/images/boss/slime.jpg";
-  if (level === 2) return "/kanji-math-quest/images/boss/bat.jpg";
-  if (level === 3) return "/kanji-math-quest/images/boss/wolf.jpg";
-  if (level === 4) return "/kanji-math-quest/images/boss/ogre.jpg";
-  if (level === 5) return "/kanji-math-quest/images/boss/griffin.jpg";
-  if (level === 6) return "/kanji-math-quest/images/boss/scorpion.jpg";
-  if (level === 7) return "/kanji-math-quest/images/boss/kraken.jpg";
-  if (level === 8) return "/kanji-math-quest/images/boss/trex.jpg";
-  if (level === 9) return "/kanji-math-quest/images/boss/golem.jpg";
-  return "/kanji-math-quest/images/boss/dragon.jpg";
+  if (level <= 1) return "/kanji-quest/images/boss/slime.jpg";
+  if (level === 2) return "/kanji-quest/images/boss/bat.jpg";
+  if (level === 3) return "/kanji-quest/images/boss/wolf.jpg";
+  if (level === 4) return "/kanji-quest/images/boss/ogre.jpg";
+  if (level === 5) return "/kanji-quest/images/boss/griffin.jpg";
+  if (level === 6) return "/kanji-quest/images/boss/scorpion.jpg";
+  if (level === 7) return "/kanji-quest/images/boss/kraken.jpg";
+  if (level === 8) return "/kanji-quest/images/boss/trex.jpg";
+  if (level === 9) return "/kanji-quest/images/boss/golem.jpg";
+  return "/kanji-quest/images/boss/dragon.jpg";
 }
 
 export function getRaidBossName(level: number): string {

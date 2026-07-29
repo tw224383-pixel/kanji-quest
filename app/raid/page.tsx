@@ -89,7 +89,7 @@ export default function RaidPage() {
   const isScary = userData?.scaryMode || false;
 
   return (
-    <div className="min-h-screen p-4 flex flex-col relative bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')] bg-cover bg-center bg-fixed">
+    <div className="min-h-screen p-4 flex flex-col relative bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')] bg-cover bg-center bg-fixed">
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
 
