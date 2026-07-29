@@ -97,7 +97,7 @@ export default function AchievementsPage() {
   const totalUnlocked = personalAchievements.filter(a => a.unlocked).length;
 
   return (
-    <main className="min-h-screen p-6 relative bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')] bg-cover bg-center bg-fixed">
+    <main className="min-h-screen p-6 relative bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')] bg-cover bg-center bg-fixed">
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
 

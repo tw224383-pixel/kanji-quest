@@ -190,7 +190,7 @@ export default function ShopPage() {
   ];
 
   return (
-    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!previewTheme && (!userData.theme || userData.theme === 'default')) ? "bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!previewTheme && (!userData.theme || userData.theme === 'default')) ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
       {/* Dark overlay for readability */}
       {(!previewTheme && (!userData.theme || userData.theme === 'default')) && (
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>

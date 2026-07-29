@@ -290,7 +290,7 @@ export default function GamePage() {
 
   return (
     <main className={`min-h-screen p-4 flex flex-col relative overflow-hidden transition-colors duration-1000 bg-cover bg-center bg-fixed ${
-      (!userData?.theme || userData.theme === 'default') ? "bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')]" : ""
+      (!userData?.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""
     } ${isBossBattle && !isFinished && userData?.scaryMode ? 'text-red-50' : ''}`}>
       {/* Background Overlay */}
       {!isBossBattle && !isFinished && (!userData?.theme || userData.theme === 'default') && (
@@ -320,7 +320,7 @@ export default function GamePage() {
                 scale: { repeat: Infinity, duration: 3, ease: "easeInOut" },
                 rotate: timeLeft <= 3 ? { repeat: Infinity, duration: 0.1 } : { repeat: Infinity, duration: 4, ease: "easeInOut" }
               }}
-              className="absolute inset-0 bg-[url('/kanji-math-quest/images/boss_bg.jpg')] bg-cover bg-center bg-no-repeat"
+              className="absolute inset-0 bg-[url('/kanji-quest/images/boss_bg.jpg')] bg-cover bg-center bg-no-repeat"
             />
             {/* Dark/Red Overlay to make text readable and add scary vibe */}
             <motion.div 
