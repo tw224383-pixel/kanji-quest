@@ -25,15 +25,58 @@ body {
   font-family: 'Inter', 'Noto Sans JP', sans-serif;
 }
 
-/* Glassmorphism utility */
+/* Glassmorphism utility (Legacy) */
 .glass {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 2px 0 0 rgba(255,255,255,0.7);
 }
 
-.dark .glass {
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* 本格スマホRPG風パネル (メイン・ダーク系) */
+.game-panel {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 138, 0.9) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 4px solid #fbbf24; /* ゴールド枠 */
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.2),
+    inset 0 0 20px rgba(59, 130, 246, 0.4);
+  color: white;
+  border-radius: 1.5rem;
+}
+
+/* 本格スマホRPG風パネル (ライト系・コンテンツ用) */
+.game-panel-light {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(224, 242, 254, 0.95) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 4px solid #3b82f6; /* ブルー枠 */
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.8),
+    inset 0 0 15px rgba(147, 197, 253, 0.5);
+  color: #0f172a;
+  border-radius: 1.5rem;
+}
+
+/* スマホゲーム風テキスト縁取り */
+.text-outline {
+  text-shadow: 
+    -2px -2px 0 #fff,  
+     2px -2px 0 #fff,
+    -2px  2px 0 #fff,
+     2px  2px 0 #fff,
+     0px  4px 0 rgba(0,0,0,0.2);
+}
+
+.text-outline-dark {
+  text-shadow: 
+    -2px -2px 0 #1e3a8a,  
+     2px -2px 0 #1e3a8a,
+    -2px  2px 0 #1e3a8a,
+     2px  2px 0 #1e3a8a,
+     0px  4px 0 rgba(0,0,0,0.4);
 }

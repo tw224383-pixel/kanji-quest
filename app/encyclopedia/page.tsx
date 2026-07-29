@@ -25,10 +25,15 @@ export default function EncyclopediaPage() {
   const progress = Math.round((masteredCount / kanjiForGrade.length) * 100) || 0;
 
   return (
-    <main className="min-h-screen p-6 relative">
-      <div className="max-w-4xl mx-auto">
+    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+      {/* Dark overlay */}
+      {(!userData.theme || userData.theme === 'default') && (
+        <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
+      )}
+
+      <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-black text-indigo-900 drop-shadow-sm flex items-center gap-2">
+          <h1 className="text-3xl font-black text-amber-400 drop-shadow-md flex items-center gap-2 text-outline-dark">
             <span>📖</span> 漢字図鑑
           </h1>
           <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
@@ -52,12 +57,12 @@ export default function EncyclopediaPage() {
         </div>
 
         {/* Progress */}
-        <div className="glass rounded-3xl p-6 mb-8 border-4 border-white/50 shadow-sm bg-white/60">
+        <div className="game-panel p-6 mb-8">
           <div className="flex justify-between items-end mb-2">
-            <div className="text-lg font-bold text-slate-600">
+            <div className="text-lg font-bold text-amber-200">
               {selectedGrade}年生のマスター達成度
             </div>
-            <div className="text-3xl font-black text-emerald-500">
+            <div className="text-3xl font-black text-emerald-400 drop-shadow-sm">
               {progress}%
             </div>
           </div>
@@ -85,8 +90,8 @@ export default function EncyclopediaPage() {
                 onClick={() => isMastered && setSelectedKanji(k)}
                 className={`aspect-square rounded-2xl flex items-center justify-center text-4xl font-serif transition-all ${
                   isMastered 
-                    ? "bg-white text-slate-800 shadow-md border-2 border-slate-200 hover:border-primary cursor-pointer" 
-                    : "bg-slate-200/50 text-slate-400 opacity-40 cursor-not-allowed"
+                    ? "game-panel-light font-black text-slate-800 hover:border-amber-400 hover:shadow-[0_0_15px_rgba(251,191,36,0.6)] cursor-pointer" 
+                    : "bg-slate-800/60 border border-slate-600 text-slate-500 opacity-60 cursor-not-allowed"
                 }`}
               >
                 {k.kanji}
@@ -111,23 +116,23 @@ export default function EncyclopediaPage() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-white rounded-[3rem] p-8 max-w-sm w-full text-center shadow-2xl relative border-4 border-primary/20"
+              className="game-panel-light p-8 max-w-sm w-full text-center relative"
               onClick={e => e.stopPropagation()}
             >
-              <div className="text-[100px] leading-none font-serif text-slate-800 mb-6 drop-shadow-sm">
+              <div className="text-[100px] leading-none font-serif text-slate-800 mb-6 drop-shadow-md text-outline">
                 {selectedKanji.kanji}
               </div>
               
               <div className="space-y-4">
-                <div className="bg-orange-50 rounded-2xl p-4 border border-orange-200">
-                  <div className="text-sm font-black text-orange-600 mb-1">音読み（カタカナ）</div>
-                  <div className="text-xl font-bold text-slate-700">
+                <div className="bg-orange-100/80 rounded-2xl p-4 border border-orange-300">
+                  <div className="text-sm font-black text-orange-800 mb-1">音読み（カタカナ）</div>
+                  <div className="text-xl font-bold text-slate-800">
                     {selectedKanji.on.length > 0 ? selectedKanji.on.join("、") : "なし"}
                   </div>
                 </div>
-                <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
-                  <div className="text-sm font-black text-blue-600 mb-1">訓読み（ひらがな）</div>
-                  <div className="text-xl font-bold text-slate-700">
+                <div className="bg-blue-100/80 rounded-2xl p-4 border border-blue-300">
+                  <div className="text-sm font-black text-blue-800 mb-1">訓読み（ひらがな）</div>
+                  <div className="text-xl font-bold text-slate-800">
                     {selectedKanji.kun.length > 0 ? selectedKanji.kun.join("、") : "なし"}
                   </div>
                 </div>

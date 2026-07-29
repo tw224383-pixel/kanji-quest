@@ -97,44 +97,55 @@ export default function AchievementsPage() {
   const totalUnlocked = personalAchievements.filter(a => a.unlocked).length;
 
   return (
-    <main className="min-h-screen p-6 relative">
-      <div className="max-w-3xl mx-auto">
+    <main className="min-h-screen p-6 relative bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')] bg-cover bg-center bg-fixed">
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-black flex items-center gap-2 drop-shadow-sm">
+          <h1 className="text-3xl font-black flex items-center gap-2 text-amber-400 drop-shadow-md text-outline-dark">
             <span>🏆</span> じっせき
           </h1>
-          <Button variant="outline" onClick={() => router.push("/home")} className="bg-white/80">もどる</Button>
+          <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
         </div>
 
-        <div className="glass rounded-3xl p-6 shadow-md mb-8 flex justify-between items-center bg-white/70">
-          <div className="font-bold text-slate-700">かいほうした実績</div>
-          <div className="text-3xl font-black text-amber-500">{totalUnlocked} / {personalAchievements.length}</div>
+        <div className="game-panel p-6 mb-6">
+          <div className="flex items-center justify-between mb-4 text-amber-200 font-bold">
+            <div>かいほうした実績</div>
+            <div className="text-3xl font-black text-amber-400 drop-shadow-md">{totalUnlocked} <span className="text-xl">/ {personalAchievements.length}</span></div>
+          </div>
+          <div className="w-full bg-slate-800/80 rounded-full h-6 overflow-hidden border-2 border-amber-600/50 shadow-inner">
+            <div 
+              className="h-full bg-gradient-to-r from-amber-500 to-yellow-300"
+              style={{ width: `${(totalUnlocked / personalAchievements.length) * 100}%` }}
+            />
+          </div>
         </div>
 
-        <h2 className="text-2xl font-black text-indigo-900 mb-4 drop-shadow-sm flex items-center gap-2">
+        <h2 className="text-2xl font-black text-amber-300 mb-4 drop-shadow-md flex items-center gap-2">
           <span>👤</span> 個人のじっせき
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
           {personalAchievements.map(ach => (
-            <div key={ach.id} className={`glass rounded-2xl p-4 flex gap-4 items-center transition-all ${ach.unlocked ? 'border-2 border-amber-300 bg-amber-50/80 shadow-md' : 'border-2 border-slate-200 bg-slate-100/50 opacity-60 grayscale'}`}>
-              <div className="text-5xl">{ach.unlocked ? ach.icon : '❓'}</div>
+            <div key={ach.id} className={`game-panel-light p-4 flex gap-4 items-center transition-all ${ach.unlocked ? '' : 'opacity-60 grayscale'}`}>
+              <div className="text-5xl drop-shadow-md">{ach.unlocked ? ach.icon : '❓'}</div>
               <div>
-                <div className={`font-black text-lg ${ach.unlocked ? 'text-amber-700' : 'text-slate-500'}`}>{ach.unlocked ? ach.name : '？？？'}</div>
+                <div className={`font-black text-lg ${ach.unlocked ? 'text-amber-600' : 'text-slate-500'}`}>{ach.unlocked ? ach.name : '？？？'}</div>
                 <div className="text-sm font-bold text-slate-600 mt-1">{ach.desc}</div>
               </div>
             </div>
           ))}
         </div>
 
-        <h2 className="text-2xl font-black text-emerald-900 mb-4 drop-shadow-sm flex items-center gap-2">
+        <h2 className="text-2xl font-black text-emerald-300 mb-4 drop-shadow-md flex items-center gap-2">
           <span>🏫</span> {userData.grade}年生のじっせき
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {gradeAchievements.map(ach => (
-            <div key={ach.id} className={`glass rounded-2xl p-4 flex gap-4 items-center transition-all ${ach.unlocked ? 'border-2 border-emerald-300 bg-emerald-50/80 shadow-md' : 'border-2 border-slate-200 bg-slate-100/50 opacity-60 grayscale'}`}>
-              <div className="text-5xl">{ach.unlocked ? ach.icon : '❓'}</div>
+            <div key={ach.id} className={`game-panel-light p-4 flex gap-4 items-center transition-all ${ach.unlocked ? '' : 'opacity-60 grayscale'}`}>
+              <div className="text-5xl drop-shadow-md">{ach.unlocked ? ach.icon : '❓'}</div>
               <div>
-                <div className={`font-black text-lg ${ach.unlocked ? 'text-emerald-700' : 'text-slate-500'}`}>{ach.unlocked ? ach.name : '？？？'}</div>
+                <div className={`font-black text-lg ${ach.unlocked ? 'text-emerald-600' : 'text-slate-500'}`}>{ach.unlocked ? ach.name : '？？？'}</div>
                 <div className="text-sm font-bold text-slate-600 mt-1">{ach.desc}</div>
               </div>
             </div>

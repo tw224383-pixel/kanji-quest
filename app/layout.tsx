@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
+import { M_PLUS_Rounded_1c } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '../components/ui/ThemeProvider';
+
+const mPlusRounded = M_PLUS_Rounded_1c({ 
+  weight: ['400', '700', '900'],
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: '漢字クエスト - 全学年対応 漢字読みゲーム',
@@ -14,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body className="min-h-screen bg-transparent text-foreground antialiased selection:bg-primary selection:text-white">
+      <body className={`min-h-screen bg-transparent text-foreground antialiased selection:bg-primary selection:text-white ${mPlusRounded.className}`}>
         <ThemeProvider>
           {children}
         </ThemeProvider>

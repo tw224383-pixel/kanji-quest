@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { storage } from "../lib/storage";
 import { Button } from "../components/ui/Button";
 import { auth, db } from "../lib/firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { motion } from "framer-motion";
+import { validateName } from "../lib/validation";
 
 export default function TopPage() {
   const router = useRouter();
@@ -17,7 +19,26 @@ export default function TopPage() {
   const [error, setError] = useState("");
   const [isLoginMode, setIsLoginMode] = useState(false); // 新規登録をデフォルトに
 
-  const handleGuest = () => {
+  useEffect(() => {
+    if (storage.isGuest()) {
+      router.push("/home");
+      return;
+    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.push("/home");
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  const handleGuest = async () => {
+    const isValid = await validateName(name);
+    if (!isValid) {
+      setError("そのなまえは つかえません。ちがうなまえにしてね。");
+      return;
+    }
+
     if (!name) {
       storage.setGuest("ゲスト", grade);
     } else {
@@ -32,6 +53,15 @@ export default function TopPage() {
     if (!name || pin.length !== 4) {
       setError("なまえと、4ケタのすうじをいれてね！");
       return;
+    }
+    
+    // Check for inappropriate names only when signing up
+    if (!isLoginMode) {
+      const isValid = await validateName(name);
+      if (!isValid) {
+        setError("そのなまえは つかえません。ちがうなまえにしてね。");
+        return;
+      }
     }
     
     const dummyEmail = `${encodeURIComponent(name)}@kanjiquest.local`;
@@ -138,7 +168,7 @@ export default function TopPage() {
 
         <div className="w-full h-1 bg-white/50 rounded-full my-8"></div>
 
-        <Button onClick={handleGuest} variant="outline" className="w-full text-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300">
+        <Button onClick={handleGuest} type="button" variant="outline" className="w-full text-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300">
           とうろくしないで あそぶ
         </Button>
         <p className="text-sm text-center text-emerald-800/70 mt-3 font-bold">

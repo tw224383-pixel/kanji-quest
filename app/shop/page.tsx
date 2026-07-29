@@ -26,10 +26,30 @@ const effects = [
 
 const titles = [
   { id: "見習い", price: 0 },
+  { id: "新米勇者", price: 100 },
   { id: "炎の", price: 300 },
+  { id: "氷の", price: 300 },
+  { id: "雷の", price: 300 },
+  { id: "光の", price: 500 },
+  { id: "闇の", price: 500 },
   { id: "伝説の", price: 1000 },
+  { id: "幻の", price: 1000 },
+  { id: "覚醒した", price: 1500 },
+  { id: "奇跡の", price: 1500 },
+  { id: "無敵の", price: 2000 },
+  { id: "最強の", price: 2000 },
   { id: "漢字マスター", price: 3000 },
+  { id: "算数マスター", price: 3000 },
+  { id: "天才", price: 4000 },
   { id: "神話の", price: 5000 },
+  { id: "星を砕く", price: 6000 },
+  { id: "時を超える", price: 7000 },
+  { id: "次元の覇者", price: 8000 },
+  { id: "破壊神", price: 10000 },
+  { id: "創造神", price: 10000 },
+  { id: "全知全能の", price: 15000 },
+  { id: "ゴッド", price: 50000 },
+  { id: "宇宙の創造主", price: 99999 },
 ];
 
 const avatars = [
@@ -170,33 +190,36 @@ export default function ShopPage() {
   ];
 
   return (
-    <main className="min-h-screen p-6 z-10 relative">
-      <div className="max-w-4xl mx-auto">
+    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!previewTheme && (!userData.theme || userData.theme === 'default')) ? "bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+      {/* Dark overlay for readability */}
+      {(!previewTheme && (!userData.theme || userData.theme === 'default')) && (
+        <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
+      )}
+      
+      <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-black flex items-center gap-2 drop-shadow-sm">
+          <h1 className="text-3xl font-black flex items-center gap-2 text-amber-400 drop-shadow-md text-outline-dark">
             <span>🛍️</span> ショップ
           </h1>
-          <Button variant="outline" onClick={() => router.push("/home")} className="bg-white/80">もどる</Button>
+          <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
         </div>
 
-        <div className="glass rounded-3xl p-6 shadow-md mb-6 flex justify-between items-center border-4 border-white/50 bg-white/70">
-          <div className="font-bold text-slate-700">もっている PT</div>
-          <div className="text-4xl font-black text-amber-500">{userData.pt} <span className="text-xl">PT</span></div>
+        <div className="game-panel p-6 mb-6 flex justify-between items-center">
+          <div className="font-bold text-slate-300">もっている PT</div>
+          <div className="text-4xl font-black text-amber-400 drop-shadow-md">{userData.pt} <span className="text-xl text-amber-200">PT</span></div>
         </div>
         {/* Full screen theme preview */}
         {previewTheme && previewTheme !== 'default' && (
-          <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="fixed inset-0 pointer-events-none z-[-10]">
             <ThemeBackground theme={previewTheme} />
             <style dangerouslySetInnerHTML={{__html: `
-              body { background-image: none !important; background-color: ${previewTheme === 'space' ? '#0f172a' : previewTheme === 'ninja' ? '#27272a' : '#000'} !important; }
-              main { background: transparent !important; }
-              .glass { 
-                background: ${previewTheme === 'cyber' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.1)'} !important; 
+              .game-panel, .game-panel-light { 
+                background-color: ${previewTheme === 'cyber' ? 'rgba(0,0,0,0.8)' : 'rgba(15,23,42,0.6)'} !important; 
+                backdrop-filter: blur(8px);
                 border-color: ${previewTheme === 'cyber' ? 'rgba(6,182,212,0.5)' : 'rgba(255,255,255,0.2)'} !important;
-                color: ${previewTheme === 'cyber' ? '#22d3ee' : '#f8fafc'} !important;
               }
-              .glass .text-slate-800, .glass .text-slate-700, .glass .text-gray-600 {
-                color: ${previewTheme === 'cyber' ? '#67e8f9' : '#f8fafc'} !important;
+              .game-panel-light {
+                background-color: ${previewTheme === 'cyber' ? 'rgba(0,0,0,0.6)' : 'rgba(30,41,59,0.7)'} !important;
               }
             `}} />
           </div>
@@ -231,7 +254,7 @@ export default function ShopPage() {
               exit={{ height: 0, opacity: 0 }}
               className="mb-8"
             >
-              <div className="glass p-6 rounded-3xl flex flex-col items-center border-4 border-dashed border-indigo-200 bg-indigo-50/50 relative overflow-hidden">
+              <div className="game-panel-light p-6 flex flex-col items-center relative overflow-hidden">
                 {(previewTheme || previewEffect) && (
                   <Button variant="danger" size="sm" className="absolute top-2 right-2 z-10" onClick={() => {setPreviewTheme(null); setPreviewEffect(null);}}>
                     試着をやめる
@@ -258,7 +281,7 @@ export default function ShopPage() {
             <button 
               key={t.id}
               onClick={() => { setActiveTab(t.id); setGachaResult(null); setPreviewTitle(null); setPreviewAvatar(null); setPreviewTheme(null); setPreviewEffect(null); }} 
-              className={`px-4 py-3 font-black rounded-xl transition-all border-b-4 flex-1 min-w-[120px] ${activeTab === t.id ? 'bg-amber-400 text-white border-amber-600 shadow-sm translate-y-1 border-b-0' : 'bg-white/80 text-amber-600 border-amber-200 hover:bg-amber-50'}`}
+              className={`px-4 py-3 font-black rounded-xl transition-all border-b-[4px] flex-1 min-w-[120px] shadow-md ${activeTab === t.id ? 'bg-amber-400 text-white border-amber-700 translate-y-1 border-b-0 drop-shadow-game-text' : 'bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600'}`}
             >
               {t.label}
             </button>
@@ -275,10 +298,10 @@ export default function ShopPage() {
             transition={{ duration: 0.2 }}
           >
             {activeTab === "gacha" && (
-              <div className="glass rounded-[3rem] p-8 text-center border-4 border-amber-300 bg-amber-50/90 shadow-xl max-w-2xl mx-auto relative overflow-hidden">
+              <div className="game-panel p-8 text-center max-w-2xl mx-auto relative overflow-hidden">
                 <div className="text-6xl mb-6">{isPulling ? "📦" : "🎁"}</div>
-                <h2 className="text-2xl font-black text-amber-800 mb-2">ランダム宝箱（ガチャ）</h2>
-                <p className="text-slate-600 font-bold mb-8">1回 100 PT でレアアバターや限定エフェクトを引き当てよう！</p>
+                <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
+                <p className="text-slate-300 font-bold mb-8">1回 100 PT でレアアバターや限定エフェクトを引き当てよう！</p>
                 
                 <Button 
                   size="lg" 
@@ -303,9 +326,9 @@ export default function ShopPage() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="mt-6 text-left bg-white p-6 rounded-2xl border-2 border-amber-200 shadow-inner overflow-hidden"
+                      className="mt-6 text-left game-panel-light p-6 overflow-hidden"
                     >
-                      <h3 className="font-black text-amber-800 mb-4 border-b-2 border-amber-100 pb-2">提供割合</h3>
+                      <h3 className="font-black text-blue-900 mb-4 border-b-2 border-blue-200 pb-2">提供割合</h3>
                       <div className="space-y-3">
                         {gachaDrops.map(drop => (
                           <div key={drop.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -329,7 +352,7 @@ export default function ShopPage() {
                     <motion.div 
                       initial={{ scale: 0.5, opacity: 0, y: 20 }}
                       animate={{ scale: 1, opacity: 1, y: 0 }}
-                      className="mt-8 bg-white rounded-3xl p-6 border-4 border-amber-200 shadow-inner"
+                      className="mt-8 game-panel-light p-6"
                     >
                       <div className={`text-sm font-black mb-2 inline-block px-3 py-1 rounded-full ${
                         gachaResult.rarity === '超レア' ? 'bg-red-500 text-white animate-bounce' :
@@ -357,7 +380,7 @@ export default function ShopPage() {
                   const isEquipped = userData.theme === theme.id;
                   const canAfford = userData.pt >= theme.price;
                   return (
-                    <div key={theme.id} className={`glass rounded-2xl p-4 shadow-sm border-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-primary/10' : 'border-white/50 bg-white/60'}`}>
+                    <div key={theme.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="text-4xl">{theme.icon}</div>
@@ -392,7 +415,7 @@ export default function ShopPage() {
                   const isEquipped = userData.equippedEffect === effect.id;
                   const canAfford = userData.pt >= effect.price;
                   return (
-                    <div key={effect.id} className={`glass rounded-2xl p-4 shadow-sm border-2 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-primary/10' : 'border-white/50 bg-white/60'}`}>
+                    <div key={effect.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="text-4xl">{effect.icon}</div>
@@ -441,7 +464,7 @@ export default function ShopPage() {
                   const isEquipped = userData.equippedTitle === title.id;
                   const canAfford = userData.pt >= title.price;
                   return (
-                    <div key={title.id} className={`glass rounded-2xl p-4 shadow-sm border-2 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-primary/10' : 'border-white/50 bg-white/60'}`}>
+                    <div key={title.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="font-black text-xl text-indigo-900">【{title.id}】</div>
@@ -473,7 +496,7 @@ export default function ShopPage() {
                   const isEquipped = userData.equippedAvatar === avatar.id;
                   const canAfford = userData.pt >= avatar.price;
                   return (
-                    <div key={avatar.id} className={`glass rounded-2xl p-4 shadow-sm border-2 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-primary/10' : 'border-white/50 bg-white/60'}`}>
+                    <div key={avatar.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="text-5xl">{avatar.id}</div>

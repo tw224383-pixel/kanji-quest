@@ -2,10 +2,11 @@
 
 import { useUser } from "../../hooks/useUser";
 import { RaidBoss } from "../../components/game/RaidBoss";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath } from "../../lib/raidLogic";
 import { collection, query, orderBy, limit, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 
@@ -18,6 +19,7 @@ type GradeData = {
 
 export default function RaidPage() {
   const { userData } = useUser();
+  const router = useRouter();
   const [otherGrades, setOtherGrades] = useState<GradeData[]>([]);
   const [topRanking, setTopRanking] = useState<{name: string, damage: number, isUser: boolean}[]>([]);
 
@@ -84,14 +86,19 @@ export default function RaidPage() {
   }, []);
 
   const currentMonth = new Date().getMonth() + 1;
+  const isScary = userData?.scaryMode || false;
 
   return (
-    <div className="min-h-screen p-4 flex flex-col max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black text-red-600 drop-shadow-md">⚔️ 学年対抗レイド戦況</h1>
-        <Link href="/home" className="text-slate-500 font-bold hover:text-slate-700">
-          もどる
-        </Link>
+    <div className="min-h-screen p-4 flex flex-col relative bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')] bg-cover bg-center bg-fixed">
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
+
+      <div className="max-w-2xl mx-auto space-y-6 relative z-10 w-full">
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-3xl font-black text-amber-400 drop-shadow-md text-outline-dark flex items-center gap-2">
+          <span>⚔️</span> 学年対抗レイド戦況
+        </h1>
+        <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
       </div>
 
       {/* Top 3 Damage Ranking */}
@@ -112,17 +119,20 @@ export default function RaidPage() {
         </div>
       </section>
 
-      {/* User's Grade */}
-      <section>
-        <h2 className="text-lg font-bold text-slate-700 mb-2">🎯 わたしたちの学年（{userData?.grade || 1}年生）</h2>
+      {/* Our Grade Boss */}
+      <section className="game-panel p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl pointer-events-none -mr-10 -mt-10"></div>
+        <h2 className="text-lg font-bold text-amber-300 mb-4 border-b-2 border-amber-500/50 pb-2 flex items-center gap-2 relative z-10">
+          <span>🔥</span> わたしたちの学年（{userData?.grade || 1}年生）
+        </h2>
         <div className="relative">
           <RaidBoss />
         </div>
       </section>
 
       {/* Other Grades */}
-      <section className="glass rounded-3xl p-6 shadow-xl border-4 border-white/50">
-        <h2 className="text-lg font-bold text-slate-700 mb-4 border-b-2 border-slate-200 pb-2">📊 他の学年の戦況</h2>
+      <section className="game-panel p-6">
+        <h2 className="text-lg font-bold text-amber-200 mb-4 border-b-2 border-amber-500/50 pb-2">📊 他の学年の戦況</h2>
         
         <div className="space-y-6">
           {otherGrades.map((d, index) => {
@@ -137,6 +147,7 @@ export default function RaidPage() {
             }
             
             const hpPercent = d.maxHp > 0 ? Math.max(0, (d.hp / d.maxHp) * 100) : 0;
+            const bossImagePath = getRaidBossImagePath(d.level);
 
             return (
             <motion.div 
@@ -144,28 +155,34 @@ export default function RaidPage() {
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white/80 rounded-2xl p-4 shadow-sm border border-slate-200"
+              className={`bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-700 relative overflow-hidden ${isScary ? 'border-red-500 bg-black' : ''}`}
             >
-              <div className="flex justify-between items-center mb-2">
+              {isScary && (
+                <>
+                  <div className="absolute inset-0 z-0 opacity-40 bg-cover bg-center pointer-events-none" style={{ backgroundImage: `url('${bossImagePath}')` }}></div>
+                  <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent pointer-events-none"></div>
+                </>
+              )}
+              <div className="flex justify-between items-center mb-2 relative z-10">
                 <div className="flex items-center gap-2">
-                  <div className="text-3xl drop-shadow-md">{currentBossIcon}</div>
-                  <div className="font-black text-slate-800 text-lg">
-                    <span className="text-sm text-slate-500 mr-2">{d.grade}年生</span>
+                  {!isScary && <div className="text-3xl drop-shadow-md">{currentBossIcon}</div>}
+                  <div className={`font-black text-lg ${isScary ? 'text-white drop-shadow-[0_0_5px_rgba(255,0,0,0.8)]' : 'text-slate-100'}`}>
+                    <span className={`text-sm mr-2 ${isScary ? 'text-red-300' : 'text-slate-400'}`}>{d.grade}年生</span>
                     {currentBossName}
                   </div>
                 </div>
-                <div className="font-bold text-red-600 bg-red-100 px-3 py-1 rounded-full text-sm">
+                <div className={`font-bold px-3 py-1 rounded-full text-sm ${isScary ? 'text-red-400 bg-red-950/80 border border-red-900' : 'text-red-400 bg-red-950/50 border border-red-900'}`}>
                   Lv.{d.level}
                 </div>
               </div>
               
-              <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
+              <div className={`flex justify-between text-xs font-bold mb-1 relative z-10 text-slate-400`}>
                 <span>ボスHP</span>
                 <span>{hpPercent.toFixed(1)}%</span>
               </div>
-              <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
+              <div className={`h-3 w-full rounded-full overflow-hidden relative z-10 bg-slate-900 border border-slate-700`}>
                 <motion.div 
-                  className="h-full bg-gradient-to-r from-red-500 to-rose-400"
+                  className={`h-full bg-gradient-to-r from-red-600 to-rose-500`}
                   initial={{ width: "100%" }}
                   animate={{ width: `${hpPercent}%` }}
                   transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
@@ -173,7 +190,7 @@ export default function RaidPage() {
               </div>
               
               {hpPercent < 20 && (
-                <div className="mt-2 text-xs font-bold text-amber-600 animate-pulse text-right">
+                <div className={`mt-2 text-xs font-bold animate-pulse text-right relative z-10 text-amber-400`}>
                   もうすぐ討伐！🔥
                 </div>
               )}
@@ -183,11 +200,11 @@ export default function RaidPage() {
       </section>
 
       {/* Raid Boss Encyclopedia */}
-      <section className="glass rounded-3xl p-6 shadow-xl border-4 border-indigo-200/50 bg-indigo-50/30">
-        <h2 className="text-lg font-bold text-indigo-900 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-2">
+      <section className="game-panel p-6">
+        <h2 className="text-lg font-bold text-amber-200 mb-4 border-b-2 border-amber-500/50 pb-2 flex items-center gap-2">
           <span>📖</span> レイドボス進化図鑑
         </h2>
-        <div className="text-sm font-bold text-slate-600 mb-4">
+        <div className="text-sm font-bold text-slate-400 mb-4">
           ボスはレベルがあがると、どんどん強力な姿に進化するぞ！<br/>
           みんなで力をあわせて、レベル10の完全討伐をめざそう！
         </div>
@@ -196,21 +213,38 @@ export default function RaidPage() {
             const icon = getRaidBossIcon(level);
             const name = getRaidBossName(level);
             const maxHp = getRaidBossMaxHp(level);
+            const imagePath = getRaidBossImagePath(level);
+            
             return (
-              <div key={level} className="bg-white/80 rounded-2xl p-3 shadow-sm border border-slate-200 flex items-center gap-4">
-                <div className="w-12 h-12 flex flex-col items-center justify-center bg-indigo-100 rounded-xl text-indigo-900 font-black text-sm shrink-0">
+              <div key={level} className={`bg-white/80 rounded-2xl p-3 shadow-sm border relative overflow-hidden flex items-center gap-4 ${isScary ? 'border-red-900/50 bg-black/95' : 'border-slate-200'}`}>
+                {isScary && (
+                  <>
+                    <div className="absolute inset-0 z-0 opacity-40 bg-cover bg-center" style={{ backgroundImage: `url('${imagePath}')` }}></div>
+                    <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+                  </>
+                )}
+                <div className={`relative z-10 w-12 h-12 flex flex-col items-center justify-center rounded-xl font-black text-sm shrink-0 shadow-inner ${isScary ? 'bg-black/60 text-red-500 border border-red-900' : 'bg-indigo-100 text-indigo-900'}`}>
                   Lv.{level}
                 </div>
-                <div className="text-4xl drop-shadow-md w-12 text-center shrink-0">{icon}</div>
-                <div className="flex-1">
-                  <div className="font-black text-slate-800 text-lg leading-tight">{name}</div>
-                  <div className="text-sm font-bold text-rose-600 mt-1">最大HP: {maxHp.toLocaleString()}</div>
+                
+                {isScary ? (
+                  <div className="relative z-10 w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-red-500/50 shadow-[0_0_10px_rgba(220,38,38,0.3)]">
+                    <img src={imagePath} alt={name} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="relative z-10 text-4xl drop-shadow-md w-12 text-center shrink-0">{icon}</div>
+                )}
+                
+                <div className="relative z-10 flex-1">
+                  <div className={`font-black text-lg leading-tight ${isScary ? 'text-white drop-shadow-[0_0_5px_rgba(255,0,0,0.8)]' : 'text-slate-800'}`}>{name}</div>
+                  <div className={`text-sm font-bold mt-1 ${isScary ? 'text-red-400' : 'text-rose-600'}`}>最大HP: {maxHp.toLocaleString()}</div>
                 </div>
               </div>
             );
           })}
         </div>
       </section>
+      </div>
     </div>
   );
 }

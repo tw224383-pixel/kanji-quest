@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getRandomQuestions, getRevengeQuestions, KanjiQuestion } from "../../lib/kanjiData";
+import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion } from "../../lib/mathData";
 import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, increment } from "firebase/firestore";
@@ -16,7 +17,8 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function GamePage() {
   const router = useRouter();
   const { userData, updateUserData, loading } = useUser();
-  const [questions, setQuestions] = useState<KanjiQuestion[]>([]);
+  const [questions, setQuestions] = useState<(KanjiQuestion | MathQuestion)[]>([]);
+  const [isMath, setIsMath] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mode, setMode] = useState<"4choice" | "keyboard">("4choice");
   const [isFinished, setIsFinished] = useState(false);
@@ -44,18 +46,38 @@ export default function GamePage() {
       
       setIsRevenge(revengeParam);
 
+      const subjectParam = params.get("subject");
+      const isMathMode = subjectParam === "math";
+      setIsMath(isMathMode);
+
       if (revengeParam) {
-        const revQ = getRevengeQuestions(userData.mistakeIds, 10); // リベンジは最大10問
-        if (revQ.length === 0) {
-          alert("にがてな漢字は まだ ありません！");
-          router.push("/home");
-          return;
+        if (isMathMode) {
+          const revQ = getRevengeMathQuestions(userData.mistakeIds, 10);
+          if (revQ.length === 0) {
+            alert("にがてな算数の問題は まだ ありません！");
+            router.push("/home");
+            return;
+          }
+          setQuestions(revQ);
+        } else {
+          const revQ = getRevengeQuestions(userData.mistakeIds, 10); // リベンジは最大10問
+          if (revQ.length === 0) {
+            alert("にがてな漢字は まだ ありません！");
+            router.push("/home");
+            return;
+          }
+          setQuestions(revQ);
         }
-        setQuestions(revQ);
       } else {
         const targetGrades = gradesParam ? gradesParam.split(",").map(Number) : [userData.grade];
         const targetCount = countParam ? parseInt(countParam, 10) : 5;
-        setQuestions(getRandomQuestions(targetGrades, targetCount));
+        if (isMathMode) {
+          const skillsParam = params.get("skills");
+          const targetSkills = skillsParam ? skillsParam.split(",") : [];
+          setQuestions(getRandomMathQuestions(targetSkills, targetCount));
+        } else {
+          setQuestions(getRandomQuestions(targetGrades, targetCount));
+        }
       }
     }
     setMode(storage.getAnswerMode() as "4choice" | "keyboard");
@@ -131,14 +153,28 @@ export default function GamePage() {
     
     const multiplier = 1 + (maxCombo * 0.1);
     const revengeBonus = isRevenge ? 2.0 : 1.0;
+    const keyboardBonus = mode === "keyboard" ? 3.0 : 1.0;
 
-    const baseXP = qCount * 10;
-    const basePT = qCount * 5;
-    const penaltyXP = totalMistakes * 10;
-    const penaltyPT = totalMistakes * 5;
+    let baseXP = 0;
+    let basePT = 0;
+    let lowGradeCount = 0;
+
+    questions.forEach(q => {
+      if (isMath && !isRevenge && q.grade < (userData?.grade || 1)) {
+        baseXP += 1;
+        basePT += 0;
+        lowGradeCount++;
+      } else {
+        baseXP += 10;
+        basePT += 5;
+      }
+    });
+
+    const penaltyXP = totalMistakes * 5;
+    const penaltyPT = totalMistakes * 2;
     
-    const finalXP = Math.max(0, Math.floor((baseXP - penaltyXP) * multiplier * revengeBonus));
-    const finalPT = Math.max(0, Math.floor((basePT - penaltyPT) * multiplier * revengeBonus));
+    const finalXP = Math.max(0, Math.floor((baseXP - penaltyXP) * multiplier * revengeBonus * keyboardBonus));
+    const finalPT = Math.max(0, Math.floor((basePT - penaltyPT) * multiplier * revengeBonus * keyboardBonus));
     
     if (userData) {
       const updatedMastered = Array.from(new Set([...userData.masteredIds, ...Array.from(newMastered.current)]));
@@ -202,9 +238,9 @@ export default function GamePage() {
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="glass rounded-[3rem] shadow-2xl p-12 max-w-md w-full text-center border-4 border-white/60 bg-white/40"
+          className="game-panel p-12 max-w-md w-full text-center"
         >
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500 mb-6 drop-shadow-sm">
+          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-amber-500 mb-6 drop-shadow-game text-outline">
             クリア！
           </h1>
           {unlockedMastery && (
@@ -214,8 +250,13 @@ export default function GamePage() {
             </div>
           )}
           {isRevenge && (
-            <div className="text-xl font-black text-orange-500 mb-4 animate-bounce">
+            <div className="text-xl font-black text-orange-500 mb-2 animate-bounce">
               🔥リベンジボーナス x2🔥
+            </div>
+          )}
+          {mode === "keyboard" && (
+            <div className="text-xl font-black text-pink-500 mb-4 animate-bounce">
+              ⌨️ キーボードボーナス x3! ⌨️
             </div>
           )}
           {maxCombo > 2 && (
@@ -228,8 +269,13 @@ export default function GamePage() {
               まちがえた回数: {totalMistakes} 回
             </div>
           )}
-          <div className="text-4xl font-black mb-4 text-blue-900">+ {Math.max(0, Math.floor((questions.length * 10 - totalMistakes * 10) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1)))} XP</div>
-          <div className="text-3xl font-black text-amber-500 mb-10 drop-shadow-sm">+ {Math.max(0, Math.floor((questions.length * 5 - totalMistakes * 5) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1)))} PT</div>
+          {isMath && !isRevenge && questions.some(q => q.grade < (userData?.grade || 1)) && (
+            <div className="text-sm font-bold text-blue-500 mb-4 bg-blue-50 p-2 rounded-xl border border-blue-200">
+              ℹ️ 自分の学年より下の問題があったため、もらえる経験値が少なくなったよ！
+            </div>
+          )}
+          <div className="text-4xl font-black mb-4 text-blue-900">+ {Math.max(0, Math.floor((questions.reduce((acc, q) => acc + (isMath && !isRevenge && q.grade < (userData?.grade || 1) ? 1 : 10), 0) - totalMistakes * 5) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1) * (mode === "keyboard" ? 3 : 1)))} XP</div>
+          <div className="text-3xl font-black text-amber-500 mb-10 drop-shadow-sm">+ {Math.max(0, Math.floor((questions.reduce((acc, q) => acc + (isMath && !isRevenge && q.grade < (userData?.grade || 1) ? 0 : 5), 0) - totalMistakes * 2) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1) * (mode === "keyboard" ? 3 : 1)))} PT</div>
           
           <Button size="lg" className="w-full text-2xl py-6" variant="fun" onClick={() => router.push("/home")}>
             ホームにもどる
@@ -243,32 +289,45 @@ export default function GamePage() {
   const bossIcon = currentMonth === 10 ? "🎃" : currentMonth === 12 ? "⛄" : "🐲";
 
   return (
-    <main className={`min-h-screen p-4 flex flex-col relative overflow-hidden transition-colors duration-1000 ${
-      isBossBattle && !isFinished ? 'bg-red-950 text-red-50' : 'bg-transparent'
-    }`}>
-      {/* Boss Animation Layer */}
+    <main className={`min-h-screen p-4 flex flex-col relative overflow-hidden transition-colors duration-1000 bg-cover bg-center bg-fixed ${
+      (!userData?.theme || userData.theme === 'default') ? "bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')]" : ""
+    } ${isBossBattle && !isFinished && userData?.scaryMode ? 'text-red-50' : ''}`}>
+      {/* Background Overlay */}
+      {!isBossBattle && !isFinished && (!userData?.theme || userData.theme === 'default') && (
+        <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
+      )}
+      {isBossBattle && !isFinished && !userData?.scaryMode && (
+        <div className="absolute inset-0 bg-red-900/40 pointer-events-none z-0"></div>
+      )}
+      
+      {/* Boss Fullscreen Background */}
       <AnimatePresence>
-        {isBossBattle && (
+        {isBossBattle && !isFinished && userData?.scaryMode && (
           <motion.div 
-            initial={{ y: -200, scale: 0.5, opacity: 0 }}
-            animate={{ y: 0, scale: 1, opacity: 1 }}
-            exit={{ opacity: 0, scale: 2 }}
-            transition={{ type: "spring", bounce: 0.6 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-0 pointer-events-none"
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            className="absolute inset-0 z-0 pointer-events-none"
           >
+            {/* Background Image with pulsing shake */}
             <motion.div 
               animate={{ 
-                y: [0, -15, 0],
-                x: timeLeft <= 3 ? [-10, 10, -10, 10, 0] : 0,
+                scale: [1, 1.02, 1],
+                rotate: timeLeft <= 3 ? [-1, 1, -1, 1, 0] : [0, 0.5, -0.5, 0]
               }}
               transition={{ 
-                y: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-                x: { repeat: Infinity, duration: 0.1 }
+                scale: { repeat: Infinity, duration: 3, ease: "easeInOut" },
+                rotate: timeLeft <= 3 ? { repeat: Infinity, duration: 0.1 } : { repeat: Infinity, duration: 4, ease: "easeInOut" }
               }}
-              className="text-[8rem] md:text-[12rem] drop-shadow-[0_0_30px_rgba(239,68,68,0.8)] filter"
-            >
-              {bossIcon}
-            </motion.div>
+              className="absolute inset-0 bg-[url('/kanji-math-quest/images/boss_bg.jpg')] bg-cover bg-center bg-no-repeat"
+            />
+            {/* Dark/Red Overlay to make text readable and add scary vibe */}
+            <motion.div 
+              animate={{ opacity: [0.6, 0.8, 0.6] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              className="absolute inset-0 bg-gradient-to-t from-black via-red-950/80 to-black/90 mix-blend-multiply"
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -276,7 +335,7 @@ export default function GamePage() {
       <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col z-10 relative">
       
       {/* 進行状況 */}
-      <div className={`absolute top-8 left-1/2 -translate-x-1/2 font-black text-2xl tracking-widest px-6 py-2 rounded-full border-2 shadow-sm ${isBossBattle ? 'bg-red-900/50 text-red-200 border-red-500/50' : 'bg-white/50 text-blue-900/40 border-white/60'}`}>
+      <div className={`relative mx-auto mb-6 mt-4 font-black text-3xl tracking-widest px-8 py-3 rounded-full border-4 shadow-xl z-20 w-max ${isBossBattle ? 'bg-red-900/80 text-red-100 border-red-500 text-outline' : 'bg-gradient-to-b from-blue-400 to-indigo-600 text-white border-blue-300 text-outline-dark'}`}>
         {currentIndex + 1} / {questions.length}
       </div>
 
@@ -303,10 +362,22 @@ export default function GamePage() {
           className="flex flex-col items-center w-full max-w-lg"
         >
           {/* 問題エリア */}
-          <div className={`glass w-full rounded-[3rem] shadow-xl border-4 p-12 flex flex-col items-center mb-8 relative transition-all duration-500 ${isBossBattle ? 'bg-red-900/80 border-red-500/80 shadow-red-500/50' : 'bg-white/50 border-white/60'}`}>
+          <div className={`w-full rounded-[3rem] p-12 flex flex-col items-center mb-8 relative transition-all duration-500 ${
+            isBossBattle 
+              ? (userData?.scaryMode 
+                  ? 'bg-black/80 border-4 border-red-500/80 shadow-[0_0_50px_rgba(220,38,38,0.5)] backdrop-blur-md' 
+                  : 'game-panel-light border-red-400 shadow-[0_0_30px_rgba(220,38,38,0.3)]') 
+              : 'game-panel-light'
+          }`}>
             {isBossBattle && (
-               <div className="absolute -top-12 text-red-500 font-black text-2xl md:text-3xl animate-pulse whitespace-nowrap">
+               <div className="absolute -top-12 text-red-600 font-black text-2xl md:text-3xl animate-pulse whitespace-nowrap drop-shadow-md">
                  ⚠️ ボスがあらわれた！ ⚠️
+               </div>
+            )}
+            
+            {isBossBattle && !userData?.scaryMode && (
+               <div className="absolute top-12 text-[100px] opacity-20 pointer-events-none drop-shadow-md">
+                 {bossIcon}
                </div>
             )}
             
@@ -324,8 +395,8 @@ export default function GamePage() {
             )}
 
             {!isBossBattle && (
-              <div className="absolute -top-5 bg-gradient-to-r from-primary to-blue-500 text-white font-black px-8 py-3 rounded-full shadow-lg text-lg border-2 border-white/50 z-20">
-                {currentQ.type === "onyomi" ? "音読み（カタカナ）" : "訓読み（ひらがな）"}
+              <div className={`absolute -top-5 ${isMath ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gradient-to-r from-primary to-blue-500'} text-white font-black px-8 py-3 rounded-full shadow-lg text-lg border-2 border-white/50 z-20`}>
+                {isMath ? "さんすう もんだい" : (currentQ.type === "onyomi" ? "音読み（カタカナ）" : "訓読み（ひらがな）")}
               </div>
             )}
             
@@ -334,7 +405,7 @@ export default function GamePage() {
               <KanjiEffect effect={userData.equippedEffect} />
             )}
 
-            <div className={`text-[120px] leading-none font-serif drop-shadow-md my-4 relative z-10 ${isBossBattle ? 'text-red-100' : 'text-slate-800'}`}>
+            <div className={`${isMath ? 'text-[70px] md:text-[90px] font-sans font-black' : 'text-[120px] font-serif'} leading-none drop-shadow-md my-4 relative z-10 ${isBossBattle ? (userData?.scaryMode ? 'text-red-100' : 'text-red-900') : 'text-slate-800'}`}>
               {currentQ.word}
             </div>
           </div>
@@ -366,6 +437,7 @@ export default function GamePage() {
               <KeyboardInput 
                 onAnswer={handleAnswer} 
                 disabled={feedback !== null}
+                placeholder={isMath ? "こたえをいれてね" : "よみをひらがなでいれてね"}
               />
             )}
           </div>

@@ -21,6 +21,7 @@ export type UserData = {
   theme: string;
   totalDamage: number;
   equippedEffect: string;
+  scaryMode: boolean;
 };
 
 export function useUser() {
@@ -66,7 +67,8 @@ export function useUser() {
               equippedAvatar: data.equippedAvatar || "👦",
               theme: data.theme || "default",
               totalDamage: data.totalDamage || 0,
-              equippedEffect: data.equippedEffect || ""
+              equippedEffect: data.equippedEffect || "",
+              scaryMode: data.scaryMode || false
             });
           } else {
             // default
@@ -84,7 +86,8 @@ export function useUser() {
               equippedAvatar: "👦",
               theme: "default",
               totalDamage: 0,
-              equippedEffect: ""
+              equippedEffect: "",
+              scaryMode: false
             });
           }
           setLoading(false);

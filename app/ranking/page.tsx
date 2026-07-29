@@ -17,7 +17,7 @@ type RankingUser = {
 };
 
 export default function RankingPage() {
-  const { isGuest } = useUser();
+  const { userData, isGuest } = useUser();
   const router = useRouter();
   const [ranking, setRanking] = useState<RankingUser[]>([]);
   const [gradeFilter, setGradeFilter] = useState<number>(1);
@@ -28,15 +28,19 @@ export default function RankingPage() {
       setLoading(true);
       try {
         const usersRef = collection(db, "users");
+        // Firebase composite index (grade + xp) is likely missing. 
+        // We will fetch users by grade and sort them client-side.
         const q = query(
           usersRef, 
-          where("grade", "==", gradeFilter),
-          orderBy("xp", "desc"), 
-          limit(10)
+          where("grade", "==", gradeFilter)
         );
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RankingUser));
-        setRanking(data);
+        
+        // Client-side sort and limit
+        const sortedData = data.sort((a, b) => b.xp - a.xp).slice(0, 10);
+        
+        setRanking(sortedData);
       } catch (err) {
         console.error("Failed to fetch ranking", err);
       }
@@ -47,20 +51,25 @@ export default function RankingPage() {
   }, [gradeFilter]);
 
   return (
-    <main className="min-h-screen bg-indigo-50 p-6">
-      <div className="max-w-3xl mx-auto">
+    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData?.theme || userData.theme === 'default') ? "bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+      {/* Dark overlay */}
+      {(!userData?.theme || userData.theme === 'default') && (
+        <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
+      )}
+
+      <div className="max-w-3xl mx-auto relative z-10">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-black text-indigo-800">今週のヒーロー</h1>
+          <h1 className="text-3xl font-black text-amber-400 drop-shadow-md text-outline-dark">今週のヒーロー</h1>
           <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white p-4 rounded-2xl font-bold mb-6 shadow-md text-center">
-          <div className="text-xl drop-shadow-md">👑 ランキングは <span className="text-yellow-100 text-2xl font-black border-b-4 border-yellow-200">獲得XP（けいけんち）</span> で決まるよ！</div>
-          <div className="text-sm mt-1 opacity-90">クエストをたくさんクリアしてXPを稼ぎ、トップを目指そう！</div>
+        <div className="game-panel-light p-4 mb-6 text-center">
+          <div className="text-xl font-bold text-slate-800 drop-shadow-sm">👑 ランキングは <span className="text-amber-600 text-2xl font-black border-b-4 border-amber-300">獲得XP（けいけんち）</span> で決まるよ！</div>
+          <div className="text-sm mt-1 font-bold text-slate-600">クエストをたくさんクリアしてXPを稼ぎ、トップを目指そう！</div>
         </div>
 
         {isGuest && (
-          <div className="bg-white border-2 border-indigo-200 text-indigo-800 p-4 rounded-2xl font-bold mb-8 text-center shadow-sm">
+          <div className="game-panel-light border-red-400 text-red-700 p-4 mb-8 text-center shadow-sm">
             ゲストモードではランキングに さんかできません。<br/>
             ランキングにのるには、アカウントとうろくをしてね！
           </div>
@@ -79,8 +88,8 @@ export default function RankingPage() {
           ))}
         </div>
 
-        <div className="bg-white rounded-3xl p-6 shadow-md border-4 border-indigo-100">
-          <h2 className="text-xl font-bold text-indigo-900 mb-6 text-center border-b-2 border-indigo-100 pb-4">
+        <div className="game-panel p-6">
+          <h2 className="text-xl font-black text-amber-300 mb-6 text-center border-b-2 border-amber-500/50 pb-4">
             {gradeFilter}年生の ヒーローたち (トップ10)
           </h2>
 
@@ -93,13 +102,13 @@ export default function RankingPage() {
               {ranking.map((user, index) => {
                 const { level } = calculateLevel(user.xp);
                 return (
-                  <div key={user.id} className="flex items-center gap-4 bg-indigo-50/50 p-4 rounded-2xl">
-                    <div className="text-2xl font-black w-8 text-center text-indigo-400">
+                  <div key={user.id} className="flex items-center gap-4 bg-slate-800/80 border-2 border-slate-600 p-4 rounded-2xl shadow-inner">
+                    <div className="text-3xl font-black w-8 text-center text-amber-400 drop-shadow-md">
                       {index + 1}
                     </div>
                     <div className="flex-1">
-                      <div className="font-bold text-lg text-gray-800">{user.name}</div>
-                      <div className="text-sm text-gray-500">Lv. {level} (XP: {user.xp})</div>
+                      <div className="font-black text-lg text-slate-200">{user.name}</div>
+                      <div className="text-sm font-bold text-amber-300">Lv. {level} (XP: {user.xp})</div>
                     </div>
                     <div className="scale-75 origin-right">
                       <RankPlate level={level} name="" />

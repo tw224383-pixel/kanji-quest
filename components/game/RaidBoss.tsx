@@ -7,7 +7,7 @@ import { useUser } from "../../hooks/useUser";
 import { motion } from "framer-motion";
 import { storage } from "../../lib/storage";
 import Link from "next/link";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath } from "../../lib/raidLogic";
 
 export function RaidBoss() {
   const { user, isGuest, userData, updateUserData } = useUser();
@@ -100,6 +100,8 @@ export function RaidBoss() {
   const monthNum = new Date().getMonth() + 1;
   let bossIcon = getRaidBossIcon(level);
   let bossName = getRaidBossName(level);
+  const bossImagePath = getRaidBossImagePath(level);
+  const isScary = userData?.scaryMode || false;
 
   if (monthNum === 10) {
     bossIcon = "🎃"; bossName = "ハロウィン " + bossName;
@@ -108,26 +110,34 @@ export function RaidBoss() {
   }
 
   return (
-    <div className="glass rounded-3xl p-6 shadow-xl border-4 border-purple-500/50 bg-gradient-to-br from-purple-100 to-indigo-50 mb-8 relative overflow-hidden">
+    <div className={`glass rounded-3xl p-6 shadow-xl border-4 mb-8 relative overflow-hidden transition-all duration-1000 ${isScary ? 'border-red-900/50 bg-black/90 shadow-[0_0_30px_rgba(220,38,38,0.3)]' : 'border-purple-500/50 bg-gradient-to-br from-purple-100 to-indigo-50'}`}>
       
       {/* Background decoration */}
-      <div className="absolute -right-4 -bottom-4 text-8xl opacity-10 blur-sm pointer-events-none">{bossIcon}</div>
+      {isScary ? (
+        <>
+          <div className="absolute inset-0 z-0 opacity-40 pointer-events-none bg-cover bg-center mix-blend-lighten transition-all duration-1000" style={{ backgroundImage: `url('${bossImagePath}')` }}></div>
+          <div className="absolute inset-0 z-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none"></div>
+        </>
+      ) : (
+        <div className="absolute -right-4 -bottom-4 text-8xl opacity-10 blur-sm pointer-events-none">{bossIcon}</div>
+      )}
 
       <div className="flex justify-between items-end mb-3 relative z-10">
-         <div className="text-xl md:text-2xl font-black text-purple-900 drop-shadow-sm flex items-center gap-2">
-           <span>{bossIcon}</span> {bossName} 
+         <div className={`text-xl md:text-2xl font-black flex items-center gap-2 drop-shadow-md ${isScary ? 'text-red-500' : 'text-purple-900'}`}>
+           {!isScary && <span>{bossIcon}</span>} 
+           <span className={isScary ? 'text-white drop-shadow-[0_0_10px_rgba(255,0,0,0.8)] tracking-widest' : ''}>{bossName}</span> 
            {hp <= 0 && level >= MAX_RAID_LEVEL ? (
              <span className="text-amber-500 bg-white/80 px-2 rounded-lg text-lg animate-pulse">MAX 討伐済</span>
            ) : (
-             <span className="text-purple-600 bg-white/50 px-2 rounded-lg text-lg">Lv.{level}</span>
+             <span className={`${isScary ? 'text-red-500 bg-black/60 border border-red-500/50 shadow-inner' : 'text-purple-600 bg-white/50'} px-2 rounded-lg text-lg`}>Lv.{level}</span>
            )}
          </div>
-         <div className="text-sm md:text-base font-bold text-purple-700 bg-white/60 px-3 py-1 rounded-full border border-purple-200">
+         <div className={`text-sm md:text-base font-bold px-3 py-1 rounded-full border ${isScary ? 'text-red-300 bg-black/60 border-red-500 shadow-inner' : 'text-purple-700 bg-white/60 border-purple-200'}`}>
            HP: {hp} / {maxHp}
          </div>
       </div>
       
-      <div className="w-full bg-purple-900/10 rounded-full h-8 border-2 border-white/80 overflow-hidden relative shadow-inner">
+      <div className={`w-full rounded-full h-8 border-2 overflow-hidden relative shadow-inner ${isScary ? 'bg-black/80 border-red-900/80 shadow-[inset_0_0_10px_rgba(0,0,0,1)]' : 'bg-purple-900/10 border-white/80'}`}>
          <motion.div 
            animate={{ width: `${percent}%` }}
            transition={{ duration: 0.5 }}
@@ -137,12 +147,12 @@ export function RaidBoss() {
          </motion.div>
       </div>
       
-      <div className="text-xs text-purple-600 font-bold text-center mt-2 opacity-70">
+      <div className={`text-xs font-bold text-center mt-2 opacity-70 ${isScary ? 'text-red-400' : 'text-purple-600'}`}>
         ※クエストをクリアしてXPを稼ぐと、ボスにダメージを与えられるぞ！
       </div>
 
-      <div className="mt-4 text-center">
-        <Link href="/raid" className="inline-block bg-white/80 text-purple-700 font-bold px-6 py-2 rounded-full text-sm shadow hover:bg-white transition-colors border border-purple-200">
+      <div className="mt-4 text-center relative z-10">
+        <Link href="/raid" className={`inline-block font-bold px-6 py-2 rounded-full text-sm shadow transition-all border ${isScary ? 'bg-red-950/80 text-red-300 border-red-500/50 hover:bg-red-900 hover:text-white shadow-[0_0_10px_rgba(220,38,38,0.3)]' : 'bg-white/80 text-purple-700 hover:bg-white border-purple-200'}`}>
           ⚔️ 他の学年の戦況を見る
         </Link>
       </div>

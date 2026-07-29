@@ -18,14 +18,14 @@ export function Button({
   className,
   ...props
 }: ButtonProps) {
-  const baseStyle = "relative inline-flex items-center justify-center font-black rounded-2xl transition-all focus:outline-none focus:ring-4 focus:ring-primary/50 overflow-hidden";
+  const baseStyle = "relative inline-flex items-center justify-center font-black rounded-[2rem] transition-all focus:outline-none focus:ring-4 focus:ring-primary/50 overflow-hidden transform-gpu border-2 border-white/30";
   
   const variants = {
-    primary: "bg-blue-500 text-white hover:bg-blue-400 border-b-8 border-blue-700 active:border-b-0 active:translate-y-2 shadow-[0_10px_0_0_rgba(29,78,216,0.5)] active:shadow-none",
-    secondary: "bg-emerald-500 text-white hover:bg-emerald-400 border-b-8 border-emerald-700 active:border-b-0 active:translate-y-2 shadow-[0_10px_0_0_rgba(4,120,87,0.5)] active:shadow-none",
-    danger: "bg-red-500 text-white hover:bg-red-400 border-b-8 border-red-700 active:border-b-0 active:translate-y-2 shadow-[0_10px_0_0_rgba(185,28,28,0.5)] active:shadow-none",
-    fun: "bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:from-amber-300 hover:to-orange-400 border-b-8 border-orange-700 active:border-b-0 active:translate-y-2 shadow-[0_10px_0_0_rgba(194,65,12,0.5)] active:shadow-none",
-    outline: "bg-white text-gray-800 border-4 border-gray-300 hover:bg-gray-50 active:translate-y-1 shadow-[0_5px_0_0_rgba(209,213,219,1)] active:shadow-none active:border-b-0",
+    primary: "bg-gradient-to-b from-blue-400 to-blue-600 text-white hover:brightness-110 border-b-[8px] border-blue-800 active:border-b-0 active:translate-y-[8px] shadow-[0_10px_20px_rgba(37,99,235,0.4),inset_0_4px_0_rgba(255,255,255,0.4)] active:shadow-none text-outline-dark",
+    secondary: "bg-gradient-to-b from-emerald-400 to-emerald-600 text-white hover:brightness-110 border-b-[8px] border-emerald-800 active:border-b-0 active:translate-y-[8px] shadow-[0_10px_20px_rgba(5,150,105,0.4),inset_0_4px_0_rgba(255,255,255,0.4)] active:shadow-none drop-shadow-game-text",
+    danger: "bg-gradient-to-b from-red-400 to-red-600 text-white hover:brightness-110 border-b-[8px] border-red-800 active:border-b-0 active:translate-y-[8px] shadow-[0_10px_20px_rgba(220,38,38,0.4),inset_0_4px_0_rgba(255,255,255,0.4)] active:shadow-none drop-shadow-game-text",
+    fun: "bg-gradient-to-b from-amber-300 to-orange-500 text-white hover:brightness-110 border-b-[8px] border-orange-800 active:border-b-0 active:translate-y-[8px] shadow-[0_10px_20px_rgba(234,88,12,0.4),inset_0_4px_0_rgba(255,255,255,0.5)] active:shadow-none drop-shadow-game-text",
+    outline: "bg-gradient-to-b from-white to-gray-100 text-gray-800 border-b-[6px] border-gray-300 hover:brightness-95 active:translate-y-[6px] shadow-[0_8px_15px_rgba(0,0,0,0.1),inset_0_4px_0_rgba(255,255,255,1)] active:shadow-none active:border-b-0",
     ghost: "bg-transparent text-gray-700 hover:bg-gray-100 shadow-none border-0 active:scale-95",
   };
 
@@ -37,14 +37,16 @@ export function Button({
 
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.95, y: 8 }}
       className={twMerge(clsx(baseStyle, variants[variant], sizes[size], className))}
       {...props}
     >
-      <span className="relative z-10">{children}</span>
-      {/* Shine effect */}
-      <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent hover:animate-[shimmer_1.5s_infinite] z-0"></div>
+      <span className="relative z-10 flex items-center justify-center">{children}</span>
+      {/* Shine effect (glossy highlight on top half) */}
+      <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent pointer-events-none rounded-t-[1.8rem]"></div>
+      {/* Moving Shimmer */}
+      <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent hover:animate-[shimmer_1.5s_infinite] z-0 rounded-[2rem]"></div>
     </motion.button>
   );
 }

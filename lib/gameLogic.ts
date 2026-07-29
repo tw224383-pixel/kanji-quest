@@ -4,9 +4,7 @@ export function calculateLevel(totalXp: number) {
   let currentXp = totalXp;
 
   while (level < MAX_LEVEL) {
-    let requiredXp = 10;
-    if (level >= 100 && level < 200) requiredXp = 20;
-    else if (level >= 200) requiredXp = 30;
+    let requiredXp = level * 20 + 100;
 
     if (currentXp >= requiredXp) {
       currentXp -= requiredXp;
@@ -16,10 +14,7 @@ export function calculateLevel(totalXp: number) {
     }
   }
 
-  let nextLevelXp = 10;
-  if (level >= 100 && level < 200) nextLevelXp = 20;
-  else if (level >= 200 && level < 300) nextLevelXp = 30;
-  else if (level === MAX_LEVEL) nextLevelXp = 0; // Max level
+  let nextLevelXp = level === MAX_LEVEL ? 0 : level * 20 + 100;
 
   return {
     level,

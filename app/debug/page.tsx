@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { useRouter } from "next/navigation";
 
 export default function DebugPage() {
-  const { userData, updateUserData, loading } = useUser();
+  const { user, isGuest, userData, updateUserData, loading } = useUser();
   const router = useRouter();
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-2xl">ロード中...</div>;
@@ -45,6 +45,23 @@ export default function DebugPage() {
 
   const handleClearData = async () => {
     if (window.confirm("本当にすべてのデータをリセットしますか？")) {
+      if (!isGuest && user) {
+        await updateUserData({
+          xp: 0,
+          pt: 0,
+          effects: ["default"],
+          mistakeIds: [],
+          masteredIds: [],
+          titles: ["見習い"],
+          equippedTitle: "見習い",
+          avatars: ["👦"],
+          equippedAvatar: "👦",
+          theme: "default",
+          totalDamage: 0,
+          equippedEffect: "",
+          scaryMode: false
+        });
+      }
       localStorage.clear();
       window.location.href = "/";
     }
