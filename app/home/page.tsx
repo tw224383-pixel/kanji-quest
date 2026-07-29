@@ -51,7 +51,7 @@ export default function Home() {
   };
 
   return (
-    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/kanji-math-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
       {/* Dark overlay for readability */}
       {(!userData.theme || userData.theme === 'default') && (
         <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>

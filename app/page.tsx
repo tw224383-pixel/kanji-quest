@@ -81,33 +81,46 @@ export default function TopPage() {
           grade: grade, // 学年を保存
           effects: ["default"],
         });
-        storage.clearGuest();
-        router.push("/home");
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError("エラーがおきました。なまえかすうじがちがうかも？");
-    }
-  };
-
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
+         return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 relative bg-cover bg-center bg-fixed bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]">
+      <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
+      
       <motion.div 
         initial={{ y: -50, opacity: 0, scale: 0.9 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ type: "spring", bounce: 0.5 }}
-        className="glass w-full max-w-md p-8 rounded-[2rem] shadow-2xl flex flex-col items-center bg-white/40 border-4 border-white/60"
+        className="game-panel w-full max-w-md p-8 flex flex-col items-center relative z-10"
       >
         <motion.h1 
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 mb-8 tracking-tighter drop-shadow-sm text-center py-2"
+          className="text-4xl md:text-5xl font-black text-amber-400 text-outline-dark mb-8 tracking-tighter drop-shadow-md text-center py-2"
         >
-          漢字クエスト
+          漢字・算数クエスト
         </motion.h1>
         
+        {/* モード切り替えタブ */}
+        <div className="flex w-full gap-2 mb-6">
+          <Button 
+            type="button"
+            variant={!isLoginMode ? "fun" : "outline"}
+            onClick={() => setIsLoginMode(false)}
+            className={`flex-1 py-3 text-lg ${!isLoginMode ? "shadow-md" : "bg-slate-700/80 text-slate-300 border-slate-900"}`}
+          >
+            🆕 初めてあそぶ
+          </Button>
+          <Button 
+            type="button"
+            variant={isLoginMode ? "fun" : "outline"}
+            onClick={() => setIsLoginMode(true)}
+            className={`flex-1 py-3 text-lg ${isLoginMode ? "shadow-md" : "bg-slate-700/80 text-slate-300 border-slate-900"}`}
+          >
+            🔑 まえにあそんだ
+          </Button>
+        </div>
+
         <form onSubmit={handleAuth} className="w-full flex flex-col gap-5">
-          <div className="bg-white/60 p-4 rounded-2xl shadow-sm border-2 border-white/80">
+          <div className="game-panel-light p-4 shadow-inner">
             <label className="block text-blue-900 font-black mb-2 text-lg">なまえを おしえてね</label>
             <input 
               type="text" 
@@ -118,27 +131,29 @@ export default function TopPage() {
             />
           </div>
 
-          <div className="bg-white/60 p-4 rounded-2xl shadow-sm border-2 border-white/80">
-            <label className="block text-blue-900 font-black mb-2 text-lg">がくねん は？</label>
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3, 4, 5, 6].map(g => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => setGrade(g)}
-                  className={`py-2 rounded-xl font-black text-lg transition-all border-b-4 ${
-                    grade === g 
-                      ? "bg-amber-400 text-white border-amber-600 shadow-sm translate-y-1 border-b-0" 
-                      : "bg-white text-gray-500 border-gray-300 hover:bg-gray-100"
-                  }`}
-                >
-                  {g}年
-                </button>
-              ))}
+          {!isLoginMode && (
+            <div className="game-panel-light p-4 shadow-inner">
+              <label className="block text-blue-900 font-black mb-2 text-lg">がくねん は？</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[1, 2, 3, 4, 5, 6].map(g => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGrade(g)}
+                    className={`py-2 rounded-xl font-black text-lg transition-all border-b-4 ${
+                      grade === g 
+                        ? "bg-amber-400 text-white border-amber-600 shadow-sm translate-y-1 border-b-0" 
+                        : "bg-white text-gray-500 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {g}年
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="bg-white/60 p-4 rounded-2xl shadow-sm border-2 border-white/80">
+          <div className="game-panel-light p-4 shadow-inner">
             <label className="block text-blue-900 font-black mb-2 text-lg">ひみつの すうじ（4ケタ）</label>
             <input 
               type="password" 
@@ -151,22 +166,25 @@ export default function TopPage() {
             />
           </div>
           
-          {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 font-black text-center bg-red-50 p-2 rounded-xl">{error}</motion.p>}
+          {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 font-black text-center bg-red-50 border-2 border-red-200 p-2 rounded-xl">{error}</motion.p>}
           
-          <Button type="submit" variant="fun" size="lg" className="mt-2 w-full text-2xl py-4">
+          <Button type="submit" variant="primary" size="lg" className="mt-2 w-full text-2xl py-4 h-auto shadow-lg shadow-blue-500/30">
             {isLoginMode ? "冒険を つづける！" : "冒険を はじめる！"}
           </Button>
-          
-          <button 
-            type="button" 
-            onClick={() => setIsLoginMode(!isLoginMode)}
-            className="text-blue-700 font-bold underline mt-2 hover:text-blue-500 transition-colors"
-          >
-            {isLoginMode ? "はじめてあそぶひとは こちら" : "まえにあそんだひとは こちら"}
-          </button>
         </form>
 
-        <div className="w-full h-1 bg-white/50 rounded-full my-8"></div>
+        <div className="w-full h-1 bg-slate-600/50 rounded-full my-8"></div>
+
+        <Button onClick={handleGuest} type="button" variant="outline" className="w-full text-lg border-emerald-500 text-emerald-100 bg-emerald-900/40 hover:bg-emerald-800/60">
+          とうろくしないで あそぶ
+        </Button>
+        <p className="text-sm text-center text-amber-200/70 mt-3 font-bold">
+          ※ ゲストも がくねん はえらんでね！
+        </p>
+      </motion.div>
+    </main>
+  );
+}-8"></div>
 
         <Button onClick={handleGuest} type="button" variant="outline" className="w-full text-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300">
           とうろくしないで あそぶ
