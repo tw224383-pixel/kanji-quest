@@ -331,6 +331,51 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Ad and Updates Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 mb-4">
+          {/* Update News */}
+          <div className="game-panel p-4 flex flex-col gap-2 shadow-lg">
+             <h3 className="text-lg font-black text-amber-300 border-b border-slate-600 pb-2 flex items-center gap-2">
+               <span>📣</span> アップデートのお知らせ
+             </h3>
+             <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+               <li>
+                 <div className="text-xs text-amber-400 mb-0.5">2026/07/30</div>
+                 <div>「スタディ・モンスターズ」にタイトル変更！算数の問題もパワーアップ！</div>
+               </li>
+               <li>
+                 <div className="text-xs text-amber-400 mb-0.5">2026/07/29</div>
+                 <div>かっこいい・かわいいボス画像がたくさん追加されたよ！</div>
+               </li>
+               <li>
+                 <div className="text-xs text-amber-400 mb-0.5">2026/07/28</div>
+                 <div>ランキングで自分の称号とアバターが見えるようになったよ！</div>
+               </li>
+             </ul>
+          </div>
+
+          {/* Cross-promotion Ad */}
+          <a 
+            href="https://tw224383-pixel.github.io/hyakuninisshu/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="game-panel-light p-4 flex flex-col justify-center items-center gap-2 hover:scale-105 transition-transform border-4 border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.6)] group relative overflow-hidden cursor-pointer"
+          >
+            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1 animate-pulse">
+              <span>🌟</span> おすすめ！
+            </div>
+            <div className="font-black text-blue-900 text-center leading-tight mt-3 relative z-10 text-sm md:text-base">
+              黒田先生が作った<br/>ほかのアプリでも遊んでみよう！
+            </div>
+            <div className="text-5xl mt-2 relative z-10 group-hover:rotate-12 transition-transform duration-300 drop-shadow-md">🎴</div>
+            <div className="text-xs font-bold text-slate-600 mt-2 relative z-10 bg-white/60 px-3 py-1 rounded-full border border-slate-300">
+              百人一首（ひゃくにんいっしゅ）
+            </div>
+            
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-orange-400/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+          </a>
+        </div>
+
         {/* Footer / Secret Room */}
         <div className="text-center mt-12 mb-4 opacity-30 text-xs font-bold text-white hover:opacity-100 transition-opacity">
           <button onClick={() => {
