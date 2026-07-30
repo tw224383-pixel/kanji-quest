@@ -305,7 +305,7 @@ export default function GamePage() {
               ℹ️ 自分の学年より下の問題があったため、もらえる経験値が少なくなったよ！
             </div>
           )}
-          <div className="text-4xl font-black mb-4 text-blue-900">+ {Math.max(0, Math.floor((questions.reduce((acc, q) => acc + (isMath && !isRevenge && q.grade < (userData?.grade || 1) ? 1 : 10), 0) - totalMistakes * 5) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1) * (mode === "keyboard" ? 3 : 1)))} XP</div>
+          <div className="text-4xl font-black mb-4 text-cyan-400 drop-shadow-md">+ {Math.max(0, Math.floor((questions.reduce((acc, q) => acc + (isMath && !isRevenge && q.grade < (userData?.grade || 1) ? 1 : 10), 0) - totalMistakes * 5) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1) * (mode === "keyboard" ? 3 : 1)))} XP</div>
           <div className="text-3xl font-black text-amber-500 mb-10 drop-shadow-sm">+ {Math.max(0, Math.floor((questions.reduce((acc, q) => acc + (isMath && !isRevenge && q.grade < (userData?.grade || 1) ? 0 : 5), 0) - totalMistakes * 2) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1) * (mode === "keyboard" ? 3 : 1)))} PT</div>
           
           <Button size="lg" className="w-full text-2xl py-6" variant="fun" onClick={() => router.push("/home")}>
