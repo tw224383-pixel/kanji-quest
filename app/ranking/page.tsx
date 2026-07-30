@@ -39,8 +39,8 @@ export default function RankingPage() {
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RankingUser));
         
-        // Client-side sort and limit
-        const sortedData = data.sort((a, b) => b.xp - a.xp).slice(0, 10);
+        // Client-side sort and limit, safe against undefined xp
+        const sortedData = data.sort((a, b) => (b.xp || 0) - (a.xp || 0)).slice(0, 10);
         
         setRanking(sortedData);
       } catch (err) {
@@ -102,15 +102,15 @@ export default function RankingPage() {
           ) : (
             <div className="flex flex-col gap-4">
               {ranking.map((user, index) => {
-                const { level } = calculateLevel(user.xp);
+                const { level } = calculateLevel(user.xp || 0);
                 return (
                   <div key={user.id} className="flex items-center gap-4 bg-slate-800/80 border-2 border-slate-600 p-4 rounded-2xl shadow-inner">
                     <div className="text-3xl font-black w-8 text-center text-amber-400 drop-shadow-md">
                       {index + 1}
                     </div>
                     <div className="flex-1">
-                      <div className="font-black text-lg text-slate-200">{user.name}</div>
-                      <div className="text-sm font-bold text-amber-300">Lv. {level} (XP: {user.xp})</div>
+                      <div className="font-black text-lg text-slate-200">{user.name || "名無し"}</div>
+                      <div className="text-sm font-bold text-amber-300">Lv. {level} (XP: {user.xp || 0})</div>
                     </div>
                     <div className="scale-75 origin-right">
                       <RankPlate level={level} name="" title={user.equippedTitle} avatar={user.equippedAvatar} />
