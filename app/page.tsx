@@ -105,7 +105,7 @@ export default function TopPage() {
           transition={{ repeat: Infinity, duration: 2 }}
           className="text-4xl md:text-5xl font-black text-amber-400 text-outline-dark mb-8 drop-shadow-md text-center py-2"
         >
-          漢字・算数クエスト
+          スタディ・モンスターズ
         </motion.h1>
         
         {/* モード切り替えタブ */}

@@ -121,7 +121,7 @@ export default function Home() {
           <div className="flex items-center justify-between relative z-10">
             <div>
               <h2 className="text-2xl font-black text-red-400 mb-1 flex items-center gap-2 drop-shadow-md">
-                👹 怖い人モード <span className="text-xs bg-red-600 text-white px-2 py-1 rounded-full shadow-sm border border-red-400">リアルボス</span>
+                👹 ダークモード <span className="text-xs bg-red-600 text-white px-2 py-1 rounded-full shadow-sm border border-red-400">リアルボス</span>
               </h2>
               <p className="text-red-200/90 font-bold text-sm">レイドボスがリアルで怖い姿に変わるよ！勇気がある人だけ挑戦しよう！</p>
             </div>
@@ -164,10 +164,10 @@ export default function Home() {
         <div className="game-panel p-6">
           <div className="flex justify-center gap-4 mb-8 border-b-2 border-slate-700 pb-6">
             <Button variant={subject === "kanji" ? "fun" : "outline"} onClick={() => setSubject("kanji")} className="text-xl px-6 md:px-8 shadow-md">
-              ✏️ 漢字クエスト
+              ✏️ 漢字バトル
             </Button>
             <Button variant={subject === "math" ? "fun" : "outline"} onClick={() => setSubject("math")} className={`text-xl px-6 md:px-8 shadow-md ${subject === "math" ? "bg-blue-500 hover:bg-blue-600 border-blue-700" : ""}`}>
-              🔢 算数クエスト
+              🔢 算数バトル
             </Button>
           </div>
 
@@ -287,7 +287,7 @@ export default function Home() {
               }} 
               className={`w-full text-2xl md:text-3xl h-20 shadow-lg group relative overflow-hidden ${subject === 'math' ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30 border-blue-700' : 'shadow-orange-500/30'}`}
             >
-              {subject === "kanji" ? "漢字クエストへ出発！" : "算数クエストへ出発！"}
+              {subject === "kanji" ? "漢字バトルへ出発！" : "算数バトルへ出発！"}
               <motion.span 
                 className="absolute right-4 text-4xl opacity-50 group-hover:opacity-100 transition-opacity"
                 animate={{ x: [0, 5, 0] }}

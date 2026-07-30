@@ -10,7 +10,7 @@ const mPlusRounded = M_PLUS_Rounded_1c({
 });
 
 export const metadata: Metadata = {
-  title: '漢字・算数クエスト - 全学年対応RPG',
+  title: 'スタディ・モンスターズ - 全学年対応RPG',
   description: '楽しみながら漢字と計算をマスターできる、小学生向けのRPG風ゲームアプリです。',
 };
 
