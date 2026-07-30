@@ -14,6 +14,8 @@ type RankingUser = {
   name: string;
   xp: number;
   grade: number;
+  equippedTitle?: string;
+  equippedAvatar?: string;
 };
 
 export default function RankingPage() {
@@ -111,7 +113,7 @@ export default function RankingPage() {
                       <div className="text-sm font-bold text-amber-300">Lv. {level} (XP: {user.xp})</div>
                     </div>
                     <div className="scale-75 origin-right">
-                      <RankPlate level={level} name="" />
+                      <RankPlate level={level} name="" title={user.equippedTitle} avatar={user.equippedAvatar} />
                     </div>
                   </div>
                 );

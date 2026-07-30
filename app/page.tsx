@@ -103,7 +103,7 @@ export default function TopPage() {
         <motion.h1 
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="text-4xl md:text-5xl font-black text-amber-400 text-outline-dark mb-8 tracking-tighter drop-shadow-md text-center py-2"
+          className="text-4xl md:text-5xl font-black text-amber-400 text-outline-dark mb-8 drop-shadow-md text-center py-2"
         >
           漢字・算数クエスト
         </motion.h1>

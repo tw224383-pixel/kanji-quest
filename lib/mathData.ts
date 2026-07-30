@@ -39,12 +39,26 @@ function generateWrongChoices(correctAnswer: number, isDecimal = false): string[
   choices.add(isDecimal ? correctAnswer.toFixed(1).replace(/\.0$/, '') : correctAnswer.toString());
 
   while (choices.size < 4) {
-    let offset = Math.floor(Math.random() * 5) + 1; // 1 to 5
-    if (Math.random() > 0.5) offset *= -1;
-    
-    let wrong = correctAnswer + (isDecimal ? offset * 0.1 : offset);
-    if (!isDecimal && wrong < 0 && correctAnswer >= 0) {
-      wrong = correctAnswer + Math.abs(offset);
+    let wrong: number;
+    if (isDecimal) {
+      let offset = Math.floor(Math.random() * 5) + 1; // 1 to 5
+      if (Math.random() > 0.5) offset *= -1;
+      wrong = correctAnswer + offset * 0.1;
+    } else {
+      let offset = Math.floor(Math.random() * 5) + 1;
+      if (Math.random() > 0.5) offset *= -1;
+      
+      // Prevent guessing by last digit by keeping the last digit identical for some choices
+      if (correctAnswer >= 20 && Math.random() > 0.4) {
+        offset *= 10;
+      } else if (correctAnswer >= 200 && Math.random() > 0.5) {
+        offset *= 100;
+      }
+      
+      wrong = correctAnswer + offset;
+      if (wrong < 0 && correctAnswer >= 0) {
+        wrong = correctAnswer + Math.abs(offset);
+      }
     }
     
     // Format to 1 decimal place if it was a decimal
