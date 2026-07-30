@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getRandomQuestions, getRevengeQuestions, KanjiQuestion } from "../../lib/kanjiData";
 import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion } from "../../lib/mathData";
+import { getRaidBossImagePath } from "../../lib/raidLogic";
 import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, increment } from "firebase/firestore";
@@ -36,6 +37,36 @@ export default function GamePage() {
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [isRevenge, setIsRevenge] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10);
+  const [bossLevel, setBossLevel] = useState(1);
+
+  useEffect(() => {
+    if (userData?.grade) {
+      const fetchBossLevel = async () => {
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        if (storage.isGuest()) {
+          let level = parseInt(localStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10);
+          const month = localStorage.getItem("kq_raid_month_" + userData.grade) || currentMonth;
+          if (month !== currentMonth) level = 1;
+          setBossLevel(level);
+        } else {
+          try {
+            const { getDoc, doc } = await import("firebase/firestore");
+            const { db } = await import("../../lib/firebase");
+            const snap = await getDoc(doc(db, "globalStats", "raidBoss_" + userData.grade));
+            if (snap.exists()) {
+              const data = snap.data();
+              if (data.month === currentMonth) {
+                setBossLevel(data.level || 1);
+              } else {
+                setBossLevel(1);
+              }
+            }
+          } catch(e) {}
+        }
+      };
+      fetchBossLevel();
+    }
+  }, [userData?.grade]);
 
   useEffect(() => {
     if (userData && questions.length === 0) {
@@ -302,7 +333,7 @@ export default function GamePage() {
       
       {/* Boss Fullscreen Background */}
       <AnimatePresence>
-        {isBossBattle && !isFinished && userData?.scaryMode && (
+        {isBossBattle && !isFinished && (
           <motion.div 
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -310,24 +341,29 @@ export default function GamePage() {
             transition={{ duration: 1 }}
             className="absolute inset-0 z-0 pointer-events-none"
           >
-            {/* Background Image with pulsing shake */}
+            {/* Background Image with pulsing shake (only if scary mode) */}
             <motion.div 
-              animate={{ 
+              animate={userData?.scaryMode ? { 
                 scale: [1, 1.02, 1],
                 rotate: timeLeft <= 3 ? [-1, 1, -1, 1, 0] : [0, 0.5, -0.5, 0]
-              }}
+              } : { scale: 1, rotate: 0 }}
               transition={{ 
                 scale: { repeat: Infinity, duration: 3, ease: "easeInOut" },
                 rotate: timeLeft <= 3 ? { repeat: Infinity, duration: 0.1 } : { repeat: Infinity, duration: 4, ease: "easeInOut" }
               }}
-              className="absolute inset-0 bg-[url('/kanji-quest/images/boss_bg.jpg')] bg-cover bg-center bg-no-repeat"
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url('${getRaidBossImagePath(bossLevel)}')` }}
             />
             {/* Dark/Red Overlay to make text readable and add scary vibe */}
-            <motion.div 
-              animate={{ opacity: [0.6, 0.8, 0.6] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="absolute inset-0 bg-gradient-to-t from-black via-red-950/80 to-black/90 mix-blend-multiply"
-            />
+            {userData?.scaryMode ? (
+              <motion.div 
+                animate={{ opacity: [0.6, 0.8, 0.6] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                className="absolute inset-0 bg-gradient-to-t from-black via-red-950/80 to-black/90 mix-blend-multiply"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-black/40" />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -376,8 +412,8 @@ export default function GamePage() {
             )}
             
             {isBossBattle && !userData?.scaryMode && (
-               <div className="absolute top-12 text-[100px] opacity-20 pointer-events-none drop-shadow-md">
-                 {bossIcon}
+               <div className="absolute top-12 opacity-15 pointer-events-none drop-shadow-md w-32 h-32 rounded-full overflow-hidden border-4 border-slate-300">
+                 <img src={getRaidBossImagePath(bossLevel)} alt="boss" className="w-full h-full object-cover grayscale" />
                </div>
             )}
             
