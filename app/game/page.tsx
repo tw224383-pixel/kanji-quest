@@ -352,7 +352,7 @@ export default function GamePage() {
                 rotate: timeLeft <= 3 ? { repeat: Infinity, duration: 0.1 } : { repeat: Infinity, duration: 4, ease: "easeInOut" }
               }}
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url('${getRaidBossImagePath(bossLevel)}')` }}
+              style={{ backgroundImage: `url('${getRaidBossImagePath(bossLevel, !!userData?.scaryMode)}')` }}
             />
             {/* Dark/Red Overlay to make text readable and add scary vibe */}
             {userData?.scaryMode ? (
@@ -412,8 +412,8 @@ export default function GamePage() {
             )}
             
             {isBossBattle && !userData?.scaryMode && (
-               <div className="absolute top-12 opacity-15 pointer-events-none drop-shadow-md w-32 h-32 rounded-full overflow-hidden border-4 border-slate-300">
-                 <img src={getRaidBossImagePath(bossLevel)} alt="boss" className="w-full h-full object-cover grayscale" />
+               <div className="absolute top-12 opacity-30 pointer-events-none drop-shadow-md w-32 h-32 rounded-full overflow-hidden border-4 border-slate-300">
+                 <img src={getRaidBossImagePath(bossLevel, false)} alt="boss" className="w-full h-full object-cover grayscale" />
                </div>
             )}
             

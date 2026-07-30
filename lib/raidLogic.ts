@@ -27,17 +27,18 @@ export function getRaidBossIcon(level: number): string {
   return "🐉"; // Ultimate Dragon (Lv 10+)
 }
 
-export function getRaidBossImagePath(level: number): string {
-  if (level <= 1) return "/kanji-quest/images/boss/slime.jpg";
-  if (level === 2) return "/kanji-quest/images/boss/bat.jpg";
-  if (level === 3) return "/kanji-quest/images/boss/wolf.jpg";
-  if (level === 4) return "/kanji-quest/images/boss/ogre.jpg";
-  if (level === 5) return "/kanji-quest/images/boss/griffin.jpg";
-  if (level === 6) return "/kanji-quest/images/boss/scorpion.jpg";
-  if (level === 7) return "/kanji-quest/images/boss/kraken.jpg";
-  if (level === 8) return "/kanji-quest/images/boss/trex.jpg";
-  if (level === 9) return "/kanji-quest/images/boss/golem.jpg";
-  return "/kanji-quest/images/boss/dragon.jpg";
+export function getRaidBossImagePath(level: number, isScary: boolean = true): string {
+  const dir = isScary ? "/kanji-quest/images/boss" : "/kanji-quest/images/boss/cute";
+  if (level <= 1) return `${dir}/slime.jpg`;
+  if (level === 2) return `${dir}/bat.jpg`;
+  if (level === 3) return `${dir}/wolf.jpg`;
+  if (level === 4) return `${dir}/ogre.jpg`;
+  if (level === 5) return `${dir}/griffin.jpg`;
+  if (level === 6) return `${dir}/scorpion.jpg`;
+  if (level === 7) return `${dir}/kraken.jpg`;
+  if (level === 8) return `${dir}/trex.jpg`;
+  if (level === 9) return `${dir}/golem.jpg`;
+  return `${dir}/dragon.jpg`;
 }
 
 export function getRaidBossName(level: number): string {

@@ -101,8 +101,8 @@ export function RaidBoss() {
   const monthNum = new Date().getMonth() + 1;
   let bossIcon = getRaidBossIcon(level);
   let bossName = getRaidBossName(level);
-  const bossImagePath = getRaidBossImagePath(level);
   const isScary = userData?.scaryMode || false;
+  const bossImagePath = getRaidBossImagePath(level, isScary);
 
   if (monthNum === 10) {
     bossIcon = "🎃"; bossName = "ハロウィン " + bossName;
@@ -126,12 +126,12 @@ export function RaidBoss() {
           <div className="absolute inset-0 z-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none"></div>
         </>
       ) : (
-        <div className="absolute -right-4 -bottom-4 text-8xl opacity-10 blur-sm pointer-events-none">{bossIcon}</div>
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none bg-cover bg-center transition-all duration-1000" style={{ backgroundImage: `url('${bossImagePath}')` }}></div>
       )}
 
       <div className="flex justify-between items-end mb-3 relative z-10">
          <div className={`text-xl md:text-2xl font-black flex items-center gap-2 drop-shadow-md ${isScary ? 'text-red-500' : 'text-purple-900'}`}>
-           {!isScary && <span>{bossIcon}</span>} 
+           {!isScary && <img src={bossImagePath} alt="boss" className="w-8 h-8 rounded-full border-2 border-purple-300 shadow-sm object-cover" />} 
            <span className={isScary ? 'text-white drop-shadow-[0_0_10px_rgba(255,0,0,0.8)] tracking-widest' : ''}>{bossName}</span> 
            {hp <= 0 && level >= MAX_RAID_LEVEL ? (
              <span className="text-amber-500 bg-white/80 px-2 rounded-lg text-lg animate-pulse">MAX 討伐済</span>
@@ -182,7 +182,6 @@ export function RaidBoss() {
               <div className="absolute bottom-4 left-4 right-4">
                 <div className={`text-sm font-bold mb-1 drop-shadow-md ${isScary ? 'text-red-400' : 'text-amber-400'}`}>{bossProfile.alias}</div>
                 <div className="text-3xl sm:text-4xl font-black text-white flex items-center gap-2 drop-shadow-lg">
-                  {!isScary && <span>{bossIcon}</span>}
                   <span>{bossName}</span>
                 </div>
               </div>

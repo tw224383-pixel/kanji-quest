@@ -147,7 +147,7 @@ export default function RaidPage() {
             }
             
             const hpPercent = d.maxHp > 0 ? Math.max(0, (d.hp / d.maxHp) * 100) : 0;
-            const bossImagePath = getRaidBossImagePath(d.level);
+            const bossImagePath = getRaidBossImagePath(d.level, isScary);
 
             return (
             <motion.div 
@@ -157,15 +157,17 @@ export default function RaidPage() {
               transition={{ delay: index * 0.1 }}
               className={`bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-700 relative overflow-hidden ${isScary ? 'border-red-500 bg-black' : ''}`}
             >
-              {isScary && (
+              {isScary ? (
                 <>
                   <div className="absolute inset-0 z-0 opacity-40 bg-cover bg-center pointer-events-none" style={{ backgroundImage: `url('${bossImagePath}')` }}></div>
                   <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent pointer-events-none"></div>
                 </>
+              ) : (
+                <div className="absolute inset-0 z-0 opacity-20 bg-cover bg-center pointer-events-none transition-all duration-1000" style={{ backgroundImage: `url('${bossImagePath}')` }}></div>
               )}
               <div className="flex justify-between items-center mb-2 relative z-10">
                 <div className="flex items-center gap-2">
-                  {!isScary && <div className="text-3xl drop-shadow-md">{currentBossIcon}</div>}
+                  {!isScary && <img src={bossImagePath} alt="boss" className="w-8 h-8 rounded-full border-2 border-slate-300 object-cover shadow-sm" />}
                   <div className={`font-black text-lg ${isScary ? 'text-white drop-shadow-[0_0_5px_rgba(255,0,0,0.8)]' : 'text-slate-100'}`}>
                     <span className={`text-sm mr-2 ${isScary ? 'text-red-300' : 'text-slate-400'}`}>{d.grade}年生</span>
                     {currentBossName}
@@ -213,27 +215,25 @@ export default function RaidPage() {
             const icon = getRaidBossIcon(level);
             const name = getRaidBossName(level);
             const maxHp = getRaidBossMaxHp(level);
-            const imagePath = getRaidBossImagePath(level);
+            const imagePath = getRaidBossImagePath(level, isScary);
             
             return (
               <div key={level} className={`bg-white/80 rounded-2xl p-3 shadow-sm border relative overflow-hidden flex items-center gap-4 ${isScary ? 'border-red-900/50 bg-black/95' : 'border-slate-200'}`}>
-                {isScary && (
+                {isScary ? (
                   <>
                     <div className="absolute inset-0 z-0 opacity-40 bg-cover bg-center" style={{ backgroundImage: `url('${imagePath}')` }}></div>
                     <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
                   </>
+                ) : (
+                  <div className="absolute inset-0 z-0 opacity-10 bg-cover bg-center pointer-events-none" style={{ backgroundImage: `url('${imagePath}')` }}></div>
                 )}
                 <div className={`relative z-10 w-12 h-12 flex flex-col items-center justify-center rounded-xl font-black text-sm shrink-0 shadow-inner ${isScary ? 'bg-black/60 text-red-500 border border-red-900' : 'bg-indigo-100 text-indigo-900'}`}>
                   Lv.{level}
                 </div>
                 
-                {isScary ? (
-                  <div className="relative z-10 w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-red-500/50 shadow-[0_0_10px_rgba(220,38,38,0.3)]">
-                    <img src={imagePath} alt={name} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="relative z-10 text-4xl drop-shadow-md w-12 text-center shrink-0">{icon}</div>
-                )}
+                <div className={`relative z-10 w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 ${isScary ? 'border-red-500/50 shadow-[0_0_10px_rgba(220,38,38,0.3)]' : 'border-indigo-300 shadow-md'}`}>
+                  <img src={imagePath} alt={name} className="w-full h-full object-cover" />
+                </div>
                 
                 <div className="relative z-10 flex-1">
                   <div className={`font-black text-lg leading-tight ${isScary ? 'text-white drop-shadow-[0_0_5px_rgba(255,0,0,0.8)]' : 'text-slate-800'}`}>{name}</div>
