@@ -7,13 +7,14 @@ import { useUser } from "../../hooks/useUser";
 import { motion } from "framer-motion";
 import { storage } from "../../lib/storage";
 import Link from "next/link";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile } from "../../lib/raidLogic";
 
 export function RaidBoss() {
   const { user, isGuest, userData, updateUserData } = useUser();
   const [hp, setHp] = useState(getRaidBossMaxHp(1));
   const [maxHp, setMaxHp] = useState(getRaidBossMaxHp(1));
   const [level, setLevel] = useState(1);
+  const [showModal, setShowModal] = useState(false);
 
   const currentMonth = new Date().toISOString().slice(0, 7);
 
@@ -109,8 +110,14 @@ export function RaidBoss() {
     bossIcon = "⛄"; bossName = "スノーマン " + bossName;
   }
 
+  const bossProfile = getRaidBossProfile(level, isScary);
+
   return (
-    <div className={`glass rounded-3xl p-6 shadow-xl border-4 mb-8 relative overflow-hidden transition-all duration-1000 ${isScary ? 'border-red-900/50 bg-black/90 shadow-[0_0_30px_rgba(220,38,38,0.3)]' : 'border-purple-500/50 bg-gradient-to-br from-purple-100 to-indigo-50'}`}>
+    <>
+    <div 
+      onClick={() => setShowModal(true)}
+      className={`glass rounded-3xl p-6 shadow-xl border-4 mb-8 relative overflow-hidden transition-all duration-500 cursor-pointer hover:scale-[1.02] hover:shadow-2xl group ${isScary ? 'border-red-900/50 bg-black/90 shadow-[0_0_30px_rgba(220,38,38,0.3)] hover:border-red-500/80' : 'border-purple-500/50 bg-gradient-to-br from-purple-100 to-indigo-50 hover:border-purple-400'}`}
+    >
       
       {/* Background decoration */}
       {isScary ? (
@@ -151,11 +158,75 @@ export function RaidBoss() {
         ※クエストをクリアしてXPを稼ぐと、ボスにダメージを与えられるぞ！
       </div>
 
-      <div className="mt-4 text-center relative z-10">
-        <Link href="/raid" className={`inline-block font-bold px-6 py-2 rounded-full text-sm shadow transition-all border ${isScary ? 'bg-red-950/80 text-red-300 border-red-500/50 hover:bg-red-900 hover:text-white shadow-[0_0_10px_rgba(220,38,38,0.3)]' : 'bg-white/80 text-purple-700 hover:bg-white border-purple-200'}`}>
+      <div className="mt-4 text-center relative z-10 flex flex-col md:flex-row justify-center gap-3">
+        <button className={`inline-block font-bold px-6 py-2 rounded-full text-sm shadow transition-all border ${isScary ? 'bg-black/80 text-red-400 border-red-900/50 group-hover:bg-red-900 group-hover:text-white group-hover:border-red-500' : 'bg-white/50 text-indigo-700 border-indigo-200 group-hover:bg-indigo-100'}`}>
+          📖 ボスの詳細・討伐記録
+        </button>
+        <Link href="/raid" onClick={(e) => e.stopPropagation()} className={`inline-block font-bold px-6 py-2 rounded-full text-sm shadow transition-all border ${isScary ? 'bg-red-950/80 text-red-300 border-red-500/50 hover:bg-red-900 hover:text-white shadow-[0_0_10px_rgba(220,38,38,0.3)]' : 'bg-white/80 text-purple-700 hover:bg-white border-purple-200'}`}>
           ⚔️ 他の学年の戦況を見る
         </Link>
       </div>
     </div>
+
+    {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className={`w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border-4 flex flex-col max-h-[90vh] ${isScary ? 'bg-zinc-950 border-red-900 text-red-50' : 'bg-slate-50 border-indigo-200 text-slate-800'}`}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="relative h-48 sm:h-56 w-full bg-cover bg-center shrink-0" style={{ backgroundImage: `url('${bossImagePath}')` }}>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+              <button className="absolute top-3 right-3 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors z-10 font-bold" onClick={() => setShowModal(false)}>✕</button>
+              <div className="absolute bottom-4 left-4 right-4">
+                <div className={`text-sm font-bold mb-1 drop-shadow-md ${isScary ? 'text-red-400' : 'text-amber-400'}`}>{bossProfile.alias}</div>
+                <div className="text-3xl sm:text-4xl font-black text-white flex items-center gap-2 drop-shadow-lg">
+                  {!isScary && <span>{bossIcon}</span>}
+                  <span>{bossName}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <div className="mb-8">
+                <h3 className={`font-black text-lg mb-3 flex items-center gap-2 ${isScary ? 'text-red-500 border-b border-red-900/50 pb-2' : 'text-indigo-800 border-b border-indigo-200 pb-2'}`}>
+                  <span>📝</span> プロフィール
+                </h3>
+                <p className="text-sm leading-relaxed mb-4 font-bold opacity-90">{bossProfile.profile}</p>
+                <p className="text-sm leading-relaxed opacity-80">{bossProfile.story}</p>
+              </div>
+
+              <div>
+                <h3 className={`font-black text-lg mb-3 flex items-center gap-2 ${isScary ? 'text-red-500 border-b border-red-900/50 pb-2' : 'text-indigo-800 border-b border-indigo-200 pb-2'}`}>
+                  <span>🏆</span> あなたの学年（{userData?.grade || 1}年生）の討伐記録
+                </h3>
+                <div className="grid grid-cols-5 gap-2">
+                  {Array.from({length: 10}).map((_, i) => {
+                    const l = i + 1;
+                    let count = 0;
+                    if (level > l) count = 1;
+                    else if (level === 10 && hp <= 0 && l === 10) count = 1;
+                    
+                    const isCurrent = l === level && hp > 0;
+                    
+                    return (
+                      <div key={l} className={`p-2 rounded-xl text-center border-2 transition-colors ${
+                        count > 0 ? (isScary ? 'bg-red-950 border-red-800 text-red-200' : 'bg-indigo-50 border-indigo-200 text-indigo-700') 
+                        : isCurrent ? (isScary ? 'bg-black border-red-500 text-red-500 animate-pulse shadow-[0_0_10px_rgba(255,0,0,0.5)]' : 'bg-white border-amber-400 text-amber-600 font-bold shadow-md')
+                        : (isScary ? 'bg-zinc-900/50 border-zinc-800 text-zinc-600' : 'bg-slate-100/50 border-slate-200 text-slate-400')
+                      }`}>
+                        <div className="text-[10px] sm:text-xs font-bold mb-1 opacity-80">Lv.{l}</div>
+                        <div className="text-xs sm:text-sm font-black">{count > 0 ? "1回" : isCurrent ? "交戦中" : "-"}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </>
   );
 }
