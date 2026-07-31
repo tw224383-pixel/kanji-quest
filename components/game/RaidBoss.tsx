@@ -129,16 +129,37 @@ export function RaidBoss() {
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none bg-cover bg-center transition-all duration-1000" style={{ backgroundImage: `url('${bossImagePath}')` }}></div>
       )}
 
-      <div className="flex justify-between items-end mb-3 relative z-10">
-         <div className={`text-xl md:text-2xl font-black flex items-center gap-2 drop-shadow-md ${isScary ? 'text-red-500' : 'text-purple-900'}`}>
-           {!isScary && <img src={bossImagePath} alt="boss" className="w-8 h-8 rounded-full border-2 border-purple-300 shadow-sm object-cover" />} 
-           <span className={isScary ? 'text-white drop-shadow-[0_0_10px_rgba(255,0,0,0.8)] tracking-widest' : ''}>{bossName}</span> 
-           {hp <= 0 && level >= MAX_RAID_LEVEL ? (
-             <span className="text-amber-500 bg-white/80 px-2 rounded-lg text-lg animate-pulse">MAX 討伐済</span>
-           ) : (
-             <span className={`${isScary ? 'text-red-500 bg-black/60 border border-red-500/50 shadow-inner' : 'text-purple-600 bg-white/50'} px-2 rounded-lg text-lg`}>Lv.{level}</span>
-           )}
+      <div className="flex justify-between items-end mb-3 relative z-10 flex-wrap gap-2">
+         <div className="flex flex-col gap-2">
+           <div className={`text-xl md:text-2xl font-black flex items-center gap-2 drop-shadow-md ${isScary ? 'text-red-500' : 'text-purple-900'}`}>
+             {!isScary && <img src={bossImagePath} alt="boss" className="w-8 h-8 rounded-full border-2 border-purple-300 shadow-sm object-cover" />} 
+             <span className={isScary ? 'text-white drop-shadow-[0_0_10px_rgba(255,0,0,0.8)] tracking-widest' : ''}>{bossName}</span> 
+             {hp <= 0 && level >= MAX_RAID_LEVEL ? (
+               <span className="text-amber-500 bg-white/80 px-2 rounded-lg text-lg animate-pulse whitespace-nowrap">MAX 討伐済</span>
+             ) : (
+               <span className={`${isScary ? 'text-red-500 bg-black/60 border border-red-500/50 shadow-inner' : 'text-purple-600 bg-white/50'} px-2 rounded-lg text-lg whitespace-nowrap`}>Lv.{level}</span>
+             )}
+           </div>
+           
+           {/* Scary Mode Toggle */}
+           <div 
+             className="flex items-center gap-2 bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700/50 w-max"
+             onClick={(e) => {
+               e.stopPropagation(); // prevent modal
+               updateUserData({ scaryMode: !isScary });
+             }}
+           >
+             <span className={`text-xs md:text-sm font-bold whitespace-nowrap ${isScary ? 'text-red-300' : 'text-slate-300'}`}>👹 リアルボス</span>
+             <button 
+               className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 shadow-inner border border-black/50 ${isScary ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`}
+             >
+               <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center ${isScary ? 'translate-x-6' : 'translate-x-0'}`}>
+                 {isScary && <span className="text-[8px]">🔥</span>}
+               </div>
+             </button>
+           </div>
          </div>
+
          <div className={`text-sm md:text-base font-bold px-3 py-1 rounded-full border ${isScary ? 'text-red-300 bg-black/60 border-red-500 shadow-inner' : 'text-purple-700 bg-white/60 border-purple-200'}`}>
            HP: {hp} / {maxHp}
          </div>

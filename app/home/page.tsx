@@ -57,14 +57,13 @@ export default function Home() {
   };
 
   return (
-    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+    <main className="min-h-screen p-6 relative">
       {/* Dark overlay for readability */}
       {(!userData.theme || userData.theme === 'default') && (
         <div className="absolute inset-0 bg-black/30 pointer-events-none z-0"></div>
       )}
       
       <ThemeBackground theme={userData.theme || 'default'} />
-      <KanjiEffect effect={userData.equippedEffect || 'none'} />
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -311,20 +310,6 @@ export default function Home() {
                   {currentLevelXp} / {nextLevelRequiredXp || "MAX"}
                 </div>
               </div>
-            </div>
-            
-            <div className="mt-2 flex items-center justify-between bg-red-950/40 p-3 rounded-xl border border-red-500/50 shadow-inner">
-               <div className="text-red-200 text-sm font-bold flex items-center gap-2 whitespace-nowrap">
-                 <span>👹</span> ダークモード (リアルボス)
-               </div>
-               <button 
-                 onClick={() => updateUserData({ scaryMode: !userData.scaryMode })}
-                 className={`w-14 h-7 flex items-center rounded-full p-1 transition-colors duration-300 shadow-inner border-2 border-black/50 ${userData.scaryMode ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`}
-               >
-                 <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center ${userData.scaryMode ? 'translate-x-7' : 'translate-x-0'}`}>
-                   {userData.scaryMode && <span className="text-[10px]">🔥</span>}
-                 </div>
-               </button>
             </div>
           </div>
         </div>

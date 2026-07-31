@@ -1,17 +1,26 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export function ThemeBackground({ theme }: { theme: string }) {
-  if (!theme || theme === "default") return null;
-
+  const isDefault = !theme || theme === "default";
+  
   // AI-generated background image paths
-  const bgImageTheme = theme === 'time_space' ? 'space' : theme;
-  const bgImageUrl = `/kanji-quest/images/themes/bg_${bgImageTheme}.jpg`;
+  const bgImageTheme = isDefault ? 'fantasy_bg' : (theme === 'time_space' ? 'space' : theme);
+  const bgImageUrl = isDefault ? `/kanji-quest/images/ui/fantasy_bg.jpg` : `/kanji-quest/images/themes/bg_${bgImageTheme}.jpg`;
 
   return (
-    <div className={`absolute inset-0 pointer-events-none overflow-hidden bg-cover bg-center ${theme === 'time_space' ? 'hue-rotate-180' : ''}`}
-         style={{ backgroundImage: `url('${bgImageUrl}')` }}>
+    <div className={`absolute inset-0 pointer-events-none overflow-hidden ${theme === 'time_space' ? 'hue-rotate-180' : ''}`}>
+      <Image 
+        src={bgImageUrl} 
+        alt="background" 
+        fill 
+        className="object-cover" 
+        quality={100} 
+        priority 
+        unoptimized
+      />
 
       {/* Darken/Lighten overlay to ensure contrast and blend with animations */}
       <div className="absolute inset-0 bg-black/30" />
