@@ -43,7 +43,7 @@ function mapToQuestions(pool: (RawKanji & { grade: number })[], count: number, a
       const rawReading = k.kun[Math.floor(Math.random() * k.kun.length)];
       if (rawReading.includes('.')) {
         const parts = rawReading.split('.');
-        reading = parts.join('');
+        reading = parts[0];
         okurigana = parts[1];
       } else {
         reading = rawReading;
@@ -55,8 +55,8 @@ function mapToQuestions(pool: (RawKanji & { grade: number })[], count: number, a
     const wrongChoices = new Set<string>();
     while (wrongChoices.size < 3) {
       const randomReading = targetReadings[Math.floor(Math.random() * targetReadings.length)];
-      const cleanRandom = randomReading.replace('.', '');
-      if (cleanRandom !== reading) {
+      const cleanRandom = randomReading.split('.')[0];
+      if (cleanRandom !== reading && cleanRandom.length > 0) {
         wrongChoices.add(cleanRandom);
       }
     }
