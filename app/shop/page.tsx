@@ -315,9 +315,9 @@ export default function ShopPage() {
                 
                 <button 
                   onClick={() => setShowGachaRates(!showGachaRates)}
-                  className="text-amber-600 font-bold underline hover:text-amber-800"
+                  className="mt-2 px-6 py-2 bg-amber-100/50 hover:bg-amber-100 text-amber-800 font-black rounded-full shadow-sm border-2 border-amber-300 transition-colors flex items-center justify-center gap-2 mx-auto"
                 >
-                  中身を見る
+                  <span>🔍</span> 中身を見る
                 </button>
 
                 <AnimatePresence>
@@ -398,7 +398,7 @@ export default function ShopPage() {
                         )}
                       </div>
                       <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                         <button onClick={() => setPreviewTheme(theme.id)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1">
+                         <button onClick={() => setPreviewTheme(theme.id)} className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-black shadow-sm border border-indigo-200 hover:bg-indigo-100 hover:scale-105 transition-all flex items-center gap-2">
                            👀 しちゃく
                          </button>
                       </div>
@@ -440,7 +440,7 @@ export default function ShopPage() {
                         )}
                       </div>
                       <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                         <button onClick={() => setPreviewEffect(effect.id)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1">
+                         <button onClick={() => setPreviewEffect(effect.id)} className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-black shadow-sm border border-indigo-200 hover:bg-indigo-100 hover:scale-105 transition-all flex items-center gap-2">
                            👀 しちゃく
                          </button>
                       </div>
@@ -479,7 +479,7 @@ export default function ShopPage() {
                         )}
                       </div>
                       <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                         <button onClick={() => setPreviewTitle(title.id)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1">
+                         <button onClick={() => setPreviewTitle(title.id)} className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-black shadow-sm border border-indigo-200 hover:bg-indigo-100 hover:scale-105 transition-all flex items-center gap-2">
                            👀 しちゃく
                          </button>
                       </div>
@@ -511,7 +511,7 @@ export default function ShopPage() {
                         )}
                       </div>
                       <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                         <button onClick={() => setPreviewAvatar(avatar.id)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1">
+                         <button onClick={() => setPreviewAvatar(avatar.id)} className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-black shadow-sm border border-indigo-200 hover:bg-indigo-100 hover:scale-105 transition-all flex items-center gap-2">
                            👀 しちゃく
                          </button>
                       </div>
