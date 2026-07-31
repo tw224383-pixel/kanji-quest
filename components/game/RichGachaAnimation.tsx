@@ -8,7 +8,7 @@ type GachaAnimationProps = {
   onComplete: () => void;
 };
 
-export const GachaAnimation = ({ targetStage, onComplete }: GachaAnimationProps) => {
+export const RichGachaAnimation = ({ targetStage, onComplete }: GachaAnimationProps) => {
   const [currentStage, setCurrentStage] = useState(1);
   const [isShaking, setIsShaking] = useState(false);
 
@@ -109,18 +109,18 @@ export const GachaAnimation = ({ targetStage, onComplete }: GachaAnimationProps)
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         />
 
-        {/* Lasers */}
-        <div className="absolute inset-0 z-20 pointer-events-none">
+        {/* Lasers & Explosion */}
+        <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
           <style dangerouslySetInnerHTML={{__html: `
             .laser {
               position: absolute;
               bottom: 10%;
-              width: 4px;
+              width: 8px;
               height: 400px;
-              background: #f87171;
-              box-shadow: 0 0 10px #ef4444, 0 0 20px #ef4444;
+              background: #06b6d4;
+              box-shadow: 0 0 20px #06b6d4, 0 0 40px #0ea5e9, 0 0 80px #38bdf8;
               transform-origin: bottom center;
-              animation: shoot 0.15s linear infinite;
+              animation: shoot 0.3s ease-out;
             }
             .laser-left {
               left: 20%;
@@ -136,8 +136,23 @@ export const GachaAnimation = ({ targetStage, onComplete }: GachaAnimationProps)
               100% { height: 400px; opacity: 0; bottom: 50%; }
             }
           `}} />
-          <div className="laser laser-left" />
-          <div className="laser laser-right" />
+          <AnimatePresence>
+            {isShaking && (
+              <>
+                <motion.div className="laser laser-left" />
+                <motion.div className="laser laser-right" />
+                
+                {/* Explosion ring on the planet */}
+                <motion.div
+                  className="absolute rounded-full border-4 border-white"
+                  initial={{ width: 300, height: 300, opacity: 1 }}
+                  animate={{ width: 600, height: 600, opacity: 0, borderWidth: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  style={{ boxShadow: getPlanetShadow(currentStage) }}
+                />
+              </>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Cockpit Overlay */}

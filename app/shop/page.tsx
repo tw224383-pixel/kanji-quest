@@ -11,7 +11,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems } from "../../lib/gachaData";
 import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
-import { GachaAnimation } from "../../components/game/GachaAnimation";
+import { RegularGachaAnimation } from "../../components/game/RegularGachaAnimation";
+import { RichGachaAnimation } from "../../components/game/RichGachaAnimation";
 
 const themes = getAllThemes();
 const effects = getAllEffects();
@@ -31,7 +32,7 @@ export default function ShopPage() {
   const [previewEffect, setPreviewEffect] = useState<string | null>(null);
 
   // Gacha state
-  const [isPulling, setIsPulling] = useState(false);
+  const [pullingType, setPullingType] = useState<"regular" | "rich" | null>(null);
   const [gachaResult, setGachaResult] = useState<any>(null);
   const [pendingGachaResult, setPendingGachaResult] = useState<any>(null);
   const [gachaTargetStage, setGachaTargetStage] = useState(1);
@@ -75,8 +76,8 @@ export default function ShopPage() {
 
   const pullGacha = async (isRich: boolean = false) => {
     const cost = isRich ? 3000 : 100;
-    if (userData.pt < cost || isPulling) return;
-    setIsPulling(true);
+    if (userData.pt < cost || pullingType) return;
+    setPullingType(isRich ? "rich" : "regular");
     setGachaResult(null);
     setShowGachaRates(false);
     await updateUserData({ pt: userData.pt - cost });
@@ -123,13 +124,22 @@ export default function ShopPage() {
   return (
     <>
       {/* Gacha animation full screen */}
-      {isPulling && pendingGachaResult && (
-        <GachaAnimation
+      {pullingType === "rich" && pendingGachaResult && (
+        <RichGachaAnimation
           targetStage={gachaTargetStage}
           onComplete={() => {
             setGachaResult(pendingGachaResult);
             setPendingGachaResult(null);
-            setIsPulling(false);
+            setPullingType(null);
+          }}
+        />
+      )}
+      {pullingType === "regular" && pendingGachaResult && (
+        <RegularGachaAnimation
+          onComplete={() => {
+            setGachaResult(pendingGachaResult);
+            setPendingGachaResult(null);
+            setPullingType(null);
           }}
         />
       )}
@@ -243,11 +253,11 @@ export default function ShopPage() {
                       <Button
                         size="lg"
                         variant="fun"
-                        className={`w-full py-4 ${isPulling ? 'animate-pulse' : ''}`}
+                        className={`w-full py-4 ${pullingType ? 'animate-pulse' : ''}`}
                         onClick={() => pullGacha(false)}
-                        disabled={isPulling || userData.pt < 100}
+                        disabled={pullingType !== null || userData.pt < 100}
                       >
-                        {isPulling ? "..." : "100 PT で まわす！"}
+                        {pullingType ? "..." : "100 PT で まわす！"}
                       </Button>
                     </div>
                     
@@ -256,11 +266,11 @@ export default function ShopPage() {
                       <Button
                         size="lg"
                         variant="primary"
-                        className={`w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-black shadow-[0_0_10px_rgba(250,204,21,0.5)] ${isPulling ? 'animate-pulse' : ''}`}
+                        className={`w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-black shadow-[0_0_10px_rgba(250,204,21,0.5)] ${pullingType ? 'animate-pulse' : ''}`}
                         onClick={() => pullGacha(true)}
-                        disabled={isPulling || userData.pt < 3000}
+                        disabled={pullingType !== null || userData.pt < 3000}
                       >
-                        {isPulling ? "..." : "3000 PT で まわす！"}
+                        {pullingType ? "..." : "3000 PT で まわす！"}
                       </Button>
                     </div>
                   </div>
