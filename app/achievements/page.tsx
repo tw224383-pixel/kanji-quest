@@ -6,8 +6,6 @@ import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
-import { ThemeBackground } from "../../components/ui/ThemeBackground";
-import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 
 export default function AchievementsPage() {
@@ -102,12 +100,7 @@ export default function AchievementsPage() {
   if (!userData) return <LoadingScreen />;
 
   return (
-    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
-      {(!userData.theme || userData.theme === 'default') && (
-        <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
-      )}
-      <ThemeBackground theme={userData.theme || 'default'} />
-      <KanjiEffect effect={userData.equippedEffect || 'none'} />
+    <main className="min-h-screen p-6 relative">
       
       <div className="max-w-4xl mx-auto space-y-6 relative z-10">
         <div className="flex items-center justify-between mb-6">
