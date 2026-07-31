@@ -5,7 +5,7 @@ import { getRankColor, getRankTitle } from "../../lib/gameLogic";
 import clsx from "clsx";
 import { getAllAvatars } from "../../lib/itemData";
 
-export function RankPlate({ level, name, title, avatar, isMvp }: { level: number; name: string, title?: string, avatar?: string, isMvp?: boolean }) {
+export function RankPlate({ level, name, title, avatar, isMvp, onAvatarClick }: { level: number; name: string, title?: string, avatar?: string, isMvp?: boolean, onAvatarClick?: (url?: string, id?: string) => void }) {
   const colorClass = getRankColor(level);
   const rankTitle = getRankTitle(level); // System rank based on level
   
@@ -21,9 +21,9 @@ export function RankPlate({ level, name, title, avatar, isMvp }: { level: number
         </div>
       )}
       {avatarIcon && (avatarIcon.startsWith('/') || avatarIcon.endsWith('.jpg') || avatarIcon.endsWith('.png')) ? (
-        <img src={avatarIcon} alt="avatar" className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mx-auto mb-4" />
+        <img src={avatarIcon} alt="avatar" className={`w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mx-auto mb-4 ${onAvatarClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`} onClick={() => onAvatarClick && onAvatarClick(avatarIcon, avatar)} />
       ) : (
-        <div className="text-6xl mb-4 drop-shadow-md">{avatarIcon || "👦"}</div>
+        <div className={`text-6xl mb-4 drop-shadow-md flex justify-center ${onAvatarClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`} onClick={() => onAvatarClick && onAvatarClick(undefined, avatarIcon || "👦")}>{avatarIcon || "👦"}</div>
       )}
       <div className="text-sm font-black opacity-80 mb-1 text-indigo-900 bg-white/50 px-3 py-1 rounded-full">
         【 {title || "見習い"} 】

@@ -5,6 +5,8 @@ import { ThemeBackground } from "../../components/ui/ThemeBackground";
 import { useThemeContext } from "../../contexts/ThemeContext";
 import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
+import { LoadingScreen } from "../../components/ui/LoadingScreen";
+import { AvatarPreviewModal } from "../../components/ui/AvatarPreviewModal";
 import { RankPlate } from "../../components/ui/RankPlate";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
@@ -37,8 +39,9 @@ export default function ShopPage() {
   const [pendingGachaResult, setPendingGachaResult] = useState<any>(null);
   const [gachaTargetStage, setGachaTargetStage] = useState(1);
   const [showGachaRates, setShowGachaRates] = useState<"regular" | "rich" | null>(null);
+  const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-2xl">ロード中...</div>;
+  if (loading) return <LoadingScreen />;
   if (!userData) {
     router.push("/");
     return null;
@@ -252,7 +255,7 @@ export default function ShopPage() {
                 <div className="game-panel p-8 text-center max-w-2xl mx-auto relative overflow-hidden">
                   <div className="text-6xl mb-6">🎁</div>
                   <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
-                  <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT、リッチガチャは3000PTで限定AIアバターが当たる！</p>
+                  <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT、リッチガチャは3000PTで限定アバターやエフェクトが当たる！</p>
                   
                   <div className="flex flex-col md:flex-row gap-4 justify-center mb-6 items-stretch">
                     <div className="flex-1 game-panel-light p-4 bg-slate-800/80 border-2 border-amber-900/50 flex flex-col justify-between">
@@ -260,19 +263,19 @@ export default function ShopPage() {
                         <div className="text-amber-200 font-black mb-2">通常ガチャ (100 PT)</div>
                         <button
                           onClick={() => setShowGachaRates(showGachaRates === "regular" ? null : "regular")}
-                          className="mb-4 px-4 py-1 bg-amber-100/50 hover:bg-amber-100 text-amber-800 font-black text-sm rounded-full shadow-sm border border-amber-300 transition-colors inline-flex items-center justify-center gap-1"
+                          className="mb-4 px-6 py-2 bg-amber-100/50 hover:bg-amber-100 text-amber-800 font-black text-base rounded-full shadow-sm border-2 border-amber-300 transition-colors inline-flex items-center justify-center gap-2"
                         >
-                          <span>🔍</span> 中身を見る
+                          <span className="text-xl">🔍</span> 中身を見る
                         </button>
                       </div>
                       <Button
                         size="lg"
                         variant="fun"
-                        className={`w-full py-4 ${pullingType ? 'animate-pulse' : ''}`}
+                        className={`w-full py-4 text-xl tracking-wide ${pullingType ? 'animate-pulse' : ''}`}
                         onClick={() => pullGacha(false)}
                         disabled={pullingType !== null || userData.pt < 100}
                       >
-                        {pullingType ? "..." : "100 PT で まわす！"}
+                        {pullingType ? "..." : userData.pt < 100 ? "PT不足" : "100 PT でまわす！"}
                       </Button>
                     </div>
                     
@@ -291,11 +294,11 @@ export default function ShopPage() {
                         </button>
                       </div>
                         <button
-                          className={`w-full py-4 text-2xl tracking-wider ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
                           onClick={() => pullGacha(true)}
                           disabled={pullingType !== null || userData.pt < 3000}
                         >
-                          {pullingType ? "..." : "3000 PT で まわす！"}
+                          {pullingType ? "..." : "3000 PT でまわす！"}
                         </button>
                     </div>
                   </div>
@@ -328,7 +331,16 @@ export default function ShopPage() {
                                     <div key={item.id} className="bg-white px-2 py-1 rounded shadow-sm text-sm font-bold flex items-center gap-2 text-slate-600">
                                       <span className={`text-[10px] px-1.5 py-0.5 rounded-sm ${typeColor}`}>{typeLabel}</span>
                                       <span className="text-base flex items-center justify-center min-w-[20px]">
-                                        {item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" /> : item.icon}
+                                        {item.type === 'avatar' ? (
+                                          <button 
+                                            onClick={() => setPreviewingAvatar({ url: item.icon, id: item.id, name: item.name })}
+                                            className="hover:scale-125 transition-transform cursor-pointer focus:outline-none"
+                                          >
+                                            {item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" /> : item.icon}
+                                          </button>
+                                        ) : (
+                                          item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" /> : item.icon
+                                        )}
                                       </span>
                                       <span>{item.name.replace(/称号「|アバター「|エフェクト「|テーマ「|」/g, '')}</span>
                                     </div>
@@ -442,7 +454,9 @@ export default function ShopPage() {
                           ) : effect.isGachaOnly ? (
                             <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                           ) : (
-                            <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("effect", effect.id, effect.price || 0)}>かう</Button>
+                            <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("effect", effect.id, effect.price || 0)}>
+                              {canAfford ? "かう" : "PT不足"}
+                            </Button>
                           )}
                         </div>
                         <div className="flex justify-end border-t border-slate-200/50 pt-2">
@@ -488,7 +502,9 @@ export default function ShopPage() {
                             ) : title.isGachaOnly ? (
                               <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                             ) : (
-                              <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("title", title.id, title.price || 0)}>かう</Button>
+                              <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("title", title.id, title.price || 0)}>
+                                {canAfford ? "かう" : "PT不足"}
+                              </Button>
                             )}
                           </div>
                           <div className="flex justify-end border-t border-slate-200/50 pt-2">
@@ -518,14 +534,20 @@ export default function ShopPage() {
                       <div key={avatar.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="text-5xl flex justify-center w-16">
+                            <button 
+                              onClick={() => setPreviewingAvatar({ url: avatar.icon, id: avatar.id, name: avatar.name })}
+                              className="text-5xl flex justify-center w-16 hover:scale-110 transition-transform cursor-pointer"
+                            >
                               {avatar.icon && avatar.icon.startsWith('/') ? (
                                 <img src={avatar.icon} alt={avatar.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md" />
                               ) : (
                                 avatar.id
                               )}
+                            </button>
+                            <div>
+                              <div className="font-bold text-lg text-slate-800">{avatar.name}</div>
+                              {!isOwned && <div className="text-amber-600 font-black">{avatar.price} PT</div>}
                             </div>
-                            {!isOwned && <div className="text-amber-600 font-black">{avatar.price} PT</div>}
                           </div>
                           {isEquipped ? (
                             <div className="text-primary font-black px-4">そうび中</div>
@@ -534,7 +556,9 @@ export default function ShopPage() {
                           ) : avatar.isGachaOnly ? (
                             <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                           ) : (
-                            <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("avatar", avatar.id, avatar.price || 0)}>かう</Button>
+                            <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("avatar", avatar.id, avatar.price || 0)}>
+                              {canAfford ? "かう" : "PT不足"}
+                            </Button>
                           )}
                         </div>
                         <div className="flex justify-end border-t border-slate-200/50 pt-2">
@@ -554,6 +578,14 @@ export default function ShopPage() {
           </AnimatePresence>
         </div>
       </main>
-    </>
+
+      <AvatarPreviewModal 
+        isOpen={!!previewingAvatar} 
+        onClose={() => setPreviewingAvatar(null)}
+        avatarUrl={previewingAvatar?.url}
+        avatarId={previewingAvatar?.id}
+        name={previewingAvatar?.name}
+      />
+    </div>
   );
 }

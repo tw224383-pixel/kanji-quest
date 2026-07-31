@@ -97,7 +97,7 @@ export const RichGachaAnimation = ({ targetStage, onComplete }: GachaAnimationPr
 
         {/* Planet */}
         <motion.div 
-          className="relative z-10 rounded-full"
+          className="relative z-10 rounded-full flex items-center justify-center overflow-hidden border border-white/20"
           style={{
             width: "300px",
             height: "300px",
@@ -107,7 +107,17 @@ export const RichGachaAnimation = ({ targetStage, onComplete }: GachaAnimationPr
           }}
           animate={{ rotate: 360 }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        />
+        >
+          {/* Sparkles / Craters */}
+          <div className="absolute inset-0 opacity-60 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMSIgZmlsbD0id2hpdGUiLz48Y2lyY2xlIGN4PSIxMCIgY3k9IjQwIiByPSIyIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuNSkiLz48Y2lyY2xlIGN4PSI0MCIgY3k9IjEwIiByPSIxLjUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC44KSIvPjwvc3ZnPg==')] animate-[pulse_1.5s_ease-in-out_infinite]" />
+          <div className="absolute inset-0 opacity-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjIwIiByPSI1IiBmaWxsPSJyZ2JhKDAsMCwwLDAuMikiLz48Y2lyY2xlIGN4PSI4MCIgY3k9IjcwIiByPSI4IiBmaWxsPSJyZ2JhKDAsMCwwLDAuMSkiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjgwIiByPSI0IiBmaWxsPSJyZ2JhKDAsMCwwLDAuMjUpIi8+PC9zdmc+')] mix-blend-multiply" />
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent w-[200%] h-[200%] mix-blend-overlay"
+            style={{ left: '-50%', top: '-50%' }}
+            animate={{ rotate: -720 }}
+            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          />
+        </motion.div>
 
         {/* Lasers & Explosion */}
         <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">

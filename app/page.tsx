@@ -18,6 +18,7 @@ export default function TopPage() {
   const [grade, setGrade] = useState<number>(1);
   const [error, setError] = useState("");
   const [isLoginMode, setIsLoginMode] = useState(false); // 新規登録をデフォルトに
+  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     if (storage.isGuest()) {
@@ -103,10 +104,17 @@ export default function TopPage() {
         <motion.h1 
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="text-4xl md:text-5xl font-black text-amber-400 text-outline-dark mb-8 drop-shadow-md text-center py-2"
+          className="text-5xl md:text-6xl font-black text-amber-400 text-outline-dark mb-4 drop-shadow-lg text-center py-2"
         >
           スタディ・モンスターズ
         </motion.h1>
+
+        <button 
+          onClick={() => setShowQR(true)}
+          className="mb-8 px-4 py-1.5 bg-white/20 hover:bg-white/30 text-white font-bold rounded-full text-sm flex items-center gap-2 border border-white/30 transition-colors"
+        >
+          📱 スマホ・タブレットであそぶ
+        </button>
         
         {/* モード切り替えタブ */}
         <div className="flex w-full gap-2 mb-6">
@@ -191,6 +199,22 @@ export default function TopPage() {
           ※ ゲストも がくねん はえらんでね！
         </p>
       </motion.div>
+
+      {/* QR Code Modal */}
+      {showQR && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowQR(false)}>
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-2xl font-black text-blue-900 mb-4">スマホであそぶ</h2>
+            <p className="text-slate-600 font-bold mb-6 text-sm">カメラでこのQRコードを読み取ってね！</p>
+            <div className="bg-white p-4 rounded-xl border-4 border-slate-200 flex justify-center mb-6">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://tw224383-pixel.github.io/kanji-quest/" alt="QR Code" className="w-48 h-48" />
+            </div>
+            <Button variant="outline" onClick={() => setShowQR(false)} className="w-full">
+              とじる
+            </Button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

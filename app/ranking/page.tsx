@@ -7,6 +7,8 @@ import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
 import { RankPlate } from "../../components/ui/RankPlate";
 import { calculateLevel } from "../../lib/gameLogic";
+import { LoadingScreen } from "../../components/ui/LoadingScreen";
+import { AvatarPreviewModal } from "../../components/ui/AvatarPreviewModal";
 import { useRouter } from "next/navigation";
 
 type RankingUser = {
@@ -24,6 +26,7 @@ export default function RankingPage() {
   const [ranking, setRanking] = useState<RankingUser[]>([]);
   const [gradeFilter, setGradeFilter] = useState<number>(1);
   const [loading, setLoading] = useState(false);
+  const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
 
   useEffect(() => {
     const fetchRanking = async () => {
@@ -96,7 +99,7 @@ export default function RankingPage() {
           </h2>
 
           {loading ? (
-            <div className="text-center py-12 text-gray-500 font-bold">よみこみちゅう...</div>
+            <LoadingScreen fullScreen={false} />
           ) : ranking.length === 0 ? (
             <div className="text-center py-12 text-gray-500 font-bold">まだ だれもいないよ！チャンス！</div>
           ) : (
@@ -113,7 +116,13 @@ export default function RankingPage() {
                       <div className="text-sm font-bold text-amber-300">Lv. {level} (XP: {user.xp || 0})</div>
                     </div>
                     <div className="scale-75 origin-right">
-                      <RankPlate level={level} name="" title={user.equippedTitle} avatar={user.equippedAvatar} />
+                      <RankPlate 
+                        level={level} 
+                        name="" 
+                        title={user.equippedTitle} 
+                        avatar={user.equippedAvatar} 
+                        onAvatarClick={(url, id) => setPreviewingAvatar({url, id, name: user.name})}
+                      />
                     </div>
                   </div>
                 );
@@ -122,6 +131,14 @@ export default function RankingPage() {
           )}
         </div>
       </div>
+
+      <AvatarPreviewModal 
+        isOpen={!!previewingAvatar} 
+        onClose={() => setPreviewingAvatar(null)}
+        avatarUrl={previewingAvatar?.url}
+        avatarId={previewingAvatar?.id}
+        name={previewingAvatar?.name}
+      />
     </main>
   );
 }

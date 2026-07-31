@@ -4,20 +4,24 @@ import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
 import { useRouter } from "next/navigation";
 
+import { LoadingScreen } from "../../components/ui/LoadingScreen";
+import { allGachaItems, allRichGachaItems } from "../../lib/gachaData";
+import { shopThemes, shopEffects, shopTitles, shopAvatars } from "../../lib/itemData";
+
 export default function DebugPage() {
   const { user, isGuest, userData, updateUserData, loading } = useUser();
   const router = useRouter();
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-2xl">ロード中...</div>;
+  if (loading) return <LoadingScreen />;
   if (!userData) {
     router.push("/");
     return null;
   }
 
-  const allTitles = ["見習い", "炎の", "伝説の", "漢字マスター", "神話の", "1年生マスター", "2年生マスター", "3年生マスター", "4年生マスター", "5年生マスター", "6年生マスター", "レイド討伐隊"];
-  const allAvatars = ["👦", "👧", "⚔️", "🛡️", "🐶", "🐱", "🐲", "🦄", "👽", "👻", "🤖", "👾", "🧙‍♂️", "🧛", "🧚", "🦸", "🥷", "🦁", "🦅", "🦖", "🚀", "🛸", "🏅", "🏆"];
-  const allThemes = ["theme_default", "theme_space", "theme_ninja", "theme_cyber"];
-  const allEffects = ["fire", "water", "thunder", "star", "rainbow", "sparkle"];
+  const allTitles = ["見習い", ...shopTitles.map(t => t.id), ...allGachaItems.filter(i => i.type === 'title').map(i => i.id), ...allRichGachaItems.filter(i => i.type === 'title').map(i => i.id)];
+  const allAvatars = ["👦", ...shopAvatars.map(a => a.id), ...allGachaItems.filter(i => i.type === 'avatar').map(i => i.id), ...allRichGachaItems.filter(i => i.type === 'avatar').map(i => i.id)];
+  const allThemes = ["default", ...shopThemes.map(t => t.id), ...allGachaItems.filter(i => i.type === 'theme').map(i => `theme_${i.id}`), ...allRichGachaItems.filter(i => i.type === 'theme').map(i => `theme_${i.id}`)];
+  const allEffects = ["default", ...shopEffects.map(e => e.id), ...allGachaItems.filter(i => i.type === 'effect').map(i => i.id), ...allRichGachaItems.filter(i => i.type === 'effect').map(i => i.id)];
 
   const handleMaxPT = async () => {
     await updateUserData({ pt: 9999999 });

@@ -3,8 +3,10 @@
 import { useUser } from "../../hooks/useUser";
 import { calculateLevel } from "../../lib/gameLogic";
 import { RankPlate } from "../../components/ui/RankPlate";
+import { AvatarPreviewModal } from "../../components/ui/AvatarPreviewModal";
 import { RaidBoss } from "../../components/game/RaidBoss";
 import { Button } from "../../components/ui/Button";
+import { LoadingScreen } from "../../components/ui/LoadingScreen";
 import { useRouter } from "next/navigation";
 import { storage } from "../../lib/storage";
 import { useEffect, useState } from "react";
@@ -16,8 +18,10 @@ export default function Home() {
   const router = useRouter();
   const [mode, setMode] = useState<"4choice" | "keyboard">("4choice");
   const [subject, setSubject] = useState<"kanji" | "math">("kanji");
+  const [isAnimating, setIsAnimating] = useState(false);
   const [targetGrades, setTargetGrades] = useState<number[]>([1]);
   const [targetMathSkills, setTargetMathSkills] = useState<string[]>([]);
+  const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(5);
 
   useEffect(() => {
@@ -33,7 +37,7 @@ export default function Home() {
     setMode(storage.getAnswerMode() as "4choice" | "keyboard");
   }, [userData]);
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center font-black text-3xl text-primary animate-pulse">よみこみちゅう...</div>;
+  if (loading) return <LoadingScreen />;
   if (!userData) {
     router.push("/");
     return null;
@@ -65,13 +69,14 @@ export default function Home() {
         <RaidBoss />
         
         {/* Header Profile */}
-        <div className="flex flex-col md:flex-row items-stretch gap-4">
-          <div className="flex-shrink-0 min-w-[200px]">
+        <div className="flex flex-col md:flex-row gap-6 mb-8 w-full relative z-10">
+          <div className="w-full md:w-1/3 flex-shrink-0 relative">
             <RankPlate 
               level={level} 
               name={userData.name} 
               title={userData.equippedTitle} 
               avatar={userData.equippedAvatar}
+              onAvatarClick={(url, id) => setPreviewingAvatar({url, id, name: userData.name})}
               isMvp={userData.totalDamage > 0}
             />
           </div>
@@ -82,22 +87,22 @@ export default function Home() {
                 <div className="bg-primary text-white font-black px-4 py-1 rounded-full text-sm shadow-md border-2 border-blue-400">
                   小学 {userData.grade} 年生
                 </div>
-                <div className="text-3xl font-black text-amber-400 text-outline drop-shadow-sm flex items-center gap-2">
-                  <span className="text-4xl animate-bounce-slight">⭐</span> {userData.pt} <span className="text-lg text-amber-200 text-outline">PT</span>
+                <div className="text-3xl font-black text-amber-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] flex items-center gap-2">
+                  <span className="text-4xl animate-bounce-slight">⭐</span> {userData.pt} <span className="text-lg text-amber-500">PT</span>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={() => router.push("/profile")} className="game-panel-light flex items-center gap-2 px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 bg-indigo-50 border-indigo-200">
-                  <span className="text-xl">👑</span>
-                  <span className="font-black text-indigo-900">プロフィール</span>
+              <div className="flex w-full md:w-auto gap-2 mt-2 md:mt-0">
+                <button onClick={() => router.push("/profile")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 bg-indigo-50 border-indigo-200">
+                  <span className="text-lg md:text-xl">👑</span>
+                  <span className="font-black text-indigo-900 text-xs md:text-base">プロフ</span>
                 </button>
-                <button onClick={() => router.push("/shop")} className="game-panel-light flex items-center gap-2 px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2">
-                  <span className="text-xl">🛍️</span>
-                  <span className="font-black text-slate-800">ショップ</span>
+                <button onClick={() => router.push("/shop")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2">
+                  <span className="text-lg md:text-xl">🛍️</span>
+                  <span className="font-black text-slate-800 text-xs md:text-base">ショップ</span>
                 </button>
-                <button onClick={() => router.push("/achievements")} className="game-panel-light flex items-center gap-2 px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2">
-                  <span className="text-xl">🏆</span>
-                  <span className="font-black text-slate-800">じっせき</span>
+                <button onClick={() => router.push("/achievements")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2">
+                  <span className="text-lg md:text-xl">🏆</span>
+                  <span className="font-black text-slate-800 text-xs md:text-base">じっせき</span>
                 </button>
               </div>
             </div>
@@ -116,27 +121,19 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Scary Mode Toggle */}
-        <div className="game-panel p-6 relative overflow-hidden border-red-500">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/20 rounded-full blur-3xl pointer-events-none -mr-10 -mt-10"></div>
-          <div className="flex items-center justify-between relative z-10">
-            <div>
-              <h2 className="text-2xl font-black text-red-400 mb-1 flex items-center gap-2 drop-shadow-md">
-                👹 ダークモード <span className="text-xs bg-red-600 text-white px-2 py-1 rounded-full shadow-sm border border-red-400">リアルボス</span>
-              </h2>
-              <p className="text-red-200/90 font-bold text-sm">レイドボスがリアルで怖い姿に変わるよ！勇気がある人だけ挑戦しよう！</p>
+            <div className="mt-4 flex items-center justify-between bg-red-950/40 p-3 rounded-xl border border-red-500/50 shadow-inner">
+               <div className="text-red-200 text-sm font-bold flex items-center gap-2">
+                 <span>👹</span> ダークモード (リアルボス)
+               </div>
+               <button 
+                 onClick={() => updateUserData({ scaryMode: !userData.scaryMode })}
+                 className={`w-14 h-7 flex items-center rounded-full p-1 transition-colors duration-300 shadow-inner border-2 border-black/50 ${userData.scaryMode ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`}
+               >
+                 <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center ${userData.scaryMode ? 'translate-x-7' : 'translate-x-0'}`}>
+                   {userData.scaryMode && <span className="text-[10px]">🔥</span>}
+                 </div>
+               </button>
             </div>
-            <button 
-              onClick={() => updateUserData({ scaryMode: !userData.scaryMode })}
-              className={`w-16 h-8 flex items-center rounded-full p-1 transition-colors duration-300 shadow-inner border-2 border-black/50 ${userData.scaryMode ? 'bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`}
-            >
-              <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center ${userData.scaryMode ? 'translate-x-8' : 'translate-x-0'}`}>
-                {userData.scaryMode && <span className="text-[10px]">🔥</span>}
-              </div>
-            </button>
           </div>
         </div>
 
@@ -146,18 +143,18 @@ export default function Home() {
           <div className="flex gap-4">
             <Button 
               variant={mode === "4choice" ? "fun" : "outline"} 
-              className="flex-1 text-xl py-6"
+              className="flex-1 text-base md:text-xl py-6 whitespace-nowrap"
               onClick={() => handleModeChange("4choice")}
             >
               👆 4たく ボタン
             </Button>
             <Button 
               variant={mode === "keyboard" ? "fun" : "outline"} 
-              className="flex-1 text-xl py-6 flex flex-col items-center justify-center gap-1"
+              className="flex-1 text-base md:text-xl py-6 flex flex-col items-center justify-center gap-1 px-1"
               onClick={() => handleModeChange("keyboard")}
             >
-              <div>⌨️ キーボード</div>
-              <div className="text-xs text-red-500 font-black bg-white/80 px-2 py-1 rounded-full shadow-sm border border-red-200">
+              <div className="whitespace-nowrap">⌨️ キーボード</div>
+              <div className="text-[10px] md:text-xs text-red-500 font-black bg-white/80 px-2 py-1 rounded-full shadow-sm border border-red-200 whitespace-nowrap">
                 XP＆PT 3倍ボーナス!
               </div>
             </Button>
@@ -289,7 +286,7 @@ export default function Home() {
                   router.push(`/game?subject=math&skills=${targetMathSkills.join(",")}&count=${questionCount}`);
                 }
               }} 
-              className={`w-full text-2xl md:text-3xl h-20 shadow-lg group relative overflow-hidden ${subject === 'math' ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30 border-blue-700' : 'shadow-orange-500/30'}`}
+              className={`w-full text-xl md:text-3xl h-20 shadow-lg group relative overflow-hidden whitespace-nowrap ${subject === 'math' ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30 border-blue-700' : 'shadow-orange-500/30'}`}
             >
               {subject === "kanji" ? "漢字バトルへ出発！" : "算数バトルへ出発！"}
               <motion.span 
@@ -400,6 +397,14 @@ export default function Home() {
           </button>
         </div>
       </motion.div>
+
+      <AvatarPreviewModal 
+        isOpen={!!previewingAvatar} 
+        onClose={() => setPreviewingAvatar(null)}
+        avatarUrl={previewingAvatar?.url}
+        avatarId={previewingAvatar?.id}
+        name={previewingAvatar?.name}
+      />
     </main>
   );
 }

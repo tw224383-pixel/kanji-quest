@@ -5,6 +5,8 @@ import { ThemeBackground } from "../../components/ui/ThemeBackground";
 import { useThemeContext } from "../../contexts/ThemeContext";
 import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
+import { LoadingScreen } from "../../components/ui/LoadingScreen";
+import { AvatarPreviewModal } from "../../components/ui/AvatarPreviewModal";
 import { RankPlate } from "../../components/ui/RankPlate";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
@@ -27,8 +29,9 @@ export default function ProfilePage() {
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
   const { previewTheme, setPreviewTheme } = useThemeContext();
   const [previewEffect, setPreviewEffect] = useState<string | null>(null);
+  const [previewingAvatarModal, setPreviewingAvatarModal] = useState<{url?: string, id?: string, name?: string} | null>(null);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-2xl">ロード中...</div>;
+  if (loading) return <LoadingScreen />;
   if (!userData) {
     router.push("/");
     return null;
@@ -104,13 +107,14 @@ export default function ProfilePage() {
           <div className="mb-8">
             <div className="game-panel-light p-6 flex flex-col items-center relative overflow-hidden">
               <div className="text-sm font-black text-indigo-400 mb-4 z-10">✨ 現在のすがた ✨</div>
-              <div className="max-w-xs w-full pointer-events-none z-10">
+              <div className="max-w-xs w-full pointer-events-auto z-10 cursor-pointer">
                 <RankPlate 
                   level={Math.floor(userData.xp / 100) + 1} 
                   name={userData.name} 
                   title={previewTitle || userData.equippedTitle} 
                   avatar={previewAvatar || userData.equippedAvatar}
                   isMvp={userData.totalDamage > 0}
+                  onAvatarClick={(url, id) => setPreviewingAvatarModal({url, id, name: userData.name})}
                 />
               </div>
             </div>
@@ -179,9 +183,9 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             {avatar.icon?.startsWith('/') ? (
-                              <img src={avatar.icon} alt={avatar.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md" />
+                              <img src={avatar.icon} alt={avatar.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md cursor-pointer" onClick={() => setPreviewingAvatarModal({url: avatar.icon, id: avatar.id, name: avatar.name})} />
                             ) : (
-                              <div className="text-5xl">{avatar.icon}</div>
+                              <div className="text-5xl cursor-pointer" onClick={() => setPreviewingAvatarModal({url: avatar.icon, id: avatar.id, name: avatar.name})}>{avatar.icon}</div>
                             )}
                             <div className="font-bold text-lg text-slate-800">{avatar.name}</div>
                           </div>
@@ -267,7 +271,7 @@ export default function ProfilePage() {
                     );
                   })}
                   {allEffects.filter(e => userData.effects.includes(e.id)).length === 0 && (
-                    <div className="col-span-1 md:col-span-2 text-center py-10 font-bold text-slate-400">
+                    <div className="col-span-1 md:col-span-2 text-center py-10 font-bold text-slate-600 bg-white/50 rounded-xl border-2 border-slate-300 shadow-sm mt-4">
                       まだエフェクトを持っていません。<br/>ガチャやショップで手に入れよう！
                     </div>
                   )}
@@ -278,6 +282,14 @@ export default function ProfilePage() {
 
         </div>
       </main>
+
+      <AvatarPreviewModal 
+        isOpen={!!previewingAvatarModal} 
+        onClose={() => setPreviewingAvatarModal(null)}
+        avatarUrl={previewingAvatarModal?.url}
+        avatarId={previewingAvatarModal?.id}
+        name={previewingAvatarModal?.name}
+      />
     </>
   );
 }

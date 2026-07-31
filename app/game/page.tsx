@@ -131,6 +131,27 @@ export default function GamePage() {
 
   const currentQ = questions[currentIndex];
 
+  const renderMathWord = (word: string) => {
+    if (!word.includes('/')) return word;
+    const parts = word.split(' ');
+    return (
+      <span className="flex items-center justify-center gap-2">
+        {parts.map((part, idx) => {
+          if (part.includes('/')) {
+            const [n, d] = part.split('/');
+            return (
+              <span key={idx} className="inline-flex flex-col items-center justify-center text-[0.8em]">
+                <span className="border-b-[4px] md:border-b-[6px] border-current w-full text-center leading-tight pb-1 px-1">{n}</span>
+                <span className="text-center leading-tight pt-1 px-1">{d}</span>
+              </span>
+            );
+          }
+          return <span key={idx} className="mx-2">{part}</span>;
+        })}
+      </span>
+    );
+  };
+
   const nextQuestion = () => {
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex(curr => curr + 1);
@@ -371,7 +392,7 @@ export default function GamePage() {
       <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col z-10 relative">
       
       {/* 進行状況 */}
-      <div className={`relative mx-auto mb-6 mt-4 font-black text-3xl tracking-widest px-8 py-3 rounded-full border-4 shadow-xl z-20 w-max ${isBossBattle ? 'bg-red-900/80 text-red-100 border-red-500 text-outline' : 'bg-gradient-to-b from-blue-400 to-indigo-600 text-white border-blue-300 text-outline-dark'}`}>
+      <div className={`relative mx-auto ${isBossBattle ? 'mb-16' : 'mb-6'} mt-4 font-black text-3xl tracking-widest px-8 py-3 rounded-full border-4 shadow-xl z-20 w-max ${isBossBattle ? 'bg-red-900/80 text-red-100 border-red-500 text-outline' : 'bg-gradient-to-b from-blue-400 to-indigo-600 text-white border-blue-300 text-outline-dark'}`}>
         {currentIndex + 1} / {questions.length}
       </div>
 
@@ -406,7 +427,7 @@ export default function GamePage() {
               : 'game-panel-light'
           }`}>
             {isBossBattle && (
-               <div className="absolute -top-12 text-red-600 font-black text-2xl md:text-3xl animate-pulse whitespace-nowrap drop-shadow-md">
+               <div className="absolute -top-14 text-red-600 font-black text-2xl md:text-3xl animate-pulse whitespace-nowrap drop-shadow-md">
                  ⚠️ ボスがあらわれた！ ⚠️
                </div>
             )}
@@ -442,7 +463,7 @@ export default function GamePage() {
             )}
 
             <div className={`${isMath ? 'text-[70px] md:text-[90px] font-sans font-black' : 'text-[120px] font-serif'} leading-none drop-shadow-md my-4 relative z-10 ${isBossBattle ? (userData?.scaryMode ? 'text-red-100' : 'text-red-900') : 'text-slate-800'}`}>
-              {currentQ.word}
+              {isMath ? renderMathWord(currentQ.word) : currentQ.word}
               {currentQ.okurigana && (
                 <span className="text-[0.5em] opacity-80 font-sans ml-1 tracking-normal">{currentQ.okurigana}</span>
               )}
@@ -476,7 +497,8 @@ export default function GamePage() {
               <KeyboardInput 
                 onAnswer={handleAnswer} 
                 disabled={feedback !== null}
-                placeholder={isMath ? "こたえをいれてね" : "よみをひらがなでいれてね"}
+                placeholder={isMath ? "こたえをいれてね" : (currentQ.type === "onyomi" ? "よみをカタカナでいれてね" : "よみをひらがなでいれてね")}
+                isFraction={isMath && currentQ.reading.includes('/')}
               />
             )}
           </div>

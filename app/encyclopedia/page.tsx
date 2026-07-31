@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useUser } from "../../hooks/useUser";
+import { LoadingScreen } from "../../components/ui/LoadingScreen";
 import { getAllKanji } from "../../lib/kanjiData";
 import { Button } from "../../components/ui/Button";
 import { useRouter } from "next/navigation";
@@ -13,7 +14,7 @@ export default function EncyclopediaPage() {
   const [selectedGrade, setSelectedGrade] = useState(1);
   const [selectedKanji, setSelectedKanji] = useState<any | null>(null);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-2xl">ロード中...</div>;
+  if (loading) return <LoadingScreen />;
   if (!userData) {
     router.push("/");
     return null;
