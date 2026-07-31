@@ -178,7 +178,11 @@ export default function ProfilePage() {
                       <div key={avatar.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="text-5xl">{avatar.icon}</div>
+                            {avatar.icon?.startsWith('/') ? (
+                              <img src={avatar.icon} alt={avatar.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md" />
+                            ) : (
+                              <div className="text-5xl">{avatar.icon}</div>
+                            )}
                             <div className="font-bold text-lg text-slate-800">{avatar.name}</div>
                           </div>
                           {isEquipped ? (

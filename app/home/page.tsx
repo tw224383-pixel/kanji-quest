@@ -344,6 +344,14 @@ export default function Home() {
              </h3>
              <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                <li>
+                 <div className="text-xs text-amber-400 mb-0.5">2026/07/31</div>
+                 <div>超豪華な「リッチガチャ」が登場！AI生成のかっこいい・かわいいアバターが当たるよ！</div>
+               </li>
+               <li>
+                 <div className="text-xs text-amber-400 mb-0.5">2026/07/31</div>
+                 <div>プロフィール画像に対応！ゲットしたアバターを設定してみよう！</div>
+               </li>
+               <li>
                  <div className="text-xs text-amber-400 mb-0.5">2026/07/30</div>
                  <div>「スタディ・モンスターズ」にタイトル変更！算数の問題もパワーアップ！</div>
                </li>

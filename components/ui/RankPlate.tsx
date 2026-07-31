@@ -1,12 +1,17 @@
 "use client";
 
-import { getRankColor, getRankTitle } from "../../lib/gameLogic";
 import { twMerge } from "tailwind-merge";
+import { getRankColor, getRankTitle } from "../../lib/gameLogic";
 import clsx from "clsx";
+import { getAllAvatars } from "../../lib/itemData";
 
 export function RankPlate({ level, name, title, avatar, isMvp }: { level: number; name: string, title?: string, avatar?: string, isMvp?: boolean }) {
   const colorClass = getRankColor(level);
   const rankTitle = getRankTitle(level); // System rank based on level
+  
+  const avatars = getAllAvatars();
+  const avatarItem = avatars.find(a => a.id === avatar);
+  const avatarIcon = avatarItem?.icon || avatar;
 
   return (
     <div className={twMerge(clsx("flex flex-col items-center justify-center p-6 rounded-[2rem] font-bold shadow-xl border-4 border-white/50 bg-white/40 glass relative", colorClass))}>
@@ -15,10 +20,10 @@ export function RankPlate({ level, name, title, avatar, isMvp }: { level: number
           🌟 MVP
         </div>
       )}
-      {avatar && (avatar.startsWith('/') || avatar.endsWith('.jpg') || avatar.endsWith('.png')) ? (
-        <img src={avatar} alt="avatar" className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mx-auto mb-4" />
+      {avatarIcon && (avatarIcon.startsWith('/') || avatarIcon.endsWith('.jpg') || avatarIcon.endsWith('.png')) ? (
+        <img src={avatarIcon} alt="avatar" className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mx-auto mb-4" />
       ) : (
-        <div className="text-6xl mb-4 drop-shadow-md">{avatar || "👦"}</div>
+        <div className="text-6xl mb-4 drop-shadow-md">{avatarIcon || "👦"}</div>
       )}
       <div className="text-sm font-black opacity-80 mb-1 text-indigo-900 bg-white/50 px-3 py-1 rounded-full">
         【 {title || "見習い"} 】
