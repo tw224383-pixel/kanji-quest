@@ -5,7 +5,7 @@ import { getRankColor, getRankTitle } from "../../lib/gameLogic";
 import clsx from "clsx";
 import { getAllAvatars } from "../../lib/itemData";
 
-export function RankPlate({ level, name, title, avatar, isMvp, onAvatarClick }: { level: number; name: string, title?: string, avatar?: string, isMvp?: boolean, onAvatarClick?: (url?: string, id?: string) => void }) {
+export function RankPlate({ level, name, title, avatar, isMvp, onAvatarClick, onSettingsClick }: { level: number; name: string, title?: string, avatar?: string, isMvp?: boolean, onAvatarClick?: (url?: string, id?: string) => void, onSettingsClick?: () => void }) {
   const colorClass = getRankColor(level);
   const rankTitle = getRankTitle(level); // System rank based on level
   
@@ -46,7 +46,18 @@ export function RankPlate({ level, name, title, avatar, isMvp, onAvatarClick }: 
       <div className="text-sm font-black opacity-80 mb-1 text-indigo-900 bg-white/50 px-3 py-1 rounded-full">
         【 {title || "見習い"} 】
       </div>
-      <div className="text-3xl font-black mt-2 drop-shadow-sm">{name}</div>
+      <div className="text-3xl font-black mt-2 drop-shadow-sm flex items-center justify-center gap-2">
+        <span>{name}</span>
+        {onSettingsClick && (
+          <button 
+            onClick={onSettingsClick}
+            className="text-xl bg-slate-200/80 hover:bg-slate-300 text-slate-700 p-1 rounded-full transition-colors shadow-sm ml-1 border border-slate-300"
+            title="設定 (プロフィール)"
+          >
+            ⚙️
+          </button>
+        )}
+      </div>
       <div className="mt-3 text-lg font-black bg-black/10 px-4 py-1 rounded-full">
         {rankTitle} / Lv. {level}
       </div>

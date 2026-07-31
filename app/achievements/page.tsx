@@ -6,6 +6,9 @@ import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { ThemeBackground } from "../../components/ui/ThemeBackground";
+import { KanjiEffect } from "../../components/game/KanjiEffect";
+import { LoadingScreen } from "../../components/ui/LoadingScreen";
 
 export default function AchievementsPage() {
   const { userData, loading } = useUser();
@@ -96,12 +99,17 @@ export default function AchievementsPage() {
 
   const totalUnlocked = personalAchievements.filter(a => a.unlocked).length;
 
-  return (
-    <main className="min-h-screen p-6 relative bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')] bg-cover bg-center bg-fixed">
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
+  if (!userData) return <LoadingScreen />;
 
-      <div className="max-w-4xl mx-auto relative z-10">
+  return (
+    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+      {(!userData.theme || userData.theme === 'default') && (
+        <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
+      )}
+      <ThemeBackground theme={userData.theme || 'default'} />
+      <KanjiEffect effect={userData.equippedEffect || 'none'} />
+      
+      <div className="max-w-4xl mx-auto space-y-6 relative z-10">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-black flex items-center gap-2 text-amber-400 drop-shadow-md text-outline-dark">
             <span>🏆</span> じっせき

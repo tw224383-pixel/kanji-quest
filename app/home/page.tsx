@@ -12,6 +12,8 @@ import { storage } from "../../lib/storage";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { MATH_SKILLS } from "../../lib/mathData";
+import { ThemeBackground } from "../../components/ui/ThemeBackground";
+import { KanjiEffect } from "../../components/game/KanjiEffect";
 
 export default function Home() {
   const { userData, updateUserData, loading, isGuest } = useUser();
@@ -58,8 +60,11 @@ export default function Home() {
     <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
       {/* Dark overlay for readability */}
       {(!userData.theme || userData.theme === 'default') && (
-        <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-black/30 pointer-events-none z-0"></div>
       )}
+      
+      <ThemeBackground theme={userData.theme || 'default'} />
+      <KanjiEffect effect={userData.equippedEffect || 'none'} />
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -67,215 +72,152 @@ export default function Home() {
         className="max-w-2xl mx-auto space-y-8 relative z-10"
       >
         <RaidBoss />
-        
-        {/* Header Profile */}
-        <div className="flex flex-col md:flex-row gap-6 mb-8 w-full relative z-10">
-          <div className="w-full md:w-1/3 flex-shrink-0 relative">
-            <RankPlate 
-              level={level} 
-              name={userData.name} 
-              title={userData.equippedTitle} 
-              avatar={userData.equippedAvatar}
-              onAvatarClick={(url, id) => setPreviewingAvatar({url, id, name: userData.name})}
-              isMvp={userData.totalDamage > 0}
-            />
-          </div>
+
+        {/* 1. 学習エリア (最優先) */}
+        <div className="game-panel p-6 space-y-6">
+          <h2 className="text-3xl font-black text-amber-400 drop-shadow-md text-outline-dark text-center animate-bounce-slight whitespace-nowrap">バトルへ出発</h2>
           
-          <div className="game-panel p-6 flex-1 flex flex-col justify-center gap-4">
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div className="flex gap-4 items-center">
-                <div className="bg-primary text-white font-black px-4 py-1 rounded-full text-sm shadow-md border-2 border-blue-400">
-                  小学 {userData.grade} 年生
-                </div>
-                <div className="text-3xl font-black text-amber-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] flex items-center gap-2">
-                  <span className="text-4xl animate-bounce-slight">⭐</span> {userData.pt} <span className="text-lg text-amber-500">PT</span>
-                </div>
-              </div>
-              <div className="flex w-full md:w-auto gap-2 mt-2 md:mt-0">
-                <button onClick={() => router.push("/profile")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 bg-indigo-50 border-indigo-200">
-                  <span className="text-lg md:text-xl">👑</span>
-                  <span className="font-black text-indigo-900 text-xs md:text-base">プロフ</span>
-                </button>
-                <button onClick={() => router.push("/shop")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2">
-                  <span className="text-lg md:text-xl">🛍️</span>
-                  <span className="font-black text-slate-800 text-xs md:text-base">ショップ</span>
-                </button>
-                <button onClick={() => router.push("/achievements")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2">
-                  <span className="text-lg md:text-xl">🏆</span>
-                  <span className="font-black text-slate-800 text-xs md:text-base">じっせき</span>
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <div className="text-sm font-black text-amber-200 mb-2 drop-shadow-md">けいけんち (XP)</div>
-              <div className="w-full bg-gray-200/80 rounded-full h-6 overflow-hidden relative shadow-inner border-2 border-white/50">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${xpPercent}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className="bg-gradient-to-r from-blue-400 to-primary h-full"
-                ></motion.div>
-                <div className="absolute inset-0 flex items-center justify-center text-[12px] font-black text-white drop-shadow-md">
-                  {currentLevelXp} / {nextLevelRequiredXp || "MAX"}
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center justify-between bg-red-950/40 p-3 rounded-xl border border-red-500/50 shadow-inner">
-               <div className="text-red-200 text-sm font-bold flex items-center gap-2">
-                 <span>👹</span> ダークモード (リアルボス)
-               </div>
-               <button 
-                 onClick={() => updateUserData({ scaryMode: !userData.scaryMode })}
-                 className={`w-14 h-7 flex items-center rounded-full p-1 transition-colors duration-300 shadow-inner border-2 border-black/50 ${userData.scaryMode ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`}
-               >
-                 <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center ${userData.scaryMode ? 'translate-x-7' : 'translate-x-0'}`}>
-                   {userData.scaryMode && <span className="text-[10px]">🔥</span>}
-                 </div>
-               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Answer Mode Selection */}
-        <div className="game-panel-light p-6">
-          <h2 className="text-3xl font-black text-blue-700 text-outline-dark mb-6 text-center animate-bounce-slight drop-shadow-md">こたえかた をえらぼう</h2>
-          <div className="flex gap-4">
-            <Button 
-              variant={mode === "4choice" ? "fun" : "outline"} 
-              className="flex-1 text-base md:text-xl py-6 whitespace-nowrap"
-              onClick={() => handleModeChange("4choice")}
-            >
-              👆 4たく ボタン
-            </Button>
-            <Button 
-              variant={mode === "keyboard" ? "fun" : "outline"} 
-              className="flex-1 text-base md:text-xl py-6 flex flex-col items-center justify-center gap-1 px-1"
-              onClick={() => handleModeChange("keyboard")}
-            >
-              <div className="whitespace-nowrap">⌨️ キーボード</div>
-              <div className="text-[10px] md:text-xs text-red-500 font-black bg-white/80 px-2 py-1 rounded-full shadow-sm border border-red-200 whitespace-nowrap">
-                XP＆PT 3倍ボーナス!
-              </div>
-            </Button>
-          </div>
-        </div>
-
-        {/* Grade/Skill Selection */}
-        <div className="game-panel p-6">
-          <div className="flex justify-center gap-4 mb-8 border-b-2 border-slate-700 pb-6">
-            <Button variant={subject === "kanji" ? "fun" : "outline"} onClick={() => setSubject("kanji")} className="text-xl px-6 md:px-8 shadow-md">
-              ✏️ 漢字バトル
-            </Button>
-            <Button variant={subject === "math" ? "fun" : "outline"} onClick={() => setSubject("math")} className={`text-xl px-6 md:px-8 shadow-md ${subject === "math" ? "bg-blue-500 hover:bg-blue-600 border-blue-700" : ""}`}>
-              🔢 算数バトル
-            </Button>
-          </div>
-
-          <h2 className="text-3xl font-black text-amber-400 text-outline-dark mb-6 text-center animate-bounce-slight drop-shadow-md">
-            {subject === "kanji" ? "どの学年の漢字をやる？" : "どの計算をやる？"}
-          </h2>
-          
-          {subject === "kanji" && (
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-6">
-              {[1, 2, 3, 4, 5, 6].map(g => {
-                const isSelected = targetGrades.includes(g);
-                return (
-                  <button
-                    key={g}
-                    onClick={() => {
-                      if (isSelected && targetGrades.length > 1) {
-                        setTargetGrades(targetGrades.filter(grade => grade !== g));
-                      } else if (!isSelected) {
-                        setTargetGrades([...targetGrades, g].sort());
-                      }
-                    }}
-                    className={`py-3 rounded-xl font-black text-lg transition-all border-b-[4px] flex items-center justify-center gap-1 shadow-md ${
-                      isSelected 
-                        ? "bg-amber-400 text-white border-amber-700 translate-y-1 border-b-0 drop-shadow-game-text" 
-                        : "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600"
-                    }`}
-                  >
-                    {isSelected && <span className="text-sm">✔️</span>}
-                    {g}年
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {subject === "math" && (
-            <div className="space-y-4 mb-6">
-              {[1, 2, 3, 4, 5, 6].map(g => {
-                const gradeSkills = MATH_SKILLS.filter(s => s.grade === g);
-                if (gradeSkills.length === 0) return null;
-                const allSelected = gradeSkills.every(s => targetMathSkills.includes(s.id));
-                
-                return (
-                  <div key={g} className="bg-slate-800/80 rounded-xl p-4 border border-slate-600 shadow-inner">
-                    <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
-                      <h3 className="text-xl font-black text-amber-200 drop-shadow-md">{g}年生</h3>
-                      <Button size="sm" variant={allSelected ? "fun" : "outline"} className={allSelected ? "bg-amber-500 text-white text-xs border-amber-700" : "text-xs border-slate-500"} onClick={() => {
-                        if (allSelected) {
-                          if (targetMathSkills.length > gradeSkills.length) {
-                            setTargetMathSkills(prev => prev.filter(id => !gradeSkills.find(s => s.id === id)));
-                          }
-                        } else {
-                          const newSkills = new Set([...targetMathSkills, ...gradeSkills.map(s => s.id)]);
-                          setTargetMathSkills(Array.from(newSkills));
-                        }
-                      }}>
-                        {allSelected ? "すべて外す" : "すべて選ぶ"}
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {gradeSkills.map(skill => {
-                        const isSelected = targetMathSkills.includes(skill.id);
-                        return (
-                          <button
-                            key={skill.id}
-                            onClick={() => {
-                              if (isSelected && targetMathSkills.length > 1) {
-                                setTargetMathSkills(targetMathSkills.filter(id => id !== skill.id));
-                              } else if (!isSelected) {
-                                setTargetMathSkills([...targetMathSkills, skill.id]);
-                              }
-                            }}
-                            className={`px-3 py-2 rounded-lg font-bold text-sm transition-all border-b-[3px] shadow-sm ${
-                              isSelected
-                                ? "bg-blue-500 text-white border-blue-800 translate-y-1 border-b-0"
-                                : "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600"
-                            }`}
-                          >
-                            {isSelected && <span className="mr-1">✔️</span>}{skill.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <h2 className="text-2xl font-black text-amber-200 drop-shadow-md mb-6 text-center">もんだい数 をえらぼう</h2>
-          <div className="flex gap-4">
-            {[5, 10, 20].map(count => (
+          {/* Answer Mode Selection */}
+          <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-600 shadow-inner">
+            <h3 className="text-xl font-black text-amber-200 drop-shadow-md mb-4 text-center border-b border-slate-700 pb-2 whitespace-nowrap">こたえかた</h3>
+            <div className="flex flex-col md:flex-row gap-4">
               <Button 
-                key={count}
-                variant={questionCount === count ? "fun" : "outline"} 
-                className="flex-1 text-xl py-4"
-                onClick={() => setQuestionCount(count)}
+                variant={mode === "4choice" ? "fun" : "outline"} 
+                className="flex-1 text-base md:text-xl py-4 whitespace-nowrap"
+                onClick={() => handleModeChange("4choice")}
               >
-                {count}問
+                👆 4たく ボタン
               </Button>
-            ))}
+              <Button 
+                variant={mode === "keyboard" ? "fun" : "outline"} 
+                className="flex-1 text-base md:text-xl py-4 flex flex-col items-center justify-center gap-1 px-1 whitespace-nowrap"
+                onClick={() => handleModeChange("keyboard")}
+              >
+                <div>⌨️ キーボード</div>
+                <div className="text-[10px] md:text-xs text-red-500 font-black bg-white/80 px-2 py-1 rounded-full shadow-sm border border-red-200">
+                  XP＆PT 3倍ボーナス!
+                </div>
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-4">
+          {/* Subject Selection */}
+          <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-600 shadow-inner">
+             <h3 className="text-xl font-black text-amber-200 drop-shadow-md mb-4 text-center border-b border-slate-700 pb-2 whitespace-nowrap">かもく</h3>
+             <div className="flex gap-4 mb-6">
+               <Button 
+                 variant={subject === "kanji" ? "primary" : "outline"} 
+                 className="flex-1 text-xl py-4 whitespace-nowrap"
+                 onClick={() => setSubject("kanji")}
+               >
+                 📝 漢字
+               </Button>
+               <Button 
+                 variant={subject === "math" ? "primary" : "outline"} 
+                 className="flex-1 text-xl py-4 whitespace-nowrap"
+                 onClick={() => setSubject("math")}
+               >
+                 🔢 算数
+               </Button>
+             </div>
+
+             {/* Subject specifics */}
+             {subject === "kanji" && (
+                <div className="space-y-4 mb-6">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {[1, 2, 3, 4, 5, 6].map(g => (
+                      <button
+                        key={g}
+                        onClick={() => {
+                          if (targetGrades.includes(g) && targetGrades.length > 1) {
+                            setTargetGrades(targetGrades.filter(tg => tg !== g));
+                          } else if (!targetGrades.includes(g)) {
+                            setTargetGrades([...targetGrades, g].sort((a,b)=>a-b));
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-full font-black text-lg transition-all border-b-4 whitespace-nowrap ${
+                          targetGrades.includes(g) 
+                            ? "bg-amber-400 text-amber-900 border-amber-600 translate-y-1 border-b-0 shadow-inner" 
+                            : "bg-slate-700 text-slate-300 border-slate-900 shadow-md hover:bg-slate-600"
+                        }`}
+                      >
+                        {g}年
+                      </button>
+                    ))}
+                  </div>
+                </div>
+             )}
+
+             {subject === "math" && (
+                <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {[1, 2, 3, 4, 5, 6].map(g => {
+                    const gradeSkills = MATH_SKILLS.filter(s => s.grade === g);
+                    if (gradeSkills.length === 0) return null;
+                    const allSelected = gradeSkills.every(s => targetMathSkills.includes(s.id));
+                    
+                    return (
+                      <div key={g} className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 shadow-inner">
+                        <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
+                          <h3 className="text-xl font-black text-blue-200 drop-shadow-md whitespace-nowrap">{g}年生</h3>
+                          <Button size="sm" variant={allSelected ? "fun" : "outline"} className={`whitespace-nowrap ${allSelected ? "bg-amber-500 text-white text-xs border-amber-700" : "text-xs border-slate-500"}`} onClick={() => {
+                            if (allSelected) {
+                              if (targetMathSkills.length > gradeSkills.length) {
+                                setTargetMathSkills(prev => prev.filter(id => !gradeSkills.find(s => s.id === id)));
+                              }
+                            } else {
+                              const newSkills = new Set([...targetMathSkills, ...gradeSkills.map(s => s.id)]);
+                              setTargetMathSkills(Array.from(newSkills));
+                            }
+                          }}>
+                            {allSelected ? "すべて外す" : "すべて選ぶ"}
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {gradeSkills.map(skill => {
+                            const isSelected = targetMathSkills.includes(skill.id);
+                            return (
+                              <button
+                                key={skill.id}
+                                onClick={() => {
+                                  if (isSelected && targetMathSkills.length > 1) {
+                                    setTargetMathSkills(targetMathSkills.filter(id => id !== skill.id));
+                                  } else if (!isSelected) {
+                                    setTargetMathSkills([...targetMathSkills, skill.id]);
+                                  }
+                                }}
+                                className={`px-3 py-2 rounded-lg font-bold text-sm transition-all border-b-[3px] shadow-sm whitespace-nowrap ${
+                                  isSelected
+                                    ? "bg-blue-500 text-white border-blue-800 translate-y-1 border-b-0"
+                                    : "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600"
+                                }`}
+                              >
+                                {isSelected && <span className="mr-1">✔️</span>}{skill.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+             )}
+
+             <h3 className="text-xl font-black text-amber-200 drop-shadow-md mb-4 text-center border-b border-slate-700 pb-2 whitespace-nowrap">もんだい数</h3>
+             <div className="flex gap-4">
+               {[5, 10, 20].map(count => (
+                 <Button 
+                   key={count}
+                   variant={questionCount === count ? "fun" : "outline"} 
+                   className="flex-1 text-xl py-3 whitespace-nowrap"
+                   onClick={() => setQuestionCount(count)}
+                 >
+                   {count}問
+                 </Button>
+               ))}
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-4 mt-4">
             <Button 
               variant="fun" 
               size="lg" 
@@ -299,44 +241,109 @@ export default function Home() {
             </Button>
             
             {kanjiMistakes > 0 || mathMistakes > 0 ? (
-              <div className="flex gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
                 {kanjiMistakes > 0 ? (
-                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=kanji&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30">
+                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=kanji&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30 whitespace-nowrap">
                     🔥 漢字 にがて克服 ({kanjiMistakes})
                   </Button>
-                ) : <div className="flex-1"></div>}
+                ) : <div className="flex-1 hidden md:block"></div>}
                 
                 {mathMistakes > 0 ? (
-                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=math&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30">
+                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=math&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30 whitespace-nowrap">
                     🔥 算数 にがて克服 ({mathMistakes})
                   </Button>
-                ) : <div className="flex-1"></div>}
+                ) : <div className="flex-1 hidden md:block"></div>}
               </div>
             ) : (
-              <Button variant="ghost" size="lg" disabled className="h-16 text-sm md:text-lg bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed">
+              <Button variant="ghost" size="lg" disabled className="h-16 text-sm md:text-lg bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed whitespace-nowrap">
                 🔒 今は苦手なもんだいがないようだ・・・（封印中）
               </Button>
             )}
           </div>
+        </div>
+
+        {/* 2. プロフィールエリア */}
+        <div className="flex flex-col md:flex-row gap-6 w-full relative z-10">
+          <div className="w-full md:w-1/3 flex-shrink-0 relative">
+            <RankPlate 
+              level={level} 
+              name={userData.name} 
+              title={userData.equippedTitle} 
+              avatar={userData.equippedAvatar}
+              onAvatarClick={(url, id) => setPreviewingAvatar({url, id, name: userData.name})}
+              isMvp={userData.totalDamage > 0}
+              onSettingsClick={() => router.push("/profile")}
+            />
+          </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="secondary" onClick={() => router.push("/shop")} className="h-full text-xl flex flex-col items-center justify-center gap-2">
-              <span className="text-4xl">🛍️</span> ショップ
-            </Button>
-            <Button variant="primary" onClick={() => router.push("/encyclopedia")} className="h-full text-xl flex flex-col items-center justify-center gap-2">
-              <span className="text-4xl">📖</span> 漢字図鑑
-            </Button>
-            <Button variant="primary" onClick={() => router.push("/ranking")} className="col-span-2 h-full text-xl flex items-center justify-center gap-2">
-              <span className="text-3xl">👑</span> 今週のヒーロー
-            </Button>
+          <div className="game-panel p-6 flex-1 flex flex-col justify-center gap-4">
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <div className="flex gap-4 items-center">
+                <div className="bg-primary text-white font-black px-4 py-1 rounded-full text-sm shadow-md border-2 border-blue-400 whitespace-nowrap">
+                  小学 {userData.grade} 年生
+                </div>
+                <div className="text-3xl font-black text-amber-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] flex items-center gap-2 whitespace-nowrap">
+                  <span className="text-4xl animate-bounce-slight">⭐</span> {userData.pt} <span className="text-lg text-amber-500">PT</span>
+                </div>
+              </div>
+              <div className="flex w-full md:w-auto gap-2 mt-2 md:mt-0">
+                <button onClick={() => router.push("/shop")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 whitespace-nowrap">
+                  <span className="text-lg md:text-xl">🛍️</span>
+                  <span className="font-black text-slate-800 text-xs md:text-base">ショップ</span>
+                </button>
+                <button onClick={() => router.push("/achievements")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 whitespace-nowrap">
+                  <span className="text-lg md:text-xl">🏆</span>
+                  <span className="font-black text-slate-800 text-xs md:text-base">じっせき</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-black text-amber-200 mb-2 drop-shadow-md whitespace-nowrap">けいけんち (XP)</div>
+              <div className="w-full bg-gray-200/80 rounded-full h-6 overflow-hidden relative shadow-inner border-2 border-white/50">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${xpPercent}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="bg-gradient-to-r from-blue-400 to-primary h-full"
+                ></motion.div>
+                <div className="absolute inset-0 flex items-center justify-center text-[12px] font-black text-white drop-shadow-md whitespace-nowrap">
+                  {currentLevelXp} / {nextLevelRequiredXp || "MAX"}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-2 flex items-center justify-between bg-red-950/40 p-3 rounded-xl border border-red-500/50 shadow-inner">
+               <div className="text-red-200 text-sm font-bold flex items-center gap-2 whitespace-nowrap">
+                 <span>👹</span> ダークモード (リアルボス)
+               </div>
+               <button 
+                 onClick={() => updateUserData({ scaryMode: !userData.scaryMode })}
+                 className={`w-14 h-7 flex items-center rounded-full p-1 transition-colors duration-300 shadow-inner border-2 border-black/50 ${userData.scaryMode ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`}
+               >
+                 <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center ${userData.scaryMode ? 'translate-x-7' : 'translate-x-0'}`}>
+                   {userData.scaryMode && <span className="text-[10px]">🔥</span>}
+                 </div>
+               </button>
+            </div>
           </div>
         </div>
 
-        {/* Ad and Updates Section */}
+        {/* 3. その他のメニュー */}
+        <div className="grid grid-cols-2 gap-4">
+          <Button variant="primary" onClick={() => router.push("/encyclopedia")} className="h-full text-xl flex flex-col items-center justify-center gap-2 py-4 whitespace-nowrap">
+            <span className="text-4xl">📖</span> 漢字図鑑
+          </Button>
+          <Button variant="primary" onClick={() => router.push("/ranking")} className="h-full text-xl flex items-center justify-center gap-2 py-4 whitespace-nowrap">
+            <span className="text-3xl">👑</span> 今週のヒーロー
+          </Button>
+        </div>
+
+        {/* 4. お知らせと広告 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 mb-4">
           {/* Update News */}
           <div className="game-panel p-4 flex flex-col gap-2 shadow-lg">
-             <h3 className="text-lg font-black text-amber-300 border-b border-slate-600 pb-2 flex items-center gap-2">
+             <h3 className="text-lg font-black text-amber-300 border-b border-slate-600 pb-2 flex items-center gap-2 whitespace-nowrap">
                <span>📣</span> アップデートのお知らせ
              </h3>
              <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
@@ -370,14 +377,14 @@ export default function Home() {
             rel="noopener noreferrer"
             className="game-panel-light p-4 flex flex-col justify-center items-center gap-2 hover:scale-105 transition-transform border-4 border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.6)] group relative overflow-hidden cursor-pointer"
           >
-            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1 animate-pulse">
+            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1 animate-pulse whitespace-nowrap">
               <span>🌟</span> おすすめ！
             </div>
-            <div className="font-black text-blue-900 text-center leading-tight mt-3 relative z-10 text-sm md:text-base">
+            <div className="font-black text-blue-900 text-center leading-tight mt-3 relative z-10 text-sm md:text-base whitespace-nowrap">
               黒田先生が作った<br/>ほかのアプリでも遊んでみよう！
             </div>
             <div className="text-5xl mt-2 relative z-10 group-hover:rotate-12 transition-transform duration-300 drop-shadow-md">🎴</div>
-            <div className="text-xs font-bold text-slate-600 mt-2 relative z-10 bg-white/60 px-3 py-1 rounded-full border border-slate-300">
+            <div className="text-xs font-bold text-slate-600 mt-2 relative z-10 bg-white/60 px-3 py-1 rounded-full border border-slate-300 whitespace-nowrap">
               百人一首（ひゃくにんいっしゅ）
             </div>
             
@@ -386,7 +393,7 @@ export default function Home() {
         </div>
 
         {/* Footer / Secret Room */}
-        <div className="text-center mt-12 mb-4 opacity-30 text-xs font-bold text-white hover:opacity-100 transition-opacity">
+        <div className="text-center mt-12 mb-4 opacity-30 text-xs font-bold text-white hover:opacity-100 transition-opacity whitespace-nowrap">
           <button onClick={() => {
             const pass = window.prompt("ひみつのあいことばをいれてね");
             if (pass === "wada8817") {
