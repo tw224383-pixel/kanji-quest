@@ -40,7 +40,7 @@ export const allGachaItems: GachaItem[] = [
   { id: "rainbow", type: "effect", name: "エフェクト「オーロラ」", icon: "🌈", rarity: "超激レア", weight: 326 },
   { id: "blackhole", type: "effect", name: "エフェクト「ブラックホール」", icon: "🕳️", rarity: "超激レア", weight: 326 },
   { id: "thunder", type: "effect", name: "エフェクト「神の雷」", icon: "⚡", rarity: "超激レア", weight: 326 },
-  { id: "cyber", type: "theme", name: "テーマ「天空の城」", icon: "🏰", rarity: "超激レア", weight: 330 },
+  { id: "skycastle", type: "theme", name: "テーマ「天空の城」", icon: "🏰", rarity: "超激レア", weight: 330 },
   { id: "magma", type: "theme", name: "テーマ「マグマ地帯」", icon: "🌋", rarity: "超激レア", weight: 330 },
 
   // --- 激レア (SR) 10.0% ---
@@ -67,7 +67,7 @@ export const allGachaItems: GachaItem[] = [
   { id: "laser", type: "effect", name: "エフェクト「レーザー」", icon: "💥", rarity: "激レア", weight: 400 },
   { id: "aura", type: "effect", name: "エフェクト「黄金のオーラ」", icon: "💫", rarity: "激レア", weight: 400 },
   { id: "ruins", type: "theme", name: "テーマ「古代遺跡」", icon: "🏛️", rarity: "激レア", weight: 400 },
-  { id: "cyber", type: "theme", name: "テーマ「サイバーシティ」", icon: "🏙️", rarity: "激レア", weight: 400 },
+  { id: "cybercity", type: "theme", name: "テーマ「サイバーシティ」", icon: "🏙️", rarity: "激レア", weight: 400 },
   { id: "ocean", type: "theme", name: "テーマ「深海」", icon: "🌊", rarity: "激レア", weight: 400 },
 
   // --- レア (R) 30.0% ---
@@ -98,7 +98,7 @@ export const allGachaItems: GachaItem[] = [
   { id: "💀", type: "avatar", name: "アバター「ドクロ」", icon: "💀", rarity: "レア", weight: 1000 },
   { id: "fire", type: "effect", name: "エフェクト「メラメラ」", icon: "🔥", rarity: "レア", weight: 1000 },
   { id: "water", type: "effect", name: "エフェクト「ポコポコ」", icon: "💧", rarity: "レア", weight: 1000 },
-  { id: "star", type: "effect", name: "エフェクト「キラキラ」", icon: "⭐", rarity: "レア", weight: 1000 },
+  { id: "sparkle", type: "effect", name: "エフェクト「キラキラ」", icon: "✨", rarity: "レア", weight: 1000 },
   { id: "forest", type: "theme", name: "テーマ「魔法の森」", icon: "🌲", rarity: "レア", weight: 1000 },
   { id: "candy", type: "theme", name: "テーマ「お菓子の国」", icon: "🍭", rarity: "レア", weight: 1000 },
 
