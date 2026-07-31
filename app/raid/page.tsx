@@ -7,7 +7,7 @@ import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth } from "../../lib/raidLogic";
-import { collection, query, orderBy, limit, getDocs, doc, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs, doc, onSnapshot, where } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 
@@ -68,13 +68,18 @@ export default function RaidPage() {
   useEffect(() => {
     const fetchTopRanking = async () => {
       try {
-        const q = query(collection(db, "users"), orderBy("totalDamage", "desc"), limit(3));
+        const q = query(
+          collection(db, "users"), 
+          where("lastMonthString", "==", getCurrentJSTMonth()), 
+          orderBy("monthlyDamage", "desc"), 
+          limit(5)
+        );
         const snap = await getDocs(q);
         const ranking = snap.docs.map(docSnap => {
           const data = docSnap.data();
           return {
             name: data.name || "名無し",
-            damage: data.totalDamage || 0,
+            damage: data.monthlyDamage || 0,
             isUser: docSnap.id === auth.currentUser?.uid
           };
         });
@@ -102,16 +107,16 @@ export default function RaidPage() {
         <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
       </div>
 
-      {/* Top 3 Damage Ranking */}
+      {/* Top 5 Damage Ranking */}
       <section className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-6 shadow-xl text-white">
         <h2 className="text-xl font-black mb-4 text-center flex items-center justify-center gap-2">
-          <span>👑</span> ぜん学年 ダメージランキング TOP3
+          <span>👑</span> ぜん学年 ダメージランキング TOP5
         </h2>
         <div className="space-y-3">
           {topRanking.map((player, idx) => (
             <div key={idx} className={`flex items-center justify-between p-3 rounded-xl font-bold ${player.isUser ? 'bg-white text-orange-600 shadow-md transform scale-105' : 'bg-white/20'}`}>
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</span>
+                <span className="text-2xl">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx === 3 ? '🏅' : '🎖️'}</span>
                 <span className="text-lg">{player.name}</span>
               </div>
               <div>{player.damage.toLocaleString()} DMG</div>

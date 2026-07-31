@@ -268,6 +268,9 @@ export default function GamePage() {
 
       const currentWeekString = getCurrentJSTWeekString();
       const newWeeklyXp = (userData.lastWeekString === currentWeekString ? (userData.weeklyXp || 0) : 0) + finalXP;
+      
+      const currentMonthString = getCurrentJSTMonth();
+      const newMonthlyDamage = (userData.lastMonthString === currentMonthString ? (userData.monthlyDamage || 0) : 0) + finalXP;
 
       await updateUserData({
         xp: userData.xp + finalXP,
@@ -275,6 +278,8 @@ export default function GamePage() {
         masteredIds: updatedMastered,
         mistakeIds: updatedMistakes,
         totalDamage: (userData.totalDamage || 0) + finalXP,
+        monthlyDamage: newMonthlyDamage,
+        lastMonthString: currentMonthString,
         weeklyXp: newWeeklyXp,
         lastWeekString: currentWeekString,
         titles: Array.from(newTitles),

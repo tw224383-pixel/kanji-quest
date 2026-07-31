@@ -22,9 +22,11 @@ export type UserData = {
   theme: string;
   totalDamage: number;
   equippedEffect: string;
-  scaryMode: boolean;
   weeklyXp?: number;
   lastWeekString?: string;
+  monthlyDamage?: number;
+  lastMonthString?: string;
+  scaryMode?: boolean;
 };
 
 const DEFAULT_USER_DATA: UserData = {
