@@ -1,4 +1,4 @@
-import { allGachaItems } from './gachaData';
+import { allGachaItems, allRichGachaItems } from './gachaData';
 
 export const shopThemes = [
   { id: "default", name: "いつもの", price: 0, icon: "📄" },
@@ -119,5 +119,12 @@ export function getAllAvatars(): UnifiedItem[] {
     icon: i.icon,
     isGachaOnly: true
   }));
-  return [...shopAvatars.map(i => ({...i, icon: i.id, isGachaOnly: false})), ...gachaAvatars];
+  const richGachaAvatars = allRichGachaItems.filter(i => i.type === 'avatar').map(i => ({
+    id: i.id,
+    name: i.name.replace('アバター「', '').replace('」', ''),
+    price: null,
+    icon: i.icon, // This is the image path now
+    isGachaOnly: true
+  }));
+  return [...shopAvatars.map(i => ({...i, icon: i.id, isGachaOnly: false})), ...gachaAvatars, ...richGachaAvatars];
 }

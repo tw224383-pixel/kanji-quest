@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ThemeBackground } from "../../components/ui/ThemeBackground";
+import { useThemeContext } from "../../contexts/ThemeContext";
 import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
 import { RankPlate } from "../../components/ui/RankPlate";
@@ -24,7 +25,7 @@ export default function ProfilePage() {
   
   const [previewTitle, setPreviewTitle] = useState<string | null>(null);
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
-  const [previewTheme, setPreviewTheme] = useState<string | null>(null);
+  const { previewTheme, setPreviewTheme } = useThemeContext();
   const [previewEffect, setPreviewEffect] = useState<string | null>(null);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-2xl">ロード中...</div>;
@@ -57,18 +58,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      {/* Full-screen background — always rendered, on top of body */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        {isDefaultTheme ? (
-          <>
-            <div className="absolute inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: "url('/kanji-quest/images/ui/fantasy_bg.jpg')" }} />
-            <div className="absolute inset-0 bg-black/40" />
-          </>
-        ) : (
-          <ThemeBackground theme={activeTheme} />
-        )}
-      </div>
-
+      {/* Fixed background layer has been moved to global ThemeProvider to prevent overlap bugs */}
       {/* Full screen effect preview overlay */}
       {previewEffect && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/60 backdrop-blur-sm">

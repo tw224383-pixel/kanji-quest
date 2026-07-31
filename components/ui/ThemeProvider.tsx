@@ -3,23 +3,33 @@
 import { useEffect, useState } from "react";
 import { useUser } from "../../hooks/useUser";
 import { ThemeBackground } from "./ThemeBackground";
+import { useThemeContext } from "../../contexts/ThemeContext";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { userData, loading } = useUser();
+  const { previewTheme } = useThemeContext();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const theme = userData?.theme || "default";
+  const activeTheme = previewTheme ?? userData?.theme ?? "default";
+  const isDefaultTheme = !activeTheme || activeTheme === "default";
 
   if (!mounted) return <>{children}</>;
 
   return (
     <>
       <div className="fixed inset-0 -z-50 pointer-events-none">
-        <ThemeBackground theme={theme} />
+        {isDefaultTheme ? (
+          <>
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/kanji-quest/images/ui/fantasy_bg.jpg')" }} />
+            <div className="absolute inset-0 bg-black/40" />
+          </>
+        ) : (
+          <ThemeBackground theme={activeTheme} />
+        )}
       </div>
       {children}
     </>

@@ -144,6 +144,36 @@ export function pullGachaItem(): GachaItem {
   return allGachaItems[0]; // fallback
 }
 
+export const allRichGachaItems: GachaItem[] = [
+  // --- かっこいい枠 (Cool) ---
+  { id: "rich_dragon", type: "avatar", name: "アバター「神竜」", icon: "/avatars/dragon.jpg", rarity: "神レア", weight: 20 },
+  { id: "rich_knight", type: "avatar", name: "アバター「暗黒騎士」", icon: "/avatars/knight.jpg", rarity: "超激レア", weight: 200 },
+  { id: "rich_cyborg", type: "avatar", name: "アバター「サイボーグ」", icon: "/avatars/cyborg.jpg", rarity: "超激レア", weight: 200 },
+  { id: "rich_cool_wolf", type: "avatar", name: "アバター「孤高の狼」", icon: "/avatars/cool_wolf.jpg", rarity: "激レア", weight: 1000 },
+  { id: "rich_cool_griffin", type: "avatar", name: "アバター「グリフォン」", icon: "/avatars/cool_griffin.jpg", rarity: "激レア", weight: 1000 },
+
+  // --- かわいい枠 (Cute) ---
+  { id: "rich_princess", type: "avatar", name: "アバター「プリンセス」", icon: "/avatars/cute_princess.jpg", rarity: "神レア", weight: 20 },
+  { id: "rich_angel", type: "avatar", name: "アバター「エンジェル」", icon: "/avatars/cute_angel.jpg", rarity: "超激レア", weight: 200 },
+  { id: "rich_magical", type: "avatar", name: "アバター「魔法少女」", icon: "/avatars/cute_magical.jpg", rarity: "超激レア", weight: 200 },
+  { id: "rich_fairy", type: "avatar", name: "アバター「フェアリー」", icon: "/avatars/cute_fairy.jpg", rarity: "激レア", weight: 1000 },
+  { id: "rich_mermaid", type: "avatar", name: "アバター「マーメイド」", icon: "/avatars/cute_mermaid.jpg", rarity: "激レア", weight: 1000 },
+];
+
+export function pullRichGachaItem(): GachaItem {
+  const totalWeight = allRichGachaItems.reduce((acc, item) => acc + item.weight, 0);
+  let random = Math.random() * totalWeight;
+  
+  for (const item of allRichGachaItems) {
+    if (random < item.weight) {
+      return item;
+    }
+    random -= item.weight;
+  }
+  
+  return allRichGachaItems[0]; // fallback
+}
+
 // Compute display rates for UI
 export const gachaRates = [
   { rarity: "神レア", rate: "0.1%", color: "text-purple-500", bg: "bg-purple-100", items: allGachaItems.filter(i => i.rarity === "神レア") },

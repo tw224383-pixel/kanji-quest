@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { M_PLUS_Rounded_1c } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '../components/ui/ThemeProvider';
+import { UserProvider } from '../contexts/UserContext';
+import { ThemeContextProvider } from '../contexts/ThemeContext';
 
 const mPlusRounded = M_PLUS_Rounded_1c({ 
   weight: ['400', '700', '900'],
@@ -22,9 +24,13 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`min-h-screen bg-transparent text-foreground antialiased selection:bg-primary selection:text-white ${mPlusRounded.className}`}>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <UserProvider>
+          <ThemeContextProvider>
+            <ThemeProvider>
+              {children}
+            </ThemeProvider>
+          </ThemeContextProvider>
+        </UserProvider>
       </body>
     </html>
   );

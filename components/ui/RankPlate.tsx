@@ -15,7 +15,11 @@ export function RankPlate({ level, name, title, avatar, isMvp }: { level: number
           🌟 MVP
         </div>
       )}
-      <div className="text-6xl mb-4 drop-shadow-md">{avatar || "👦"}</div>
+      {avatar && (avatar.startsWith('/') || avatar.endsWith('.jpg') || avatar.endsWith('.png')) ? (
+        <img src={avatar} alt="avatar" className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mx-auto mb-4" />
+      ) : (
+        <div className="text-6xl mb-4 drop-shadow-md">{avatar || "👦"}</div>
+      )}
       <div className="text-sm font-black opacity-80 mb-1 text-indigo-900 bg-white/50 px-3 py-1 rounded-full">
         【 {title || "見習い"} 】
       </div>

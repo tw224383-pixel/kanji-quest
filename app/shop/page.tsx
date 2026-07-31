@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { ThemeBackground } from "../../components/ui/ThemeBackground";
+import { useThemeContext } from "../../contexts/ThemeContext";
 import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
 import { RankPlate } from "../../components/ui/RankPlate";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { pullGachaItem, gachaRates } from "../../lib/gachaData";
+import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems } from "../../lib/gachaData";
 import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
 import { GachaAnimation } from "../../components/game/GachaAnimation";
 
@@ -26,7 +27,7 @@ export default function ShopPage() {
 
   const [previewTitle, setPreviewTitle] = useState<string | null>(null);
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
-  const [previewTheme, setPreviewTheme] = useState<string | null>(null);
+  const { previewTheme, setPreviewTheme } = useThemeContext();
   const [previewEffect, setPreviewEffect] = useState<string | null>(null);
 
   // Gacha state
@@ -72,14 +73,17 @@ export default function ShopPage() {
     setPreviewEffect(null);
   };
 
-  const pullGacha = async () => {
-    if (userData.pt < 100 || isPulling) return;
+  const pullGacha = async (isRich: boolean = false) => {
+    const cost = isRich ? 3000 : 100;
+    if (userData.pt < cost || isPulling) return;
     setIsPulling(true);
     setGachaResult(null);
     setShowGachaRates(false);
-    await updateUserData({ pt: userData.pt - 100 });
-    const result = pullGachaItem();
+    await updateUserData({ pt: userData.pt - cost });
+    
+    const result = isRich ? pullRichGachaItem() : pullGachaItem();
     let duplicated = false;
+    
     if (result.type === 'effect') {
       if (userData.effects.includes(result.id)) duplicated = true;
       else await updateUserData({ effects: [...userData.effects, result.id] });
@@ -94,10 +98,12 @@ export default function ShopPage() {
       if (userData.effects.includes(themeEffectId)) duplicated = true;
       else await updateUserData({ effects: [...userData.effects, themeEffectId] });
     }
+    
     if (duplicated || result.type === 'xp') {
-      await updateUserData({ xp: userData.xp + 50 });
+      await updateUserData({ xp: userData.xp + (isRich ? 1500 : 50) });
       (result as any).duplicated = true;
     }
+    
     const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
     setGachaTargetStage(rarityLevels[result.rarity] || 1);
     setPendingGachaResult(result);
@@ -128,17 +134,7 @@ export default function ShopPage() {
         />
       )}
 
-      {/* Fixed background layer - always behind everything */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        {isDefaultTheme ? (
-          <>
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/kanji-quest/images/ui/fantasy_bg.jpg')" }} />
-            <div className="absolute inset-0 bg-black/40" />
-          </>
-        ) : (
-          <ThemeBackground theme={activeTheme} />
-        )}
-      </div>
+      {/* Fixed background layer has been moved to global ThemeProvider to prevent overlap bugs */}
 
       {/* Effect preview overlay - z-50 */}
       {previewEffect && (
@@ -239,16 +235,35 @@ export default function ShopPage() {
                 <div className="game-panel p-8 text-center max-w-2xl mx-auto relative overflow-hidden">
                   <div className="text-6xl mb-6">🎁</div>
                   <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
-                  <p className="text-slate-300 font-bold mb-8">1回 100 PT でレアアバターや限定エフェクトを引き当てよう！</p>
-                  <Button
-                    size="lg"
-                    variant="fun"
-                    className={`w-full max-w-sm text-2xl py-6 mb-6 ${isPulling ? 'animate-pulse' : ''}`}
-                    onClick={pullGacha}
-                    disabled={isPulling || userData.pt < 100}
-                  >
-                    {isPulling ? "まわしています..." : "100 PT で まわす！"}
-                  </Button>
+                  <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT、リッチガチャは3000PTで限定AIアバターが当たる！</p>
+                  
+                  <div className="flex flex-col md:flex-row gap-4 justify-center mb-6">
+                    <div className="flex-1 game-panel-light p-4 bg-slate-800/80 border-2 border-amber-900/50">
+                      <div className="text-amber-200 font-black mb-2">通常ガチャ (100 PT)</div>
+                      <Button
+                        size="lg"
+                        variant="fun"
+                        className={`w-full py-4 ${isPulling ? 'animate-pulse' : ''}`}
+                        onClick={() => pullGacha(false)}
+                        disabled={isPulling || userData.pt < 100}
+                      >
+                        {isPulling ? "..." : "100 PT で まわす！"}
+                      </Button>
+                    </div>
+                    
+                    <div className="flex-1 game-panel-light p-4 bg-amber-900/80 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]">
+                      <div className="text-yellow-300 font-black mb-2">💎 リッチガチャ (3000 PT)</div>
+                      <Button
+                        size="lg"
+                        variant="primary"
+                        className={`w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-black shadow-[0_0_10px_rgba(250,204,21,0.5)] ${isPulling ? 'animate-pulse' : ''}`}
+                        onClick={() => pullGacha(true)}
+                        disabled={isPulling || userData.pt < 3000}
+                      >
+                        {isPulling ? "..." : "3000 PT で まわす！"}
+                      </Button>
+                    </div>
+                  </div>
                   <button
                     onClick={() => setShowGachaRates(!showGachaRates)}
                     className="mt-2 px-6 py-2 bg-amber-100/50 hover:bg-amber-100 text-amber-800 font-black rounded-full shadow-sm border-2 border-amber-300 transition-colors flex items-center justify-center gap-2 mx-auto"
@@ -274,7 +289,9 @@ export default function ShopPage() {
                               <div className="flex flex-wrap gap-2">
                                 {tier.items.map(item => (
                                   <div key={item.id} className="bg-white px-2 py-1 rounded shadow-sm text-sm font-bold flex items-center gap-1 text-slate-600">
-                                    <span className="text-base">{item.icon}</span>
+                                    <span className="text-base">
+                                      {item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" /> : item.icon}
+                                    </span>
                                     <span>{item.name.replace(/称号「|アバター「|エフェクト「|テーマ「|」/g, '')}</span>
                                   </div>
                                 ))}
@@ -300,7 +317,13 @@ export default function ShopPage() {
                         }`}>
                           {gachaResult.rarity}
                         </div>
-                        <div className="text-6xl my-4 drop-shadow-md">{gachaResult.icon}</div>
+                        <div className="text-6xl my-4 drop-shadow-md flex justify-center">
+                          {gachaResult.icon.startsWith('/') ? (
+                            <img src={gachaResult.icon} alt={gachaResult.name} className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl" />
+                          ) : (
+                            gachaResult.icon
+                          )}
+                        </div>
                         <div className="text-2xl font-black text-slate-800">{gachaResult.name}</div>
                         {gachaResult.duplicated && (
                           <div className="text-amber-600 font-bold mt-2 text-sm bg-amber-100 p-2 rounded-lg">
@@ -456,7 +479,13 @@ export default function ShopPage() {
                       <div key={avatar.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="text-5xl">{avatar.id}</div>
+                            <div className="text-5xl flex justify-center w-16">
+                              {avatar.icon && avatar.icon.startsWith('/') ? (
+                                <img src={avatar.icon} alt={avatar.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md" />
+                              ) : (
+                                avatar.id
+                              )}
+                            </div>
                             {!isOwned && <div className="text-amber-600 font-black">{avatar.price} PT</div>}
                           </div>
                           {isEquipped ? (

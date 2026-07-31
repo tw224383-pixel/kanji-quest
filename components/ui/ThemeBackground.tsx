@@ -5,384 +5,461 @@ import { motion } from "framer-motion";
 export function ThemeBackground({ theme }: { theme: string }) {
   if (!theme || theme === "default") return null;
 
-  return (
-    <div className={`absolute inset-0 pointer-events-none transition-colors duration-1000 overflow-hidden ${
-      theme === 'space' ? 'bg-slate-900' :
-      theme === 'ninja' ? 'bg-zinc-800' :
-      theme === 'cyber' ? 'bg-black' :
-      theme === 'skycastle' ? 'bg-sky-900' :
-      theme === 'cybercity' ? 'bg-slate-900' :
-      theme === 'magma' ? 'bg-red-950' :
-      theme === 'ruins' ? 'bg-stone-900' :
-      theme === 'ocean' ? 'bg-blue-950' :
-      theme === 'forest' ? 'bg-emerald-950' :
-      theme === 'candy' ? 'bg-pink-950' : 'bg-transparent'
-    }`}>
+  // AI-generated background image paths
+  const bgImageUrl = `/kanji-quest/images/themes/bg_${theme}.jpg`;
 
-      {/* ==== うちゅう (space) ==== */}
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden bg-cover bg-center"
+         style={{ backgroundImage: `url('${bgImageUrl}')` }}>
+
+      {/* Darken/Lighten overlay to ensure contrast and blend with animations */}
+      <div className="absolute inset-0 bg-black/30" />
+
+      {/* ==== うちゅう (space) - 神レア ==== */}
       {theme === 'space' && (
-        <div className="absolute inset-0 bg-black overflow-hidden perspective-[800px]">
-          <div className="absolute inset-0 flex items-center justify-center">
-            {[...Array(40)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-[2px] h-[30px] bg-white rounded-full drop-shadow-[0_0_8px_white]"
-                style={{
-                  animation: `warp ${Math.random() * 2 + 1}s linear infinite`,
-                  animationDelay: `${Math.random() * -3}s`,
-                  transform: `rotate(${Math.random() * 360}deg) translateY(100px)`,
-                  opacity: 0
-                }}
-              />
+        <div className="absolute inset-0 overflow-hidden perspective-[1000px]">
+          {/* Nebula backgrounds */}
+          <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-purple-900/20 to-transparent blur-3xl opacity-60 animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute top-[20%] right-[-20%] w-[100%] h-[100%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-fuchsia-900/30 via-pink-900/10 to-transparent blur-3xl opacity-50 animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }} />
+          
+          {/* Slow rotating galaxy */}
+          <motion.div
+            className="absolute top-1/2 left-1/2 w-[800px] h-[800px] -ml-[400px] -mt-[400px] rounded-full border-[1px] border-indigo-500/10"
+            style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 60%)' }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+          >
+            {[...Array(30)].map((_, i) => (
+              <div key={i} className="absolute rounded-full bg-white blur-[1px]" style={{
+                width: Math.random() * 3 + 1 + 'px',
+                height: Math.random() * 3 + 1 + 'px',
+                top: `${50 + Math.sin(i) * (Math.random() * 40 + 10)}%`,
+                left: `${50 + Math.cos(i) * (Math.random() * 40 + 10)}%`,
+                opacity: Math.random() * 0.8 + 0.2
+              }} />
             ))}
-          </div>
-          <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-purple-600/30 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="absolute bottom-1/4 right-1/4 w-1/2 h-1/2 bg-blue-600/30 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }} />
-          <style>{`
-            @keyframes warp {
-              0% { transform: rotate(var(--angle, 45deg)) translateY(0) scaleY(1); opacity: 0; }
-              50% { opacity: 1; }
-              100% { transform: rotate(var(--angle, 45deg)) translateY(1000px) scaleY(4); opacity: 0; }
-            }
-          `}</style>
+          </motion.div>
+
+          {/* Shooting stars */}
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={`shooting-${i}`}
+              className="absolute h-px bg-gradient-to-r from-transparent via-white to-transparent"
+              style={{
+                width: `${Math.random() * 150 + 50}px`,
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                rotate: '45deg',
+              }}
+              animate={{
+                x: ['-100vw', '100vw'],
+                y: ['-100vh', '100vh'],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: Math.random() * 2 + 1,
+                repeat: Infinity,
+                delay: Math.random() * 15,
+                ease: "linear"
+              }}
+            />
+          ))}
+
+          {/* Twinkling stars */}
+          {[...Array(100)].map((_, i) => (
+            <motion.div
+              key={`star-${i}`}
+              className="absolute rounded-full bg-white"
+              style={{
+                width: Math.random() > 0.9 ? '3px' : '1px',
+                height: Math.random() > 0.9 ? '3px' : '1px',
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                boxShadow: Math.random() > 0.8 ? '0 0 4px #fff' : 'none'
+              }}
+              animate={{ opacity: [0.1, 1, 0.1] }}
+              transition={{
+                duration: Math.random() * 3 + 1,
+                repeat: Infinity,
+                delay: Math.random() * 5
+              }}
+            />
+          ))}
         </div>
       )}
 
       {/* ==== にんじゃ (ninja) ==== */}
       {theme === 'ninja' && (
-        <div className="absolute inset-0 overflow-hidden bg-zinc-900">
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `radial-gradient(circle at center, transparent 0%, #000 100%), repeating-linear-gradient(45deg, #222 0, #222 2px, transparent 2px, transparent 8px)`
-          }} />
-          {[...Array(20)].map((_, i) => (
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Sakura Petals */}
+          {[...Array(30)].map((_, i) => (
             <motion.div
-              key={i}
-              className="absolute text-slate-700/30 font-black text-6xl"
-              initial={{ y: -100, x: `${Math.random() * 100}vw`, rotate: 0 }}
+              key={`petal-${i}`}
+              className="absolute w-3 h-3 bg-pink-200 rounded-br-full rounded-tl-full opacity-80 drop-shadow-[0_0_4px_rgba(255,192,203,0.8)]"
+              style={{
+                left: `${Math.random() * 120 - 10}%`,
+                top: -20,
+              }}
               animate={{
-                y: "110vh",
-                x: `${Math.random() * 100}vw`,
-                rotate: 360
+                y: '110vh',
+                x: `${Math.random() * 200 - 100}px`,
+                rotate: [0, 360, 720],
+                rotateX: [0, 360],
+                rotateY: [0, 360],
               }}
               transition={{
-                duration: Math.random() * 10 + 5,
+                duration: Math.random() * 8 + 5,
                 repeat: Infinity,
                 ease: "linear",
                 delay: Math.random() * -10
               }}
-            >
-              {['忍', '影', '斬', '隠', '速'][Math.floor(Math.random() * 5)]}
-            </motion.div>
+            />
           ))}
-          <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-around px-10 opacity-60">
-             {[...Array(10)].map((_, i) => (
-               <div key={i} className={`w-4 bg-zinc-950 rounded-t-full transform ${Math.random() > 0.5 ? 'rotate-2' : '-rotate-2'}`} style={{ height: `${Math.random() * 100 + 50}%` }} />
-             ))}
-          </div>
-        </div>
-      )}
 
-      {/* ==== サイバー (cyber) - ショップで購入できる ==== */}
-      {theme === 'cyber' && (
-        <div className="absolute inset-0 bg-black overflow-hidden perspective-[1000px]">
-          {/* Cyber Grid */}
-          <div className="absolute inset-0 bg-[linear-gradient(transparent_95%,#0ff_95%),linear-gradient(90deg,transparent_95%,#0ff_95%)] bg-[length:40px_40px] opacity-20"
-               style={{ transform: 'rotateX(60deg) translateY(-100px) scale(2)', transformOrigin: 'center top' }} />
-          {/* Scanning lines */}
-          <motion.div
-            className="absolute left-0 right-0 h-1 bg-cyan-400/50 shadow-[0_0_10px_#0ff]"
-            animate={{ top: ['0%', '100%'] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          />
-          {/* Floating Hexagons */}
-          {[...Array(15)].map((_, i) => (
+          {/* Occasional Shuriken throw */}
+          {[...Array(3)].map((_, i) => (
             <motion.div
-              key={i}
-              className="absolute border border-cyan-500/30 text-cyan-500/10 flex items-center justify-center text-xs font-mono"
-              style={{
-                width: `${Math.random() * 100 + 50}px`,
-                height: `${Math.random() * 100 + 50}px`,
-                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                left: `${Math.random() * 100}vw`,
-                top: `${Math.random() * 100}vh`,
-              }}
+              key={`shuriken-${i}`}
+              className="absolute text-slate-300 opacity-40 text-4xl font-bold drop-shadow-md"
+              style={{ left: '-50px', top: `${Math.random() * 80 + 10}%` }}
               animate={{
-                rotate: 360,
-                scale: [1, 1.2, 1],
-                opacity: [0.1, 0.3, 0.1]
+                x: ['0vw', '120vw'],
+                rotate: 1440,
+                opacity: [0, 0.6, 0]
               }}
               transition={{
-                duration: Math.random() * 10 + 5,
+                duration: 1.5,
                 repeat: Infinity,
+                delay: Math.random() * 20 + 5,
                 ease: "linear"
               }}
             >
-              {(Math.random() * 1000).toFixed(0)}
+              ✥
             </motion.div>
           ))}
         </div>
       )}
 
-      {/* ==== 天空の城 (skycastle) - ガチャ超激レア ==== */}
-      {theme === 'skycastle' && (
-        <div className="absolute inset-0 overflow-hidden">
-          {/* Sky gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-sky-300 via-sky-500 to-indigo-900" />
-          {/* Floating clouds */}
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full bg-white/60 blur-md"
-              style={{
-                width: `${Math.random() * 200 + 100}px`,
-                height: `${Math.random() * 60 + 30}px`,
-                top: `${Math.random() * 50}%`,
-                left: `-200px`,
-              }}
-              animate={{ x: ['0vw', '120vw'] }}
-              transition={{
-                duration: Math.random() * 20 + 15,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * -20
-              }}
-            />
-          ))}
-          {/* Castle silhouette */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-48 opacity-40">
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-slate-700" />
-            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 w-16 h-20 bg-slate-700" />
-            <div className="absolute bottom-44 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[20px] border-r-[20px] border-b-[30px] border-transparent border-b-red-700" />
-            <div className="absolute bottom-28 left-0 w-12 h-16 bg-slate-700" />
-            <div className="absolute bottom-40 left-0 w-0 h-0 border-l-[16px] border-r-[16px] border-b-[24px] border-transparent border-b-red-700" />
-            <div className="absolute bottom-28 right-0 w-12 h-16 bg-slate-700" />
-            <div className="absolute bottom-40 right-0 w-0 h-0 border-l-[16px] border-r-[16px] border-b-[24px] border-transparent border-b-red-700" />
-          </div>
-          {/* Sparkles */}
-          {[...Array(15)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute text-yellow-300 text-xl"
-              style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
-              animate={{ opacity: [0, 1, 0], scale: [0.5, 1.5, 0.5] }}
-              transition={{ duration: Math.random() * 2 + 1, repeat: Infinity, delay: Math.random() * 3 }}
-            >✨</motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* ==== サイバーシティ (cybercity) - ガチャ激レア ==== */}
-      {theme === 'cybercity' && (
-        <div className="absolute inset-0 bg-slate-950 overflow-hidden">
-          {/* City skyline */}
-          <div className="absolute bottom-0 left-0 right-0 h-1/2 flex items-end justify-around gap-1 px-4">
-            {[...Array(20)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-slate-800 relative"
-                style={{ width: `${Math.random() * 30 + 20}px`, height: `${Math.random() * 60 + 30}%` }}
+      {/* ==== サイバー (cyber) ==== */}
+      {theme === 'cyber' && (
+        <div className="absolute inset-0 overflow-hidden perspective-[1000px]">
+          {/* Grid Floor Overlay */}
+          <div className="absolute bottom-0 left-[-50%] w-[200%] h-[60%] bg-[linear-gradient(transparent_95%,#0ff_95%),linear-gradient(90deg,transparent_95%,#0ff_95%)] bg-[length:50px_50px] opacity-30 mix-blend-screen"
+               style={{ transform: 'rotateX(75deg) translateY(0)', transformOrigin: 'center bottom' }} />
+          
+          {/* Matrix Rain */}
+          <div className="absolute inset-0 flex justify-between overflow-hidden opacity-50">
+            {[...Array(40)].map((_, i) => (
+              <motion.div
+                key={`matrix-${i}`}
+                className="text-cyan-400 font-mono text-xs whitespace-nowrap opacity-80"
+                style={{
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'upright',
+                  left: `${i * 2.5}%`,
+                  top: '-100%',
+                }}
+                animate={{ top: '100%' }}
+                transition={{
+                  duration: Math.random() * 10 + 5,
+                  repeat: Infinity,
+                  ease: "linear",
+                  delay: Math.random() * -10
+                }}
               >
-                {/* Windows */}
-                {[...Array(5)].map((_, j) => (
-                  <div
-                    key={j}
-                    className="absolute w-2 h-2 rounded-sm"
-                    style={{
-                      background: Math.random() > 0.4 ? '#fbbf24' : '#06b6d4',
-                      top: `${Math.random() * 80}%`,
-                      left: `${Math.random() * 60 + 10}%`,
-                      opacity: Math.random() > 0.3 ? 1 : 0
-                    }}
-                  />
-                ))}
-              </div>
+                {Array.from({ length: 20 }).map(() => String.fromCharCode(0x30A0 + Math.random() * 96)).join('')}
+              </motion.div>
             ))}
           </div>
-          {/* Neon glow lines */}
-          <div className="absolute bottom-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-pink-500 to-transparent opacity-50 blur-sm" />
-          <div className="absolute bottom-1/3 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-40 blur-sm" />
-          {/* Flying cars (dots) */}
-          {[...Array(5)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-1 rounded-full bg-red-400/80 blur-sm"
-              style={{ top: `${20 + Math.random() * 40}%`, left: 0 }}
-              animate={{ x: ['0vw', '100vw'] }}
-              transition={{ duration: Math.random() * 4 + 2, repeat: Infinity, ease: "linear", delay: Math.random() * -5 }}
-            />
-          ))}
-          {/* Purple/pink top glow */}
-          <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-purple-900/60 to-transparent" />
+
+          {/* Scanning Line */}
+          <motion.div
+            className="absolute left-0 right-0 h-1 bg-cyan-400 shadow-[0_0_15px_2px_#0ff] opacity-60"
+            animate={{ top: ['-10%', '110%'] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          />
         </div>
       )}
 
-      {/* ==== マグマ地帯 (magma) - ガチャ超激レア ==== */}
-      {theme === 'magma' && (
-        <div className="absolute inset-0 bg-red-950 overflow-hidden">
-          {/* Lava glow */}
-          <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-orange-600/60 to-transparent" />
-          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-red-950 to-transparent" />
-          {/* Lava bubbles */}
-          {[...Array(12)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full bg-orange-500/50 blur-sm"
-              style={{ width: `${Math.random() * 40 + 10}px`, height: `${Math.random() * 40 + 10}px`, left: `${Math.random() * 100}%`, bottom: 0 }}
-              animate={{ y: [0, -(Math.random() * 200 + 100)], opacity: [0.6, 0] }}
-              transition={{ duration: Math.random() * 3 + 1.5, repeat: Infinity, ease: "easeOut", delay: Math.random() * 3 }}
-            />
-          ))}
-          {/* Ember sparks */}
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 rounded-full bg-yellow-400"
-              style={{ left: `${Math.random() * 100}%`, bottom: `10%` }}
-              animate={{ y: [0, -(Math.random() * 300 + 100)], x: [(Math.random() - 0.5) * 100], opacity: [1, 0] }}
-              transition={{ duration: Math.random() * 2 + 1, repeat: Infinity, ease: "easeOut", delay: Math.random() * 2 }}
-            />
-          ))}
-          {/* Volcano rocky overlay */}
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-stone-900 to-transparent" />
-        </div>
-      )}
-
-      {/* ==== 古代遺跡 (ruins) - ガチャ激レア ==== */}
-      {theme === 'ruins' && (
-        <div className="absolute inset-0 bg-stone-900 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-amber-950/50 to-stone-950" />
-          {/* Stone pattern overlay */}
-          <div className="absolute inset-0 opacity-10" style={{
-            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 30px, #6b5d3f 30px, #6b5d3f 32px), repeating-linear-gradient(90deg, transparent, transparent 30px, #6b5d3f 30px, #6b5d3f 32px)`
-          }} />
-          {/* Pillar silhouettes */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-around items-end opacity-30">
-            {[0,1,2,3,4].map(i => (
-              <div key={i} className="relative" style={{ width: '40px' }}>
-                <div className="bg-stone-600 w-full" style={{ height: `${[120, 80, 150, 90, 110][i]}px` }} />
-                <div className="absolute top-0 left-0 right-0 h-4 bg-stone-500" />
-              </div>
-            ))}
-          </div>
-          {/* Floating dust particles */}
-          {[...Array(15)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 rounded-full bg-amber-300/50"
-              style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
-              animate={{ y: [0, -30, 0], opacity: [0, 0.6, 0] }}
-              transition={{ duration: Math.random() * 4 + 2, repeat: Infinity, delay: Math.random() * 4 }}
-            />
-          ))}
-          {/* Top vignette */}
-          <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black/60 to-transparent" />
-        </div>
-      )}
-
-      {/* ==== 深海 (ocean) - ガチャ激レア ==== */}
-      {theme === 'ocean' && (
-        <div className="absolute inset-0 bg-blue-950 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-800/40 via-blue-950 to-black" />
-          {/* Bubbles */}
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full border border-cyan-400/30 bg-cyan-400/10"
-              style={{ width: `${Math.random() * 20 + 5}px`, height: `${Math.random() * 20 + 5}px`, left: `${Math.random() * 100}%`, bottom: `${Math.random() * 20}%` }}
-              animate={{ y: [0, -(Math.random() * 400 + 200)], opacity: [0.6, 0] }}
-              transition={{ duration: Math.random() * 5 + 3, repeat: Infinity, ease: "easeOut", delay: Math.random() * 5 }}
-            />
-          ))}
-          {/* Bioluminescent glow spots */}
+      {/* ==== 天空の城 (skycastle) - 神レア・超激レア ==== */}
+      {theme === 'skycastle' && (
+        <div className="absolute inset-0 overflow-hidden mix-blend-lighten">
+          {/* Sun / God rays overlay */}
+          <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[150%] h-[150%] bg-[conic-gradient(from_0deg,transparent,rgba(255,255,255,0.4)_10deg,transparent_20deg,rgba(255,255,255,0.3)_30deg,transparent_40deg)] animate-[spin_120s_linear_infinite] opacity-60 blur-xl mix-blend-screen" />
+          
+          {/* Parallax Clouds Overlay (Foreground) */}
           {[...Array(6)].map((_, i) => (
             <motion.div
-              key={i}
-              className="absolute rounded-full blur-3xl"
+              key={`cloud-fg-${i}`}
+              className="absolute bg-white/40 rounded-full blur-2xl"
               style={{
-                width: `${Math.random() * 150 + 80}px`,
+                width: `${Math.random() * 600 + 300}px`,
                 height: `${Math.random() * 150 + 80}px`,
+                bottom: `${Math.random() * 30 - 10}%`,
+                left: '-600px',
+              }}
+              animate={{ x: ['0vw', '150vw'] }}
+              transition={{
+                duration: Math.random() * 40 + 20,
+                repeat: Infinity,
+                ease: "linear",
+                delay: Math.random() * -40
+              }}
+            />
+          ))}
+
+          {/* Sparkling dust */}
+          {[...Array(40)].map((_, i) => (
+            <motion.div
+              key={`sparkle-${i}`}
+              className="absolute w-1.5 h-1.5 rounded-full bg-yellow-100"
+              style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, boxShadow: '0 0 10px 3px rgba(253, 224, 71, 0.8)' }}
+              animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0], y: [0, -30] }}
+              transition={{ duration: Math.random() * 3 + 2, repeat: Infinity, delay: Math.random() * 5 }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ==== サイバーシティ (cybercity) ==== */}
+      {theme === 'cybercity' && (
+        <div className="absolute inset-0 overflow-hidden mix-blend-screen">
+          {/* Cyber rain */}
+          {[...Array(80)].map((_, i) => (
+            <motion.div
+              key={`rain-${i}`}
+              className="absolute w-px bg-gradient-to-b from-transparent via-cyan-300/60 to-transparent"
+              style={{
+                height: `${Math.random() * 150 + 50}px`,
                 left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                background: ['#06b6d4', '#22d3ee', '#0ea5e9', '#7c3aed'][Math.floor(Math.random() * 4)] + '40'
+                top: `-200px`
               }}
-              animate={{ opacity: [0.2, 0.5, 0.2], scale: [1, 1.2, 1] }}
-              transition={{ duration: Math.random() * 4 + 3, repeat: Infinity, delay: Math.random() * 3 }}
+              animate={{ y: ['0vh', '120vh'] }}
+              transition={{ duration: Math.random() * 0.4 + 0.4, repeat: Infinity, ease: "linear", delay: Math.random() * 2 }}
             />
           ))}
-          {/* Light rays from above */}
-          <div className="absolute top-0 left-1/4 w-1 h-full bg-gradient-to-b from-cyan-300/20 to-transparent rotate-12 blur-md" />
-          <div className="absolute top-0 left-1/2 w-1 h-full bg-gradient-to-b from-cyan-300/15 to-transparent -rotate-6 blur-md" />
-        </div>
-      )}
 
-      {/* ==== 魔法の森 (forest) - ガチャレア ==== */}
-      {theme === 'forest' && (
-        <div className="absolute inset-0 bg-emerald-950 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/60 to-black/80" />
-          {/* Fireflies */}
-          {[...Array(25)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 rounded-full bg-yellow-300 blur-sm"
-              style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
-              animate={{
-                opacity: [0, 0.8, 0],
-                x: [(Math.random() - 0.5) * 60],
-                y: [(Math.random() - 0.5) * 60]
-              }}
-              transition={{ duration: Math.random() * 3 + 1, repeat: Infinity, delay: Math.random() * 4 }}
-            />
-          ))}
-          {/* Tree silhouettes */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-around items-end opacity-40">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="relative flex flex-col items-center" style={{ width: '60px' }}>
-                <div className="bg-emerald-900 rounded-full" style={{ width: `${Math.random() * 40 + 40}px`, height: `${Math.random() * 60 + 60}px` }} />
-                <div className="bg-stone-800 w-3" style={{ height: `${Math.random() * 30 + 20}px` }} />
-              </div>
-            ))}
-          </div>
-          {/* Magic particles */}
-          {[...Array(10)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute text-green-300/50 text-2xl"
-              style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
-              animate={{ opacity: [0, 0.5, 0], rotate: [0, 360] }}
-              transition={{ duration: Math.random() * 4 + 2, repeat: Infinity, delay: Math.random() * 4 }}
-            >✦</motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* ==== お菓子の国 (candy) - ガチャレア ==== */}
-      {theme === 'candy' && (
-        <div className="absolute inset-0 bg-pink-950 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-fuchsia-900/50 via-pink-950 to-rose-950" />
-          {/* Falling candy */}
+          {/* Flying Cars (Hologram dots) */}
           {[...Array(15)].map((_, i) => (
             <motion.div
-              key={i}
-              className="absolute text-2xl"
-              style={{ left: `${Math.random() * 100}%`, top: `-5%` }}
-              animate={{ y: '110vh', rotate: 360 }}
-              transition={{ duration: Math.random() * 5 + 3, repeat: Infinity, ease: "linear", delay: Math.random() * -5 }}
+              key={`car-${i}`}
+              className="absolute w-4 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_3px_#0ff]"
+              style={{ top: `${Math.random() * 50 + 20}%`, left: '-50px' }}
+              animate={{ x: ['0vw', '120vw'] }}
+              transition={{ duration: Math.random() * 4 + 2, repeat: Infinity, ease: "linear", delay: Math.random() * 5 }}
+            />
+          ))}
+          {[...Array(10)].map((_, i) => (
+            <motion.div
+              key={`car-rev-${i}`}
+              className="absolute w-4 h-1.5 rounded-full bg-pink-400 shadow-[0_0_12px_3px_#f0f]"
+              style={{ top: `${Math.random() * 40 + 30}%`, right: '-50px' }}
+              animate={{ x: ['0vw', '-120vw'] }}
+              transition={{ duration: Math.random() * 3 + 1.5, repeat: Infinity, ease: "linear", delay: Math.random() * 4 }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ==== マグマ地帯 (magma) ==== */}
+      {theme === 'magma' && (
+        <div className="absolute inset-0 overflow-hidden mix-blend-screen">
+          {/* Heat distortion (CSS trick using blur and scale) */}
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-t from-orange-600/30 to-transparent blur-xl"
+            animate={{ scaleY: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+
+          {/* Embers / Fire sparks */}
+          {[...Array(60)].map((_, i) => (
+            <motion.div
+              key={`ember-${i}`}
+              className="absolute rounded-full bg-yellow-200"
+              style={{
+                width: Math.random() * 5 + 2 + 'px',
+                height: Math.random() * 5 + 2 + 'px',
+                left: `${Math.random() * 100}%`,
+                bottom: `${Math.random() * 30}%`,
+                boxShadow: '0 0 12px 3px #f59e0b'
+              }}
+              animate={{
+                y: [0, -(Math.random() * 500 + 200)],
+                x: [(Math.random() - 0.5) * 200],
+                opacity: [1, 1, 0],
+                scale: [1, 0]
+              }}
+              transition={{ duration: Math.random() * 3 + 2, repeat: Infinity, ease: "easeOut", delay: Math.random() * 3 }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ==== 古代遺跡 (ruins) ==== */}
+      {theme === 'ruins' && (
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Ancient Runes Glowing - Overlay */}
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={`rune-${i}`}
+              className="absolute text-amber-300/60 text-6xl font-black drop-shadow-[0_0_20px_rgba(245,158,11,1)] mix-blend-screen"
+              style={{
+                left: `${Math.random() * 90 + 5}%`,
+                top: `${Math.random() * 90 + 5}%`,
+                rotate: `${Math.random() * 40 - 20}deg`
+              }}
+              animate={{ opacity: [0.1, 0.8, 0.1], scale: [0.9, 1.1, 0.9] }}
+              transition={{ duration: Math.random() * 5 + 3, repeat: Infinity, delay: Math.random() * 5 }}
             >
-              {['🍬', '🍭', '🍩', '🍪', '🍡'][Math.floor(Math.random() * 5)]}
+              {['⍙', '⍎', '⍏', '⍣', '⍟', '⍝', '⍦', '⍧'][Math.floor(Math.random() * 8)]}
             </motion.div>
           ))}
-          {/* Pastel glow spots */}
-          <div className="absolute top-1/4 left-1/4 w-1/3 h-1/3 bg-pink-500/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-1/3 h-1/3 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
-          {/* Star sprinkles */}
-          {[...Array(20)].map((_, i) => (
+
+          {/* Dust motes */}
+          {[...Array(60)].map((_, i) => (
             <motion.div
-              key={i}
-              className="absolute text-xs"
-              style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, color: ['#f9a8d4', '#c4b5fd', '#fed7aa', '#a5f3fc'][Math.floor(Math.random() * 4)] }}
-              animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5] }}
+              key={`dust-${i}`}
+              className="absolute w-1.5 h-1.5 rounded-full bg-amber-100/60 blur-[1px] mix-blend-screen"
+              style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
+              animate={{
+                y: [0, -80, 0],
+                x: [0, Math.random() * 60 - 30, 0],
+                opacity: [0, 0.9, 0]
+              }}
+              transition={{ duration: Math.random() * 6 + 4, repeat: Infinity, delay: Math.random() * 5 }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ==== 深海 (ocean) ==== */}
+      {theme === 'ocean' && (
+        <div className="absolute inset-0 overflow-hidden mix-blend-screen">
+          {/* Light rays from surface */}
+          <div className="absolute top-[-20%] left-0 right-0 h-[80%] flex justify-center opacity-40">
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={`ray-${i}`}
+                className="w-40 h-full bg-gradient-to-b from-cyan-200 to-transparent blur-3xl origin-top"
+                style={{ rotate: `${(i - 2) * 15}deg` }}
+                animate={{ opacity: [0.3, 0.8, 0.3], rotate: [`${(i - 2) * 15 - 2}deg`, `${(i - 2) * 15 + 2}deg`, `${(i - 2) * 15 - 2}deg`] }}
+                transition={{ duration: Math.random() * 4 + 4, repeat: Infinity, ease: "easeInOut", delay: Math.random() * 2 }}
+              />
+            ))}
+          </div>
+
+          {/* Rising Bubbles */}
+          {[...Array(50)].map((_, i) => (
+            <motion.div
+              key={`bubble-${i}`}
+              className="absolute rounded-full border border-cyan-200/60 bg-cyan-100/20 shadow-[0_0_10px_rgba(103,232,249,0.4)]"
+              style={{
+                width: `${Math.random() * 20 + 5}px`,
+                height: `${Math.random() * 20 + 5}px`,
+                left: `${Math.random() * 100}%`,
+                bottom: '-30px'
+              }}
+              animate={{
+                y: [0, -window.innerHeight - 100],
+                x: [0, Math.sin(i) * 60, 0],
+                opacity: [0, 1, 0]
+              }}
+              transition={{ duration: Math.random() * 8 + 4, repeat: Infinity, ease: "linear", delay: Math.random() * 10 }}
+            />
+          ))}
+
+          {/* Fish silhouettes crossing */}
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={`fish-${i}`}
+              className="absolute w-10 h-4 bg-black/60 rounded-[50%_100%_50%_100%_/_50%_50%_50%_50%] blur-[1px] mix-blend-multiply"
+              style={{ top: `${Math.random() * 80 + 10}%`, left: '-50px' }}
+              animate={{ x: ['0vw', '120vw'], y: [0, Math.sin(i) * 40, 0] }}
+              transition={{ duration: Math.random() * 10 + 10, repeat: Infinity, ease: "linear", delay: Math.random() * 20 }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ==== 魔法の森 (forest) ==== */}
+      {theme === 'forest' && (
+        <div className="absolute inset-0 overflow-hidden mix-blend-screen">
+          {/* Fireflies */}
+          {[...Array(70)].map((_, i) => (
+            <motion.div
+              key={`firefly-${i}`}
+              className="absolute w-2.5 h-2.5 rounded-full bg-yellow-200"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                boxShadow: '0 0 15px 4px rgba(253, 224, 71, 0.9)'
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                x: [(Math.random() - 0.5) * 150],
+                y: [(Math.random() - 0.5) * 150]
+              }}
+              transition={{ duration: Math.random() * 4 + 2, repeat: Infinity, delay: Math.random() * 5 }}
+            />
+          ))}
+
+          {/* Magical Spores */}
+          {[...Array(40)].map((_, i) => (
+            <motion.div
+              key={`spore-${i}`}
+              className="absolute text-green-200/80 font-black text-2xl drop-shadow-[0_0_12px_rgba(134,239,172,1)]"
+              style={{ left: `${Math.random() * 100}%`, top: '-50px' }}
+              animate={{
+                y: ['0vh', '110vh'],
+                rotate: [0, 360],
+                x: [0, Math.sin(i) * 80, 0]
+              }}
+              transition={{ duration: Math.random() * 10 + 10, repeat: Infinity, ease: "linear", delay: Math.random() * -20 }}
+            >
+              ✦
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* ==== お菓子の国 (candy) ==== */}
+      {theme === 'candy' && (
+        <div className="absolute inset-0 overflow-hidden mix-blend-screen">
+          {/* Falling Sweets */}
+          {[...Array(30)].map((_, i) => {
+            const emojis = ['🍬', '🍭', '🍩', '🍪', '🍡', '🧁', '🍦', '🍫'];
+            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+            return (
+              <motion.div
+                key={`sweet-${i}`}
+                className="absolute text-4xl drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]"
+                style={{ left: `${Math.random() * 100}%`, top: '-60px' }}
+                animate={{
+                  y: ['0vh', '110vh'],
+                  rotate: [0, 360],
+                  x: [0, Math.sin(i) * 80, 0]
+                }}
+                transition={{ duration: Math.random() * 8 + 6, repeat: Infinity, ease: "linear", delay: Math.random() * -10 }}
+              >
+                {emoji}
+              </motion.div>
+            );
+          })}
+
+          {/* Sprinkles / Sparkles */}
+          {[...Array(60)].map((_, i) => (
+            <motion.div
+              key={`sprinkle-${i}`}
+              className="absolute w-3 h-6 rounded-full opacity-90 shadow-md"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                backgroundColor: ['#f472b6', '#60a5fa', '#fbbf24', '#34d399', '#a78bfa'][Math.floor(Math.random() * 5)],
+                rotate: `${Math.random() * 360}deg`
+              }}
+              animate={{ scale: [0, 1.2, 0], rotate: '+=180deg' }}
               transition={{ duration: Math.random() * 2 + 1, repeat: Infinity, delay: Math.random() * 3 }}
-            >★</motion.div>
+            />
           ))}
         </div>
       )}
