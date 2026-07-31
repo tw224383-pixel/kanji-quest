@@ -586,6 +586,6 @@ export default function ShopPage() {
         avatarId={previewingAvatar?.id}
         name={previewingAvatar?.name}
       />
-    </div>
+    </>
   );
 }
