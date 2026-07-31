@@ -133,12 +133,7 @@ export default function ShopPage() {
           }} 
         />
       )}
-      <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!previewTheme && (!userData.theme || userData.theme === 'default')) ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
-        {/* Dark overlay for readability */}
-      {(!previewTheme && (!userData.theme || userData.theme === 'default')) && (
-        <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
-      )}
-      
+      <main className={`min-h-screen p-6 relative z-10 ${previewTheme ? 'pt-20' : ''}`}>
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-black flex items-center gap-2 text-amber-400 drop-shadow-md text-outline-dark">
@@ -151,42 +146,52 @@ export default function ShopPage() {
           <div className="font-bold text-slate-300">もっている PT</div>
           <div className="text-4xl font-black text-amber-400 drop-shadow-md">{userData.pt} <span className="text-xl text-amber-200">PT</span></div>
         </div>
-        {/* Full screen theme preview */}
-        {previewTheme && previewTheme !== 'default' && (
-          <div className="fixed inset-0 pointer-events-none z-[-10]">
-            <ThemeBackground theme={previewTheme} />
-            <style dangerouslySetInnerHTML={{__html: `
-              .game-panel, .game-panel-light { 
-                background-color: ${previewTheme === 'cyber' ? 'rgba(0,0,0,0.8)' : 'rgba(15,23,42,0.6)'} !important; 
-                backdrop-filter: blur(8px);
-                border-color: ${previewTheme === 'cyber' ? 'rgba(6,182,212,0.5)' : 'rgba(255,255,255,0.2)'} !important;
-              }
-              .game-panel-light {
-                background-color: ${previewTheme === 'cyber' ? 'rgba(0,0,0,0.6)' : 'rgba(30,41,59,0.7)'} !important;
-              }
-            `}} />
-          </div>
-        )}
+      {/* Fixed background layer */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {(() => {
+          const activeTheme = previewTheme ?? userData.theme ?? 'default';
+          const isDefaultTheme = !activeTheme || activeTheme === 'default';
+          if (isDefaultTheme) return (
+            <>
+              <div className="absolute inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: "url('/kanji-quest/images/ui/fantasy_bg.jpg')" }} />
+              <div className="absolute inset-0 bg-black/40" />
+            </>
+          );
+          return <ThemeBackground theme={activeTheme} />;
+        })()}
+      </div>
 
-        {/* Full screen effect preview */}
-        {previewEffect && (
-          <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden bg-black/40 backdrop-blur-sm">
-            <div className="relative flex items-center justify-center w-full h-full max-w-lg max-h-lg">
-              <KanjiEffect effect={previewEffect} />
-              <div className="text-[150px] leading-none font-serif text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] z-10 relative">
-                漢
-              </div>
+      {/* Full screen effect preview overlay */}
+      {previewEffect && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/60 backdrop-blur-sm">
+          <div className="relative flex items-center justify-center w-full h-full">
+            <KanjiEffect effect={previewEffect} />
+            <div className="text-[180px] leading-none font-serif text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] z-10 relative select-none">
+              漢
             </div>
-            <div className="absolute top-8 right-8 z-20 pointer-events-auto">
-              <Button variant="danger" size="lg" onClick={() => setPreviewEffect(null)} className="shadow-2xl shadow-red-500/50">
-                ❌ 試着をやめる
+          </div>
+          <div className="absolute bottom-12 left-0 right-0 text-center z-20 flex flex-col items-center gap-4">
+            <div className="text-white font-black text-2xl drop-shadow-md">✨ こんな感じになるよ！ ✨</div>
+            <div className="flex gap-4">
+              <Button variant="secondary" size="lg" onClick={() => { handleEquip("effect", previewEffect); }} className="shadow-2xl pointer-events-auto">
+                ✅ そうびする
+              </Button>
+              <Button variant="danger" size="lg" onClick={() => setPreviewEffect(null)} className="shadow-2xl pointer-events-auto">
+                ❌ やめる
               </Button>
             </div>
-            <div className="absolute bottom-20 left-0 right-0 text-center text-white font-bold text-2xl drop-shadow-md">
-              ✨ こんな感じになるよ！ ✨
-            </div>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Theme preview banner */}
+      {previewTheme && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center gap-4 py-3 bg-black/70 backdrop-blur-sm">
+          <div className="text-white font-black text-lg">👀 しちゃく中: {getAllThemes().find(t => t.id === previewTheme)?.name}</div>
+          <Button variant="secondary" size="sm" onClick={() => { handleEquip("theme", previewTheme); }}>✅ そうびする</Button>
+          <Button variant="danger" size="sm" onClick={() => setPreviewTheme(null)}>❌ やめる</Button>
+        </div>
+      )}
 
         {/* Preview Area for Titles and Avatars */}
         <AnimatePresence>
