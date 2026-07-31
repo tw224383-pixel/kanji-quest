@@ -345,7 +345,7 @@ export default function Home() {
              <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                <li>
                  <div className="text-xs text-amber-400 mb-0.5">2026/07/31</div>
-                 <div>超豪華な「リッチガチャ」が登場！AI生成のかっこいい・かわいいアバターが当たるよ！</div>
+                 <div>超豪華な「リッチガチャ」が登場！かっこいい・かわいいアバターが当たるよ！</div>
                </li>
                <li>
                  <div className="text-xs text-amber-400 mb-0.5">2026/07/31</div>
