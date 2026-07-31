@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth } from "../../lib/raidLogic";
 import { collection, query, orderBy, limit, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
@@ -27,7 +27,7 @@ export default function RaidPage() {
   useEffect(() => {
     // Listen to all raid bosses for other grades
     const unsubs: (() => void)[] = [];
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = getCurrentJSTMonth();
     
     // Initialize default array
     setOtherGrades(Array.from({length: 6}, (_, i) => ({

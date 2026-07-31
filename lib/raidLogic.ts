@@ -97,9 +97,15 @@ import { db } from "./firebase";
 import { doc, getDoc, runTransaction } from "firebase/firestore";
 import { storage } from "./storage";
 
+export function getCurrentJSTMonth() {
+  const d = new Date();
+  const jst = new Date(d.getTime() + (9 * 60 * 60 * 1000));
+  return jst.toISOString().slice(0, 7);
+}
+
 export async function dealDamageToRaidBoss(damage: number, grade: number) {
   if (damage <= 0) return;
-  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+  const currentMonth = getCurrentJSTMonth(); // YYYY-MM
 
   if (storage.isGuest()) {
     let level = parseInt(localStorage.getItem("kq_raid_level_" + grade) || "1", 10);

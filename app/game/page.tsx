@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getRandomQuestions, getRevengeQuestions, KanjiQuestion } from "../../lib/kanjiData";
 import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion } from "../../lib/mathData";
-import { getRaidBossImagePath } from "../../lib/raidLogic";
+import { getRaidBossImagePath, getCurrentJSTMonth } from "../../lib/raidLogic";
 import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, increment } from "firebase/firestore";
@@ -42,7 +42,7 @@ export default function GamePage() {
   useEffect(() => {
     if (userData?.grade) {
       const fetchBossLevel = async () => {
-        const currentMonth = new Date().toISOString().slice(0, 7);
+        const currentMonth = getCurrentJSTMonth();
         if (storage.isGuest()) {
           let level = parseInt(localStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10);
           const month = localStorage.getItem("kq_raid_month_" + userData.grade) || currentMonth;
