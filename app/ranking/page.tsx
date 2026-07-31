@@ -10,6 +10,7 @@ import { calculateLevel } from "../../lib/gameLogic";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 import { AvatarPreviewModal } from "../../components/ui/AvatarPreviewModal";
 import { useRouter } from "next/navigation";
+import { getCurrentJSTWeekString } from "../../lib/raidLogic";
 
 type RankingUser = {
   id: string;
@@ -18,6 +19,8 @@ type RankingUser = {
   grade: number;
   equippedTitle?: string;
   equippedAvatar?: string;
+  weeklyXp?: number;
+  lastWeekString?: string;
 };
 
 export default function RankingPage() {
@@ -42,8 +45,13 @@ export default function RankingPage() {
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RankingUser));
         
-        // Client-side sort and limit, safe against undefined xp
-        const sortedData = data.sort((a, b) => (b.xp || 0) - (a.xp || 0)).slice(0, 10);
+        const currentWeekString = getCurrentJSTWeekString();
+        // Client-side sort and limit, safe against undefined weeklyXp
+        const sortedData = data.sort((a, b) => {
+          const aXp = a.lastWeekString === currentWeekString ? (a.weeklyXp || 0) : 0;
+          const bXp = b.lastWeekString === currentWeekString ? (b.weeklyXp || 0) : 0;
+          return bXp - aXp;
+        }).slice(0, 10);
         
         setRanking(sortedData);
       } catch (err) {
@@ -112,8 +120,11 @@ export default function RankingPage() {
                       {index + 1}
                     </div>
                     <div className="flex-1">
-                      <div className="font-black text-lg text-slate-200">{user.name || "名無し"}</div>
-                      <div className="text-sm font-bold text-amber-300">Lv. {level} (XP: {user.xp || 0})</div>
+                      <div className="font-black text-lg text-slate-200 line-clamp-1 break-all flex items-center gap-2">
+                        {user.name || "名無し"}
+                        {user.id === userData?.id && <span className="text-xs bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full font-black">あなた</span>}
+                      </div>
+                      <div className="text-sm font-bold text-amber-300">Lv.{calculateLevel(user.xp).level} (WP: {user.lastWeekString === getCurrentJSTWeekString() ? (user.weeklyXp || 0) : 0})</div>
                     </div>
                     <div className="scale-75 origin-right">
                       <RankPlate 

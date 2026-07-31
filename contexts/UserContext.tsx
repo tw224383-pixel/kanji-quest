@@ -7,6 +7,7 @@ import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { storage } from "../lib/storage";
 
 export type UserData = {
+  id?: string;
   name: string;
   xp: number;
   pt: number;
@@ -22,6 +23,8 @@ export type UserData = {
   totalDamage: number;
   equippedEffect: string;
   scaryMode: boolean;
+  weeklyXp?: number;
+  lastWeekString?: string;
 };
 
 const DEFAULT_USER_DATA: UserData = {

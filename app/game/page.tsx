@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getRandomQuestions, getRevengeQuestions, KanjiQuestion } from "../../lib/kanjiData";
 import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion } from "../../lib/mathData";
-import { getRaidBossImagePath, getCurrentJSTMonth } from "../../lib/raidLogic";
+import { getRaidBossImagePath, getCurrentJSTMonth, getCurrentJSTWeekString } from "../../lib/raidLogic";
 import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, increment } from "firebase/firestore";
@@ -266,12 +266,17 @@ export default function GamePage() {
         setUnlockedMastery(true);
       }
 
+      const currentWeekString = getCurrentJSTWeekString();
+      const newWeeklyXp = (userData.lastWeekString === currentWeekString ? (userData.weeklyXp || 0) : 0) + finalXP;
+
       await updateUserData({
         xp: userData.xp + finalXP,
         pt: userData.pt + finalPT,
         masteredIds: updatedMastered,
         mistakeIds: updatedMistakes,
         totalDamage: (userData.totalDamage || 0) + finalXP,
+        weeklyXp: newWeeklyXp,
+        lastWeekString: currentWeekString,
         titles: Array.from(newTitles),
         avatars: Array.from(newAvatars),
       });
