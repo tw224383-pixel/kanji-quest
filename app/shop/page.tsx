@@ -9,7 +9,7 @@ import { RankPlate } from "../../components/ui/RankPlate";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems } from "../../lib/gachaData";
+import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems, richGachaRates } from "../../lib/gachaData";
 import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
 import { RegularGachaAnimation } from "../../components/game/RegularGachaAnimation";
 import { RichGachaAnimation } from "../../components/game/RichGachaAnimation";
@@ -36,7 +36,7 @@ export default function ShopPage() {
   const [gachaResult, setGachaResult] = useState<any>(null);
   const [pendingGachaResult, setPendingGachaResult] = useState<any>(null);
   const [gachaTargetStage, setGachaTargetStage] = useState(1);
-  const [showGachaRates, setShowGachaRates] = useState(false);
+  const [showGachaRates, setShowGachaRates] = useState<"regular" | "rich" | null>(null);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-2xl">ロード中...</div>;
   if (!userData) {
@@ -79,7 +79,7 @@ export default function ShopPage() {
     if (userData.pt < cost || pullingType) return;
     setPullingType(isRich ? "rich" : "regular");
     setGachaResult(null);
-    setShowGachaRates(false);
+    setShowGachaRates(null);
     await updateUserData({ pt: userData.pt - cost });
     
     const result = isRich ? pullRichGachaItem() : pullGachaItem();
@@ -101,8 +101,15 @@ export default function ShopPage() {
     }
     
     if (duplicated || result.type === 'xp') {
-      await updateUserData({ xp: userData.xp + (isRich ? 1500 : 50) });
-      (result as any).duplicated = true;
+      if (isRich) {
+        await updateUserData({ pt: userData.pt + 1000 });
+        (result as any).duplicated = true;
+        (result as any).refund = "1000 PT";
+      } else {
+        await updateUserData({ xp: userData.xp + 50 });
+        (result as any).duplicated = true;
+        (result as any).refund = "50 XP";
+      }
     }
     
     const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
@@ -247,9 +254,17 @@ export default function ShopPage() {
                   <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
                   <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT、リッチガチャは3000PTで限定AIアバターが当たる！</p>
                   
-                  <div className="flex flex-col md:flex-row gap-4 justify-center mb-6">
-                    <div className="flex-1 game-panel-light p-4 bg-slate-800/80 border-2 border-amber-900/50">
-                      <div className="text-amber-200 font-black mb-2">通常ガチャ (100 PT)</div>
+                  <div className="flex flex-col md:flex-row gap-4 justify-center mb-6 items-stretch">
+                    <div className="flex-1 game-panel-light p-4 bg-slate-800/80 border-2 border-amber-900/50 flex flex-col justify-between">
+                      <div>
+                        <div className="text-amber-200 font-black mb-2">通常ガチャ (100 PT)</div>
+                        <button
+                          onClick={() => setShowGachaRates(showGachaRates === "regular" ? null : "regular")}
+                          className="mb-4 px-4 py-1 bg-amber-100/50 hover:bg-amber-100 text-amber-800 font-black text-sm rounded-full shadow-sm border border-amber-300 transition-colors inline-flex items-center justify-center gap-1"
+                        >
+                          <span>🔍</span> 中身を見る
+                        </button>
+                      </div>
                       <Button
                         size="lg"
                         variant="fun"
@@ -261,8 +276,16 @@ export default function ShopPage() {
                       </Button>
                     </div>
                     
-                    <div className="flex-1 game-panel-light p-4 bg-amber-900/80 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]">
-                      <div className="text-yellow-300 font-black mb-2">💎 リッチガチャ (3000 PT)</div>
+                    <div className="flex-1 game-panel-light p-4 bg-amber-900/80 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] flex flex-col justify-between">
+                      <div>
+                        <div className="text-yellow-300 font-black mb-2">💎 リッチガチャ (3000 PT)</div>
+                        <button
+                          onClick={() => setShowGachaRates(showGachaRates === "rich" ? null : "rich")}
+                          className="mb-4 px-4 py-1 bg-yellow-100/50 hover:bg-yellow-100 text-yellow-900 font-black text-sm rounded-full shadow-sm border border-yellow-400 transition-colors inline-flex items-center justify-center gap-1"
+                        >
+                          <span>🔍</span> 中身を見る
+                        </button>
+                      </div>
                       <Button
                         size="lg"
                         variant="primary"
@@ -274,12 +297,6 @@ export default function ShopPage() {
                       </Button>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setShowGachaRates(!showGachaRates)}
-                    className="mt-2 px-6 py-2 bg-amber-100/50 hover:bg-amber-100 text-amber-800 font-black rounded-full shadow-sm border-2 border-amber-300 transition-colors flex items-center justify-center gap-2 mx-auto"
-                  >
-                    <span>🔍</span> 中身を見る
-                  </button>
                   <AnimatePresence>
                     {showGachaRates && (
                       <motion.div
@@ -290,21 +307,31 @@ export default function ShopPage() {
                       >
                         <h3 className="font-black text-blue-900 mb-4 border-b-2 border-blue-200 pb-2">提供割合</h3>
                         <div className="space-y-4">
-                          {gachaRates.map((tier, idx) => (
+                          {(showGachaRates === "rich" ? richGachaRates : gachaRates).map((tier, idx) => (
                             <div key={idx} className={`p-4 rounded-lg border ${tier.bg} shadow-inner`}>
                               <div className="flex justify-between items-center mb-3 border-b border-black/10 pb-2">
                                 <span className={`font-black text-xl ${tier.color} drop-shadow-sm`}>{tier.rarity}</span>
                                 <span className="font-mono font-black text-lg bg-white/60 px-3 py-1 rounded-full text-slate-700">{tier.rate}</span>
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                {tier.items.map(item => (
-                                  <div key={item.id} className="bg-white px-2 py-1 rounded shadow-sm text-sm font-bold flex items-center gap-1 text-slate-600">
-                                    <span className="text-base">
-                                      {item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" /> : item.icon}
-                                    </span>
-                                    <span>{item.name.replace(/称号「|アバター「|エフェクト「|テーマ「|」/g, '')}</span>
-                                  </div>
-                                ))}
+                                {tier.items.map(item => {
+                                  let typeLabel = "不明";
+                                  let typeColor = "bg-gray-100 text-gray-600";
+                                  if (item.type === "title") { typeLabel = "称号"; typeColor = "bg-blue-100 text-blue-700"; }
+                                  else if (item.type === "avatar") { typeLabel = "アバター"; typeColor = "bg-green-100 text-green-700"; }
+                                  else if (item.type === "effect") { typeLabel = "エフェクト"; typeColor = "bg-purple-100 text-purple-700"; }
+                                  else if (item.type === "theme") { typeLabel = "テーマ"; typeColor = "bg-pink-100 text-pink-700"; }
+                                  
+                                  return (
+                                    <div key={item.id} className="bg-white px-2 py-1 rounded shadow-sm text-sm font-bold flex items-center gap-2 text-slate-600">
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-sm ${typeColor}`}>{typeLabel}</span>
+                                      <span className="text-base flex items-center justify-center min-w-[20px]">
+                                        {item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" /> : item.icon}
+                                      </span>
+                                      <span>{item.name.replace(/称号「|アバター「|エフェクト「|テーマ「|」/g, '')}</span>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           ))}
@@ -337,7 +364,7 @@ export default function ShopPage() {
                         <div className="text-2xl font-black text-slate-800">{gachaResult.name}</div>
                         {gachaResult.duplicated && (
                           <div className="text-amber-600 font-bold mt-2 text-sm bg-amber-100 p-2 rounded-lg">
-                            すでにもっていたので、代わりに 50 XP 獲得した！
+                            すでにもっていたので、代わりに {gachaResult.refund} 獲得した！
                           </div>
                         )}
                       </motion.div>

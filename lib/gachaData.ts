@@ -182,3 +182,10 @@ export const gachaRates = [
   { rarity: "レア", rate: "30.0%", color: "text-blue-500", bg: "bg-blue-100", items: allGachaItems.filter(i => i.rarity === "レア") },
   { rarity: "ノーマル", rate: "55.0%", color: "text-slate-500", bg: "bg-slate-200", items: allGachaItems.filter(i => i.rarity === "ノーマル") },
 ];
+
+const totalRichWeight = allRichGachaItems.reduce((acc, item) => acc + item.weight, 0);
+export const richGachaRates = [
+  { rarity: "神レア", rate: "0.8%", color: "text-purple-500", bg: "bg-purple-100", items: allRichGachaItems.filter(i => i.rarity === "神レア") },
+  { rarity: "超激レア", rate: "16.5%", color: "text-red-500", bg: "bg-red-100", items: allRichGachaItems.filter(i => i.rarity === "超激レア") },
+  { rarity: "激レア", rate: "82.6%", color: "text-amber-500", bg: "bg-amber-100", items: allRichGachaItems.filter(i => i.rarity === "激レア") },
+];
