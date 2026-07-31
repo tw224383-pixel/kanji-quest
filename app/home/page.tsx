@@ -86,7 +86,11 @@ export default function Home() {
                   <span className="text-4xl animate-bounce-slight">⭐</span> {userData.pt} <span className="text-lg text-amber-200 text-outline">PT</span>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => router.push("/profile")} className="game-panel-light flex items-center gap-2 px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 bg-indigo-50 border-indigo-200">
+                  <span className="text-xl">👑</span>
+                  <span className="font-black text-indigo-900">プロフィール</span>
+                </button>
                 <button onClick={() => router.push("/shop")} className="game-panel-light flex items-center gap-2 px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2">
                   <span className="text-xl">🛍️</span>
                   <span className="font-black text-slate-800">ショップ</span>

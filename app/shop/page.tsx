@@ -9,76 +9,12 @@ import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { pullGachaItem, gachaRates, GachaItem } from "../../lib/gachaData";
+import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
 
-const themes = [
-  { id: "default", name: "いつもの", price: 0, icon: "📄" },
-  { id: "space", name: "うちゅう", price: 5000, icon: "🚀" },
-  { id: "ninja", name: "にんじゃ", price: 7500, icon: "🥷" },
-  { id: "cyber", name: "サイバー", price: 10000, icon: "⚡" },
-];
-
-const effects = [
-  { id: "fire", name: "ほのお", price: 200, icon: "🔥" },
-  { id: "water", name: "みず", price: 500, icon: "💧" },
-  { id: "thunder", name: "いかずち", price: 1000, icon: "⚡" },
-  { id: "star", name: "ほし", price: 2000, icon: "⭐" },
-  { id: "rainbow", name: "にじ", price: 3000, icon: "🌈" },
-];
-
-const titles = [
-  { id: "見習い", price: 0 },
-  { id: "新米勇者", price: 100 },
-  { id: "炎の", price: 300 },
-  { id: "氷の", price: 300 },
-  { id: "雷の", price: 300 },
-  { id: "光の", price: 500 },
-  { id: "闇の", price: 500 },
-  { id: "伝説の", price: 1000 },
-  { id: "幻の", price: 1000 },
-  { id: "覚醒した", price: 1500 },
-  { id: "奇跡の", price: 1500 },
-  { id: "無敵の", price: 2000 },
-  { id: "最強の", price: 2000 },
-  { id: "漢字マスター", price: 3000 },
-  { id: "算数マスター", price: 3000 },
-  { id: "天才", price: 4000 },
-  { id: "神話の", price: 5000 },
-  { id: "星を砕く", price: 6000 },
-  { id: "時を超える", price: 7000 },
-  { id: "次元の覇者", price: 8000 },
-  { id: "破壊神", price: 10000 },
-  { id: "創造神", price: 10000 },
-  { id: "全知全能の", price: 15000 },
-  { id: "ゴッド", price: 50000 },
-  { id: "宇宙の創造主", price: 99999 },
-];
-
-const avatars = [
-  { id: "👦", name: "男の子", price: 0 },
-  { id: "👧", name: "女の子", price: 0 },
-  { id: "⚔️", name: "戦士", price: 100 },
-  { id: "🛡️", name: "騎士", price: 200 },
-  { id: "🐶", name: "イヌ", price: 300 },
-  { id: "🐱", name: "ネコ", price: 300 },
-  { id: "🐲", name: "ドラゴン", price: 800 },
-  { id: "🦄", name: "ユニコーン", price: 1000 },
-  { id: "👽", name: "宇宙人", price: 1200 },
-  { id: "👻", name: "おばけ", price: 1200 },
-  { id: "🤖", name: "ロボット", price: 1500 },
-  { id: "👾", name: "エイリアン", price: 1500 },
-  { id: "🧙‍♂️", name: "魔法使い", price: 1800 },
-  { id: "🧛", name: "吸血鬼", price: 1800 },
-  { id: "🧚", name: "妖精", price: 2000 },
-  { id: "🦸", name: "ヒーロー", price: 2000 },
-  { id: "🥷", name: "忍者", price: 2200 },
-  { id: "🦁", name: "ライオン", price: 2500 },
-  { id: "🦅", name: "タカ", price: 2500 },
-  { id: "🦖", name: "恐竜", price: 2800 },
-  { id: "🚀", name: "ロケット", price: 3000 },
-  { id: "🛸", name: "UFO", price: 3000 },
-  { id: "🏅", name: "マスターメダル", price: 99999 },
-  { id: "🏆", name: "大マスターカップ", price: 99999 },
-];
+const themes = getAllThemes();
+const effects = getAllEffects();
+const titles = getAllTitles();
+const avatars = getAllAvatars();
 
 
 
@@ -404,7 +340,7 @@ export default function ShopPage() {
                 {themes.map(theme => {
                   const isOwned = theme.price === 0 || userData.effects.includes(`theme_${theme.id}`);
                   const isEquipped = userData.theme === theme.id;
-                  const canAfford = userData.pt >= theme.price;
+                  const canAfford = userData.pt >= (theme.price || 0);
                   return (
                     <div key={theme.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                       <div className="flex items-center justify-between">
@@ -419,8 +355,10 @@ export default function ShopPage() {
                           <div className="text-primary font-black px-4">そうび中</div>
                         ) : isOwned ? (
                           <Button variant="secondary" onClick={() => handleEquip("theme", theme.id)}>そうび</Button>
+                        ) : theme.isGachaOnly ? (
+                          <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                         ) : (
-                          <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("theme", theme.id, theme.price)}>かう</Button>
+                          <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("theme", theme.id, theme.price || 0)}>かう</Button>
                         )}
                       </div>
                       <div className="flex justify-end border-t border-slate-200/50 pt-2">
@@ -439,7 +377,7 @@ export default function ShopPage() {
                 {effects.map(effect => {
                   const isOwned = userData.effects.includes(effect.id);
                   const isEquipped = userData.equippedEffect === effect.id;
-                  const canAfford = userData.pt >= effect.price;
+                  const canAfford = userData.pt >= (effect.price || 0);
                   return (
                     <div key={effect.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                       <div className="flex items-center justify-between">
@@ -454,11 +392,13 @@ export default function ShopPage() {
                           <div className="text-primary font-black px-4">そうび中</div>
                         ) : isOwned ? (
                           <Button variant="secondary" onClick={() => handleEquip("effect", effect.id)}>そうび</Button>
+                        ) : effect.isGachaOnly ? (
+                          <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                         ) : (
                           <Button 
                             variant={canAfford ? "primary" : "ghost"}
                             disabled={!canAfford}
-                            onClick={() => handleBuy("effect", effect.id, effect.price)}
+                            onClick={() => handleBuy("effect", effect.id, effect.price || 0)}
                             className="bg-white"
                           >
                             かう
@@ -482,13 +422,13 @@ export default function ShopPage() {
                   const allTitles = [...titles];
                   userData.titles.forEach(t => {
                     if (!allTitles.find(x => x.id === t)) {
-                      allTitles.push({ id: t, price: 0 });
+                      allTitles.push({ id: t, name: t, price: 0, isGachaOnly: false });
                     }
                   });
                   return allTitles.map(title => {
                   const isOwned = userData.titles.includes(title.id);
                   const isEquipped = userData.equippedTitle === title.id;
-                  const canAfford = userData.pt >= title.price;
+                  const canAfford = userData.pt >= (title.price || 0);
                   return (
                     <div key={title.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                       <div className="flex justify-between items-start">
@@ -500,8 +440,10 @@ export default function ShopPage() {
                           <div className="text-primary font-black px-4">そうび中</div>
                         ) : isOwned ? (
                           <Button variant="secondary" onClick={() => handleEquip("title", title.id)}>そうび</Button>
+                        ) : title.isGachaOnly ? (
+                          <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                         ) : (
-                          <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("title", title.id, title.price)}>かう</Button>
+                          <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("title", title.id, title.price || 0)}>かう</Button>
                         )}
                       </div>
                       <div className="flex justify-end border-t border-slate-200/50 pt-2">
@@ -520,7 +462,7 @@ export default function ShopPage() {
                 {avatars.map(avatar => {
                   const isOwned = userData.avatars.includes(avatar.id);
                   const isEquipped = userData.equippedAvatar === avatar.id;
-                  const canAfford = userData.pt >= avatar.price;
+                  const canAfford = userData.pt >= (avatar.price || 0);
                   return (
                     <div key={avatar.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
                       <div className="flex items-center justify-between">
@@ -532,8 +474,10 @@ export default function ShopPage() {
                           <div className="text-primary font-black px-4">そうび中</div>
                         ) : isOwned ? (
                           <Button variant="secondary" onClick={() => handleEquip("avatar", avatar.id)}>そうび</Button>
+                        ) : avatar.isGachaOnly ? (
+                          <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                         ) : (
-                          <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("avatar", avatar.id, avatar.price)}>かう</Button>
+                          <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("avatar", avatar.id, avatar.price || 0)}>かう</Button>
                         )}
                       </div>
                       <div className="flex justify-end border-t border-slate-200/50 pt-2">
