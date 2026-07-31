@@ -6,17 +6,18 @@ export function ThemeBackground({ theme }: { theme: string }) {
   if (!theme || theme === "default") return null;
 
   // AI-generated background image paths
-  const bgImageUrl = `/kanji-quest/images/themes/bg_${theme}.jpg`;
+  const bgImageTheme = theme === 'time_space' ? 'space' : theme;
+  const bgImageUrl = `/kanji-quest/images/themes/bg_${bgImageTheme}.jpg`;
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden bg-cover bg-center"
+    <div className={`absolute inset-0 pointer-events-none overflow-hidden bg-cover bg-center ${theme === 'time_space' ? 'hue-rotate-180' : ''}`}
          style={{ backgroundImage: `url('${bgImageUrl}')` }}>
 
       {/* Darken/Lighten overlay to ensure contrast and blend with animations */}
       <div className="absolute inset-0 bg-black/30" />
 
-      {/* ==== うちゅう (space) - 神レア ==== */}
-      {theme === 'space' && (
+      {/* ==== うちゅう (space) & 時空の支配者 (time_space) ==== */}
+      {(theme === 'space' || theme === 'time_space') && (
         <div className="absolute inset-0 overflow-hidden perspective-[1000px]">
           {/* Nebula backgrounds */}
           <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-purple-900/20 to-transparent blur-3xl opacity-60 animate-pulse" style={{ animationDuration: '8s' }} />

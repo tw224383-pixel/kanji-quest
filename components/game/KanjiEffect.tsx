@@ -78,8 +78,8 @@ export function KanjiEffect({ effect }: { effect: string }) {
         </div>
       )}
 
-      {/* ==== にじ (rainbow) ==== */}
-      {effect === "rainbow" && (
+      {/* ==== にじ (rainbow) & オーロラ (aurora) ==== */}
+      {(effect === "rainbow" || effect === "aurora") && (
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden mix-blend-overlay opacity-50">
           <motion.div
             animate={{ rotate: 360 }}
@@ -181,7 +181,7 @@ export function KanjiEffect({ effect }: { effect: string }) {
         </div>
       )}
 
-      {/* ==== オーロラ (rainbow - 超激レアと共有) + ブラックホール (blackhole) ==== */}
+      {/* ==== ブラックホール (blackhole) ==== */}
       {effect === "blackhole" && (
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
           <motion.div

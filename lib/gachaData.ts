@@ -24,7 +24,7 @@ export const allGachaItems: GachaItem[] = [
   { id: "マスターゴッド", type: "title", name: "称号「マスターゴッド」", icon: "👑", rarity: "神レア", weight: 20 },
   { id: "👑", type: "avatar", name: "アバター「王冠ドラゴン」", icon: "👑", rarity: "神レア", weight: 20 },
   { id: "galaxy", type: "effect", name: "エフェクト「ギャラクシー」", icon: "🌌", rarity: "神レア", weight: 20 },
-  { id: "space", type: "theme", name: "テーマ「時空の支配者」", icon: "🕰️", rarity: "神レア", weight: 20 },
+  { id: "time_space", type: "theme", name: "テーマ「時空の支配者」", icon: "🕰️", rarity: "神レア", weight: 20 },
 
   // --- 超激レア (SSR) 4.9% ---
   { id: "伝説の勇者", type: "title", name: "称号「伝説の勇者」", icon: "⚔️", rarity: "超激レア", weight: 326 },
@@ -37,7 +37,7 @@ export const allGachaItems: GachaItem[] = [
   { id: "🧚", type: "avatar", name: "アバター「光の妖精」", icon: "🧚", rarity: "超激レア", weight: 326 },
   { id: "🤖", type: "avatar", name: "アバター「スーパーロボット」", icon: "🤖", rarity: "超激レア", weight: 326 },
   { id: "👽", type: "avatar", name: "アバター「宇宙人ボス」", icon: "👽", rarity: "超激レア", weight: 326 },
-  { id: "rainbow", type: "effect", name: "エフェクト「オーロラ」", icon: "🌈", rarity: "超激レア", weight: 326 },
+  { id: "aurora", type: "effect", name: "エフェクト「オーロラ」", icon: "🌈", rarity: "超激レア", weight: 326 },
   { id: "blackhole", type: "effect", name: "エフェクト「ブラックホール」", icon: "🕳️", rarity: "超激レア", weight: 326 },
   { id: "thunder", type: "effect", name: "エフェクト「神の雷」", icon: "⚡", rarity: "超激レア", weight: 326 },
   { id: "skycastle", type: "theme", name: "テーマ「天空の城」", icon: "🏰", rarity: "超激レア", weight: 330 },
