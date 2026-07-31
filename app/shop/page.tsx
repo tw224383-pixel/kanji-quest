@@ -544,9 +544,9 @@ export default function ShopPage() {
                               className="text-5xl flex justify-center w-16 hover:scale-110 transition-transform cursor-pointer"
                             >
                               {avatar.icon && avatar.icon.startsWith('/') ? (
-                                <img src={avatar.icon} alt={avatar.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md" />
+                                <img src={avatar.icon} alt={avatar.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md" style={{ objectPosition: avatar.icon.includes('cute_') ? 'center 20%' : 'center' }} />
                               ) : (
-                                avatar.id
+                                avatar.icon
                               )}
                             </button>
                             <div>

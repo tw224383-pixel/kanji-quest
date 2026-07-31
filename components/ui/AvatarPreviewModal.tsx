@@ -42,7 +42,7 @@ export function AvatarPreviewModal({
                 style={{ objectPosition: avatarUrl.includes('cute_') ? 'center 20%' : 'center' }}
               />
             ) : (
-              <div className="text-9xl my-4 drop-shadow-lg">{avatarId}</div>
+              <div className="text-9xl my-4 drop-shadow-lg">{avatarUrl || avatarId}</div>
             )}
           </div>
           
