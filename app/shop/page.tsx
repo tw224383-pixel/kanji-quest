@@ -276,25 +276,27 @@ export default function ShopPage() {
                       </Button>
                     </div>
                     
-                    <div className="flex-1 game-panel-light p-4 bg-amber-900/80 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] flex flex-col justify-between">
-                      <div>
-                        <div className="text-yellow-300 font-black mb-2">💎 リッチガチャ (3000 PT)</div>
+                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-white/90 to-blue-50/90 border-[3px] border-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] flex flex-col justify-between relative overflow-hidden">
+                      {/* Sparkles background effect */}
+                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
+                      <div className="relative z-10 text-center">
+                        <div className="text-amber-500 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
+                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">💎</span> リッチガチャ <span className="text-sm">(3000 PT)</span>
+                        </div>
                         <button
                           onClick={() => setShowGachaRates(showGachaRates === "rich" ? null : "rich")}
-                          className="mb-4 px-4 py-1 bg-yellow-100/50 hover:bg-yellow-100 text-yellow-900 font-black text-sm rounded-full shadow-sm border border-yellow-400 transition-colors inline-flex items-center justify-center gap-1"
+                          className="mb-6 px-6 py-2 bg-[#fdf8e1] hover:bg-[#faedb9] text-[#5c3a21] font-black text-sm rounded-full shadow-md border-2 border-[#e6c770] transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
                         >
-                          <span>🔍</span> 中身を見る
+                          <span className="text-lg">🔍</span> 中身を見る
                         </button>
                       </div>
-                      <Button
-                        size="lg"
-                        variant="primary"
-                        className={`w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-black shadow-[0_0_10px_rgba(250,204,21,0.5)] ${pullingType ? 'animate-pulse' : ''}`}
-                        onClick={() => pullGacha(true)}
-                        disabled={pullingType !== null || userData.pt < 3000}
-                      >
-                        {pullingType ? "..." : "3000 PT で まわす！"}
-                      </Button>
+                        <button
+                          className={`w-full py-4 text-2xl tracking-wider ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          onClick={() => pullGacha(true)}
+                          disabled={pullingType !== null || userData.pt < 3000}
+                        >
+                          {pullingType ? "..." : "3000 PT で まわす！"}
+                        </button>
                     </div>
                   </div>
                   <AnimatePresence>
