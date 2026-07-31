@@ -8,6 +8,7 @@ const XP_KEY = "kq_xp";
 const PT_KEY = "kq_pt";
 const EFFECTS_KEY = "kq_effects";
 const MODE_KEY = "kq_answer_mode";
+const MATH_SKILLS_KEY = "kq_math_skills";
 
 export const storage = {
   isGuest: () => {
@@ -74,5 +75,14 @@ export const storage = {
   setAnswerMode: (mode: "4choice" | "keyboard") => {
     if (typeof window === "undefined") return;
     localStorage.setItem(MODE_KEY, mode);
+  },
+  getMathSkills: () => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem(MATH_SKILLS_KEY);
+    return stored ? JSON.parse(stored) : null;
+  },
+  setMathSkills: (skills: string[]) => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(MATH_SKILLS_KEY, JSON.stringify(skills));
   }
 };

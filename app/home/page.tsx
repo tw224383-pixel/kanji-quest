@@ -32,12 +32,23 @@ export default function Home() {
         setTargetGrades([userData.grade]);
       }
       if (targetMathSkills.length === 0) {
-        const skills = MATH_SKILLS.filter(s => s.grade === userData.grade).map(s => s.id);
-        setTargetMathSkills(skills.length > 0 ? skills : [MATH_SKILLS[0].id]);
+        const savedMathSkills = storage.getMathSkills();
+        if (savedMathSkills && savedMathSkills.length > 0) {
+          setTargetMathSkills(savedMathSkills);
+        } else {
+          const skills = MATH_SKILLS.filter(s => s.grade === userData.grade).map(s => s.id);
+          setTargetMathSkills(skills.length > 0 ? skills : [MATH_SKILLS[0].id]);
+        }
       }
     }
     setMode(storage.getAnswerMode() as "4choice" | "keyboard");
   }, [userData]);
+
+  useEffect(() => {
+    if (targetMathSkills.length > 0) {
+      storage.setMathSkills(targetMathSkills);
+    }
+  }, [targetMathSkills]);
 
   if (loading) return <LoadingScreen />;
   if (!userData) {
