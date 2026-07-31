@@ -8,6 +8,7 @@ import { RankPlate } from "../../components/ui/RankPlate";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { pullGachaItem, gachaRates, GachaItem } from "../../lib/gachaData";
 
 const themes = [
   { id: "default", name: "いつもの", price: 0, icon: "📄" },
@@ -79,14 +80,7 @@ const avatars = [
   { id: "🏆", name: "大マスターカップ", price: 99999 },
 ];
 
-const gachaDrops = [
-  { id: "xp", name: "経験値 +50", icon: "💎", rarity: "ノーマル", rate: "70%" },
-  { id: "alien", name: "アバター「👽」", icon: "👽", rarity: "レア", rate: "7.5%" },
-  { id: "ghost", name: "アバター「👻」", icon: "👻", rarity: "レア", rate: "7.5%" },
-  { id: "robot", name: "アバター「🤖」", icon: "🤖", rarity: "レア", rate: "7.5%" },
-  { id: "monster", name: "アバター「👾」", icon: "👾", rarity: "レア", rate: "2.5%" },
-  { id: "sparkle", name: "きらきらエフェクト", icon: "✨", rarity: "超レア", rate: "5%" },
-];
+
 
 type Tab = "themes" | "effects" | "titles" | "avatars" | "gacha";
 
@@ -102,6 +96,8 @@ export default function ShopPage() {
 
   // Gacha state
   const [isPulling, setIsPulling] = useState(false);
+  const [pullStage, setPullStage] = useState(0);
+  const [currentBoxIcon, setCurrentBoxIcon] = useState("📦");
   const [gachaResult, setGachaResult] = useState<any>(null);
   const [showGachaRates, setShowGachaRates] = useState(false);
 
@@ -148,37 +144,59 @@ export default function ShopPage() {
     setIsPulling(true);
     setGachaResult(null);
     setShowGachaRates(false);
+    setPullStage(1);
+    setCurrentBoxIcon("📦");
     
     await updateUserData({ pt: userData.pt - 100 });
     
-    setTimeout(async () => {
-      const rand = Math.random();
-      let result: any = null;
-      let duplicated = false;
-      
-      if (rand < 0.05) {
-         result = { type: 'effect', id: 'sparkle', name: 'きらきらエフェクト', icon: '✨', rarity: '超レア' };
-         if (userData.effects.includes(result.id)) duplicated = true;
-         else await updateUserData({ effects: [...userData.effects, result.id] });
-      } else if (rand < 0.3) {
-         const rares = ['👽', '👻', '🤖', '👾'];
-         const selected = rares[Math.floor(Math.random() * rares.length)];
-         result = { type: 'avatar', id: selected, name: `アバター「${selected}」`, icon: selected, rarity: 'レア' };
-         if (userData.avatars.includes(result.id)) duplicated = true;
-         else await updateUserData({ avatars: [...userData.avatars, result.id] });
-      } else {
-         result = { type: 'xp', id: 'xp', name: '経験値 +50', icon: '💎', rarity: 'ノーマル' };
-         await updateUserData({ xp: userData.xp + 50 });
-      }
+    const result = pullGachaItem();
+    let duplicated = false;
 
-      if (duplicated && result.type !== 'xp') {
-         await updateUserData({ xp: userData.xp + 50 });
-         result.duplicated = true;
-      }
-      
-      setGachaResult(result);
-      setIsPulling(false);
-    }, 1500);
+    if (result.type === 'effect') {
+      if (userData.effects.includes(result.id)) duplicated = true;
+      else await updateUserData({ effects: [...userData.effects, result.id] });
+    } else if (result.type === 'avatar') {
+      if (userData.avatars.includes(result.id)) duplicated = true;
+      else await updateUserData({ avatars: [...userData.avatars, result.id] });
+    } else if (result.type === 'title') {
+      if (userData.titles.includes(result.id)) duplicated = true;
+      else await updateUserData({ titles: [...userData.titles, result.id] });
+    } else if (result.type === 'theme') {
+      const themeEffectId = `theme_${result.id}`;
+      if (userData.effects.includes(themeEffectId)) duplicated = true;
+      else await updateUserData({ effects: [...userData.effects, themeEffectId] });
+    }
+
+    if (duplicated || result.type === 'xp') {
+       await updateUserData({ xp: userData.xp + 50 });
+       (result as any).duplicated = true;
+    }
+    
+    const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
+    const targetStage = rarityLevels[result.rarity] || 1;
+    
+    let currentStage = 1;
+    const animateBox = () => {
+      setTimeout(() => {
+        if (currentStage < targetStage) {
+          currentStage++;
+          setPullStage(currentStage);
+          if (currentStage === 2) setCurrentBoxIcon("🥈");
+          if (currentStage === 3) setCurrentBoxIcon("🥇");
+          if (currentStage === 4) setCurrentBoxIcon("🌈");
+          if (currentStage === 5) setCurrentBoxIcon("🌌");
+          animateBox();
+        } else {
+          setTimeout(() => {
+            setPullStage(10);
+            setGachaResult(result);
+            setIsPulling(false);
+          }, 800);
+        }
+      }, 700);
+    };
+    
+    animateBox();
   };
 
   const tabs: { id: Tab, label: string }[] = [
@@ -299,7 +317,9 @@ export default function ShopPage() {
           >
             {activeTab === "gacha" && (
               <div className="game-panel p-8 text-center max-w-2xl mx-auto relative overflow-hidden">
-                <div className="text-6xl mb-6">{isPulling ? "📦" : "🎁"}</div>
+                <div className={`text-6xl mb-6 ${pullStage > 0 && pullStage < 10 ? 'animate-bounce' : ''}`}>
+                  {pullStage > 0 && pullStage < 10 ? currentBoxIcon : "🎁"}
+                </div>
                 <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
                 <p className="text-slate-300 font-bold mb-8">1回 100 PT でレアアバターや限定エフェクトを引き当てよう！</p>
                 
@@ -329,16 +349,20 @@ export default function ShopPage() {
                       className="mt-6 text-left game-panel-light p-6 overflow-hidden"
                     >
                       <h3 className="font-black text-blue-900 mb-4 border-b-2 border-blue-200 pb-2">提供割合</h3>
-                      <div className="space-y-3">
-                        {gachaDrops.map(drop => (
-                          <div key={drop.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
-                            <div className="flex items-center gap-3">
-                              <span className="text-2xl">{drop.icon}</span>
-                              <span className="font-bold text-slate-700">{drop.name}</span>
+                      <div className="space-y-4">
+                        {gachaRates.map((tier, idx) => (
+                          <div key={idx} className={`p-4 rounded-lg border ${tier.bg} shadow-inner`}>
+                            <div className="flex justify-between items-center mb-3 border-b border-black/10 pb-2">
+                              <span className={`font-black text-xl ${tier.color} drop-shadow-sm`}>{tier.rarity}</span>
+                              <span className="font-mono font-black text-lg bg-white/60 px-3 py-1 rounded-full text-slate-700">{tier.rate}</span>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <span className={`text-xs font-black px-2 py-1 rounded ${drop.rarity === '超レア' ? 'bg-red-500 text-white' : drop.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-600'}`}>{drop.rarity}</span>
-                              <span className="font-mono font-bold text-amber-600">{drop.rate}</span>
+                            <div className="flex flex-wrap gap-2">
+                              {tier.items.map(item => (
+                                <div key={item.id} className="bg-white px-2 py-1 rounded shadow-sm text-sm font-bold flex items-center gap-1 text-slate-600">
+                                  <span className="text-base">{item.icon}</span>
+                                  <span>{item.name.replace(/称号「|アバター「|エフェクト「|テーマ「|」/g, '')}</span>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         ))}
@@ -355,7 +379,9 @@ export default function ShopPage() {
                       className="mt-8 game-panel-light p-6"
                     >
                       <div className={`text-sm font-black mb-2 inline-block px-3 py-1 rounded-full ${
-                        gachaResult.rarity === '超レア' ? 'bg-red-500 text-white animate-bounce' :
+                        gachaResult.rarity === '神レア' ? 'bg-purple-500 text-white animate-pulse shadow-[0_0_15px_rgba(168,85,247,0.8)]' :
+                        gachaResult.rarity === '超激レア' ? 'bg-red-500 text-white animate-bounce shadow-[0_0_10px_rgba(239,68,68,0.8)]' :
+                        gachaResult.rarity === '激レア' ? 'bg-amber-500 text-white' :
                         gachaResult.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
                       }`}>
                         {gachaResult.rarity}
