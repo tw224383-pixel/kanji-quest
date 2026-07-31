@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { pullGachaItem, gachaRates, GachaItem } from "../../lib/gachaData";
 import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
+import { GachaAnimation } from "../../components/game/GachaAnimation";
 
 const themes = getAllThemes();
 const effects = getAllEffects();
@@ -32,9 +33,9 @@ export default function ShopPage() {
 
   // Gacha state
   const [isPulling, setIsPulling] = useState(false);
-  const [pullStage, setPullStage] = useState(0);
-  const [currentBoxIcon, setCurrentBoxIcon] = useState("📦");
   const [gachaResult, setGachaResult] = useState<any>(null);
+  const [pendingGachaResult, setPendingGachaResult] = useState<any>(null);
+  const [gachaTargetStage, setGachaTargetStage] = useState(1);
   const [showGachaRates, setShowGachaRates] = useState(false);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-2xl">ロード中...</div>;
@@ -80,8 +81,7 @@ export default function ShopPage() {
     setIsPulling(true);
     setGachaResult(null);
     setShowGachaRates(false);
-    setPullStage(1);
-    setCurrentBoxIcon("📦");
+
     
     await updateUserData({ pt: userData.pt - 100 });
     
@@ -109,30 +109,8 @@ export default function ShopPage() {
     }
     
     const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
-    const targetStage = rarityLevels[result.rarity] || 1;
-    
-    let currentStage = 1;
-    const animateBox = () => {
-      setTimeout(() => {
-        if (currentStage < targetStage) {
-          currentStage++;
-          setPullStage(currentStage);
-          if (currentStage === 2) setCurrentBoxIcon("🥈");
-          if (currentStage === 3) setCurrentBoxIcon("🥇");
-          if (currentStage === 4) setCurrentBoxIcon("🌈");
-          if (currentStage === 5) setCurrentBoxIcon("🌌");
-          animateBox();
-        } else {
-          setTimeout(() => {
-            setPullStage(10);
-            setGachaResult(result);
-            setIsPulling(false);
-          }, 800);
-        }
-      }, 700);
-    };
-    
-    animateBox();
+    setGachaTargetStage(rarityLevels[result.rarity] || 1);
+    setPendingGachaResult(result);
   };
 
   const tabs: { id: Tab, label: string }[] = [
@@ -144,8 +122,19 @@ export default function ShopPage() {
   ];
 
   return (
-    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!previewTheme && (!userData.theme || userData.theme === 'default')) ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
-      {/* Dark overlay for readability */}
+    <>
+      {isPulling && pendingGachaResult && (
+        <GachaAnimation 
+          targetStage={gachaTargetStage} 
+          onComplete={() => {
+            setGachaResult(pendingGachaResult);
+            setPendingGachaResult(null);
+            setIsPulling(false);
+          }} 
+        />
+      )}
+      <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!previewTheme && (!userData.theme || userData.theme === 'default')) ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+        {/* Dark overlay for readability */}
       {(!previewTheme && (!userData.theme || userData.theme === 'default')) && (
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
       )}
@@ -253,9 +242,7 @@ export default function ShopPage() {
           >
             {activeTab === "gacha" && (
               <div className="game-panel p-8 text-center max-w-2xl mx-auto relative overflow-hidden">
-                <div className={`text-6xl mb-6 ${pullStage > 0 && pullStage < 10 ? 'animate-bounce' : ''}`}>
-                  {pullStage > 0 && pullStage < 10 ? currentBoxIcon : "🎁"}
-                </div>
+                <div className="text-6xl mb-6">🎁</div>
                 <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
                 <p className="text-slate-300 font-bold mb-8">1回 100 PT でレアアバターや限定エフェクトを引き当てよう！</p>
                 
@@ -494,6 +481,7 @@ export default function ShopPage() {
         </AnimatePresence>
 
       </div>
-    </main>
+      </main>
+    </>
   );
 }
