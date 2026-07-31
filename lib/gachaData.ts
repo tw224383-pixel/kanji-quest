@@ -96,7 +96,6 @@ export const allGachaItems: GachaItem[] = [
   { id: "👽", type: "avatar", name: "アバター「グレイ」", icon: "👽", rarity: "ノーマル", weight: 2200 },
   { id: "🤡", type: "avatar", name: "アバター「ピエロ」", icon: "🤡", rarity: "ノーマル", weight: 2200 },
   { id: "🥸", type: "avatar", name: "アバター「変装」", icon: "🥸", rarity: "ノーマル", weight: 2200 },
-  { id: "🤓", type: "avatar", name: "アバター「オタク」", icon: "🤓", rarity: "ノーマル", weight: 2200 },
   { id: "🥔", type: "avatar", name: "アバター「じゃがいも」", icon: "🥔", rarity: "ノーマル", weight: 2200 },
   { id: "🍄", type: "avatar", name: "アバター「キノコ」", icon: "🍄", rarity: "ノーマル", weight: 2200 },
   { id: "🐌", type: "avatar", name: "アバター「カタツムリ」", icon: "🐌", rarity: "ノーマル", weight: 2200 },

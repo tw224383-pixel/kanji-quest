@@ -66,16 +66,7 @@ export default function ShopPage() {
     }
   };
 
-  const handleEquip = async (category: "title" | "avatar" | "theme" | "effect", id: string) => {
-    if (category === "title") await updateUserData({ equippedTitle: id });
-    if (category === "avatar") await updateUserData({ equippedAvatar: id });
-    if (category === "theme") await updateUserData({ theme: id });
-    if (category === "effect") await updateUserData({ equippedEffect: id });
-    setPreviewTitle(null);
-    setPreviewAvatar(null);
-    setPreviewTheme(null);
-    setPreviewEffect(null);
-  };
+  // Equipment is now handled only in the Profile page
 
   const pullGacha = async (isRich: boolean = false) => {
     const cost = isRich ? 3000 : 100;
@@ -168,9 +159,7 @@ export default function ShopPage() {
           <div className="absolute bottom-12 left-0 right-0 text-center z-20 flex flex-col items-center gap-4">
             <div className="text-white font-black text-2xl drop-shadow-md">✨ こんな感じになるよ！ ✨</div>
             <div className="flex gap-4">
-              <Button variant="secondary" size="lg" onClick={() => handleEquip("effect", previewEffect)} className="shadow-2xl">
-                ✅ そうびする
-              </Button>
+              {/* Equip button removed from shop */}
               <Button variant="danger" size="lg" onClick={() => setPreviewEffect(null)} className="shadow-2xl">
                 ❌ やめる
               </Button>
@@ -183,7 +172,7 @@ export default function ShopPage() {
       {previewTheme && (
         <div className="fixed top-0 left-0 right-0 z-40 flex justify-center items-center gap-4 py-3 bg-black/80 backdrop-blur-sm">
           <div className="text-white font-black text-base">👀 しちゃく中: {themes.find(t => t.id === previewTheme)?.name ?? previewTheme}</div>
-          <Button variant="secondary" size="sm" onClick={() => handleEquip("theme", previewTheme)}>✅ そうびする</Button>
+          {/* Equip button removed from shop */}
           <Button variant="danger" size="sm" onClick={() => setPreviewTheme(null)}>❌ やめる</Button>
         </div>
       )}
@@ -268,15 +257,13 @@ export default function ShopPage() {
                           <span className="text-xl">🔍</span> 中身を見る
                         </button>
                       </div>
-                      <Button
-                        size="lg"
-                        variant="fun"
-                        className={`w-full py-4 text-xl tracking-wide ${pullingType ? 'animate-pulse' : ''}`}
+                      <button
+                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap bg-amber-400 hover:bg-amber-300 text-amber-900 font-black rounded-xl shadow-[0_4px_0_0_#b45309] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || userData.pt < 100 ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={() => pullGacha(false)}
                         disabled={pullingType !== null || userData.pt < 100}
                       >
                         {pullingType ? "..." : userData.pt < 100 ? "PT不足" : "100 PT でまわす！"}
-                      </Button>
+                      </button>
                     </div>
                     
                     <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-white/90 to-blue-50/90 border-[3px] border-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] flex flex-col justify-between relative overflow-hidden">
@@ -415,7 +402,7 @@ export default function ShopPage() {
                           {isEquipped ? (
                             <div className="text-primary font-black px-4">そうび中</div>
                           ) : isOwned ? (
-                            <Button variant="secondary" onClick={() => handleEquip("theme", theme.id)}>そうび</Button>
+                            <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">所持済み</div>
                           ) : theme.isGachaOnly ? (
                             <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                           ) : (
@@ -457,7 +444,7 @@ export default function ShopPage() {
                           {isEquipped ? (
                             <div className="text-primary font-black px-4">そうび中</div>
                           ) : isOwned ? (
-                            <Button variant="secondary" onClick={() => handleEquip("effect", effect.id)}>そうび</Button>
+                            <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">所持済み</div>
                           ) : effect.isGachaOnly ? (
                             <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                           ) : (
@@ -505,7 +492,7 @@ export default function ShopPage() {
                             {isEquipped ? (
                               <div className="text-primary font-black px-4">そうび中</div>
                             ) : isOwned ? (
-                              <Button variant="secondary" onClick={() => handleEquip("title", title.id)}>そうび</Button>
+                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">所持済み</div>
                             ) : title.isGachaOnly ? (
                               <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                             ) : (
@@ -561,7 +548,7 @@ export default function ShopPage() {
                           {isEquipped ? (
                             <div className="text-primary font-black px-4">そうび中</div>
                           ) : isOwned ? (
-                            <Button variant="secondary" onClick={() => handleEquip("avatar", avatar.id)}>そうび</Button>
+                            <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">所持済み</div>
                           ) : avatar.isGachaOnly ? (
                             <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
                           ) : (
