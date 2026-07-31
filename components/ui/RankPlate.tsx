@@ -21,7 +21,25 @@ export function RankPlate({ level, name, title, avatar, isMvp, onAvatarClick }: 
         </div>
       )}
       {avatarIcon && (avatarIcon.startsWith('/') || avatarIcon.endsWith('.jpg') || avatarIcon.endsWith('.png')) ? (
-        <img src={avatarIcon} alt="avatar" className={`w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mx-auto mb-4 ${onAvatarClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`} onClick={() => onAvatarClick && onAvatarClick(avatarIcon, avatar)} />
+        <div className="relative mx-auto mb-4 w-24 h-24">
+          {avatarIcon.startsWith('/kanji-quest/avatars/') && (
+            <>
+              {/* Rich effect back aura */}
+              <div className="absolute inset-[-8px] bg-gradient-to-tr from-yellow-300 via-amber-400 to-yellow-200 rounded-full animate-spin opacity-50 blur-sm" style={{ animationDuration: '4s' }}></div>
+              <div className="absolute inset-[-4px] bg-gradient-to-br from-yellow-100 via-white to-yellow-200 rounded-full animate-pulse shadow-[0_0_15px_rgba(250,204,21,0.8)]"></div>
+              {/* Sparkles */}
+              <div className="absolute -top-2 -right-2 text-xl animate-bounce drop-shadow-md z-20">✨</div>
+              <div className="absolute -bottom-2 -left-2 text-lg animate-bounce drop-shadow-md z-20" style={{ animationDelay: '0.5s' }}>✨</div>
+            </>
+          )}
+          <img 
+            src={avatarIcon} 
+            alt="avatar" 
+            className={`absolute inset-0 w-full h-full rounded-full object-cover border-4 border-white shadow-lg z-10 ${onAvatarClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`} 
+            style={{ objectPosition: avatarIcon.includes('cute_') ? 'center 20%' : 'center' }}
+            onClick={() => onAvatarClick && onAvatarClick(avatarIcon, avatar)} 
+          />
+        </div>
       ) : (
         <div className={`text-6xl mb-4 drop-shadow-md flex justify-center ${onAvatarClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`} onClick={() => onAvatarClick && onAvatarClick(undefined, avatarIcon || "👦")}>{avatarIcon || "👦"}</div>
       )}

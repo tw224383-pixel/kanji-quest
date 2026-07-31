@@ -35,7 +35,12 @@ export function AvatarPreviewModal({
           
           <div className="bg-slate-900/80 p-6 rounded-2xl border-2 border-slate-700 flex justify-center mb-6 relative z-10 shadow-inner">
             {avatarUrl && avatarUrl.startsWith('/') ? (
-              <img src={avatarUrl} alt={name || avatarId} className="w-48 h-48 object-cover rounded-full border-4 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.6)] animate-[pulse_2s_ease-in-out_infinite]" />
+              <img 
+                src={avatarUrl} 
+                alt={name || avatarId} 
+                className="w-48 h-48 object-cover rounded-full border-4 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.6)] animate-[pulse_2s_ease-in-out_infinite]" 
+                style={{ objectPosition: avatarUrl.includes('cute_') ? 'center 20%' : 'center' }}
+              />
             ) : (
               <div className="text-9xl my-4 drop-shadow-lg">{avatarId}</div>
             )}

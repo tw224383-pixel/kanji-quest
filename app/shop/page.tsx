@@ -336,10 +336,10 @@ export default function ShopPage() {
                                             onClick={() => setPreviewingAvatar({ url: item.icon, id: item.id, name: item.name })}
                                             className="hover:scale-125 transition-transform cursor-pointer focus:outline-none"
                                           >
-                                            {item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" /> : item.icon}
+                                            {item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" style={{ objectPosition: item.icon.includes('cute_') ? 'center 20%' : 'center' }} /> : item.icon}
                                           </button>
                                         ) : (
-                                          item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" /> : item.icon
+                                          item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" style={{ objectPosition: item.icon.includes('cute_') ? 'center 20%' : 'center' }} /> : item.icon
                                         )}
                                       </span>
                                       <span>{item.name.replace(/称号「|アバター「|エフェクト「|テーマ「|」/g, '')}</span>
@@ -370,7 +370,12 @@ export default function ShopPage() {
                         </div>
                         <div className="text-6xl my-4 drop-shadow-md flex justify-center">
                           {gachaResult.icon.startsWith('/') ? (
-                            <img src={gachaResult.icon} alt={gachaResult.name} className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl" />
+                            <img 
+                              src={gachaResult.icon} 
+                              alt={gachaResult.name} 
+                              className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl" 
+                              style={{ objectPosition: gachaResult.icon.includes('cute_') ? 'center 20%' : 'center' }}
+                            />
                           ) : (
                             gachaResult.icon
                           )}

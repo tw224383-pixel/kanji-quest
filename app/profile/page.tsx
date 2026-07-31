@@ -183,7 +183,7 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             {avatar.icon?.startsWith('/') ? (
-                              <img src={avatar.icon} alt={avatar.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md cursor-pointer" onClick={() => setPreviewingAvatarModal({url: avatar.icon, id: avatar.id, name: avatar.name})} />
+                              <img src={avatar.icon} alt={avatar.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md cursor-pointer" onClick={() => setPreviewingAvatarModal({url: avatar.icon, id: avatar.id, name: avatar.name})} style={{ objectPosition: avatar.icon.includes('cute_') ? 'center 20%' : 'center' }} />
                             ) : (
                               <div className="text-5xl cursor-pointer" onClick={() => setPreviewingAvatarModal({url: avatar.icon, id: avatar.id, name: avatar.name})}>{avatar.icon}</div>
                             )}
