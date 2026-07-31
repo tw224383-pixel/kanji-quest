@@ -336,10 +336,10 @@ export default function ShopPage() {
                                             onClick={() => setPreviewingAvatar({ url: item.icon, id: item.id, name: item.name })}
                                             className="hover:scale-125 transition-transform cursor-pointer focus:outline-none"
                                           >
-                                            {item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" style={{ objectPosition: item.icon.includes('cute_') ? 'center 20%' : 'center' }} /> : item.icon}
+                                            {item.icon.startsWith('/') ? <div className="w-5 h-5 rounded-full overflow-hidden inline-block relative align-middle"><img src={item.icon} alt="icon" className={`w-full h-full object-cover ${item.icon.includes('cute_') ? 'scale-[1.3] origin-top' : ''}`} style={{ objectPosition: item.icon.includes('cute_') ? 'center 15%' : 'center' }} /></div> : item.icon}
                                           </button>
                                         ) : (
-                                          item.icon.startsWith('/') ? <img src={item.icon} alt="icon" className="w-5 h-5 rounded-full object-cover inline-block" style={{ objectPosition: item.icon.includes('cute_') ? 'center 20%' : 'center' }} /> : item.icon
+                                          item.icon.startsWith('/') ? <div className="w-5 h-5 rounded-full overflow-hidden inline-block relative align-middle"><img src={item.icon} alt="icon" className={`w-full h-full object-cover ${item.icon.includes('cute_') ? 'scale-[1.3] origin-top' : ''}`} style={{ objectPosition: item.icon.includes('cute_') ? 'center 15%' : 'center' }} /></div> : item.icon
                                         )}
                                       </span>
                                       <span>{item.name.replace(/称号「|アバター「|エフェクト「|テーマ「|」/g, '')}</span>
@@ -370,12 +370,14 @@ export default function ShopPage() {
                         </div>
                         <div className="text-6xl my-4 drop-shadow-md flex justify-center">
                           {gachaResult.icon.startsWith('/') ? (
-                            <img 
-                              src={gachaResult.icon} 
-                              alt={gachaResult.name} 
-                              className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl" 
-                              style={{ objectPosition: gachaResult.icon.includes('cute_') ? 'center 20%' : 'center' }}
-                            />
+                              <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-xl mb-4 relative">
+                                <img 
+                                  src={gachaResult.icon} 
+                                  alt="gacha result" 
+                                  className={`w-full h-full object-cover ${gachaResult.icon.includes('cute_') ? 'scale-[1.3] origin-top' : ''}`}
+                                  style={{ objectPosition: gachaResult.icon.includes('cute_') ? 'center 15%' : 'center' }}
+                                />
+                              </div>
                           ) : (
                             gachaResult.icon
                           )}
@@ -544,7 +546,9 @@ export default function ShopPage() {
                               className="text-5xl flex justify-center w-16 hover:scale-110 transition-transform cursor-pointer"
                             >
                               {avatar.icon && avatar.icon.startsWith('/') ? (
-                                <img src={avatar.icon} alt={avatar.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md" style={{ objectPosition: avatar.icon.includes('cute_') ? 'center 20%' : 'center' }} />
+                                <div className="w-14 h-14 rounded-full overflow-hidden relative border-2 border-white shadow-md mx-auto">
+                                  <img src={avatar.icon} alt={avatar.name} className={`w-full h-full object-cover ${avatar.icon.includes('cute_') ? 'scale-[1.3] origin-top' : ''}`} style={{ objectPosition: avatar.icon.includes('cute_') ? 'center 15%' : 'center' }} />
+                                </div>
                               ) : (
                                 avatar.icon
                               )}

@@ -32,13 +32,14 @@ export function RankPlate({ level, name, title, avatar, isMvp, onAvatarClick, on
               <div className="absolute -bottom-2 -left-2 text-lg animate-bounce drop-shadow-md z-20" style={{ animationDelay: '0.5s' }}>✨</div>
             </>
           )}
+        <div className={`absolute inset-0 rounded-full overflow-hidden border-4 border-white shadow-lg z-10 ${onAvatarClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`} onClick={() => onAvatarClick && onAvatarClick(avatarIcon, avatar)}>
           <img 
             src={avatarIcon} 
             alt="avatar" 
-            className={`absolute inset-0 w-full h-full rounded-full object-cover border-4 border-white shadow-lg z-10 ${onAvatarClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`} 
-            style={{ objectPosition: avatarIcon.includes('cute_') ? 'center 20%' : 'center' }}
-            onClick={() => onAvatarClick && onAvatarClick(avatarIcon, avatar)} 
+            className={`w-full h-full object-cover ${avatarIcon.includes('cute_') ? 'scale-[1.3] origin-top' : ''}`} 
+            style={{ objectPosition: avatarIcon.includes('cute_') ? 'center 15%' : 'center' }}
           />
+        </div>
         </div>
       ) : (
         <div className={`text-6xl mb-4 drop-shadow-md flex justify-center ${onAvatarClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`} onClick={() => onAvatarClick && onAvatarClick(undefined, avatarIcon || "👦")}>{avatarIcon || "👦"}</div>
