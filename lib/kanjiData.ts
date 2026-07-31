@@ -2,6 +2,7 @@ export type KanjiQuestion = {
   id: string;
   grade: number;
   word: string;
+  okurigana?: string;
   reading: string;
   type: "onyomi" | "kunyomi";
   choices: string[];
@@ -28,6 +29,7 @@ function mapToQuestions(pool: (RawKanji & { grade: number })[], count: number, a
   return selected.map((k, index) => {
     let type: "onyomi" | "kunyomi" = "onyomi";
     let reading = "";
+    let okurigana = "";
 
     if (k.on.length > 0 && k.kun.length > 0) {
       type = Math.random() > 0.5 ? "onyomi" : "kunyomi";
@@ -38,7 +40,14 @@ function mapToQuestions(pool: (RawKanji & { grade: number })[], count: number, a
     if (type === "onyomi") {
       reading = k.on[Math.floor(Math.random() * k.on.length)];
     } else {
-      reading = k.kun[Math.floor(Math.random() * k.kun.length)];
+      const rawReading = k.kun[Math.floor(Math.random() * k.kun.length)];
+      if (rawReading.includes('.')) {
+        const parts = rawReading.split('.');
+        reading = parts.join('');
+        okurigana = parts[1];
+      } else {
+        reading = rawReading;
+      }
     }
 
     const targetReadings = type === "onyomi" ? allOnReadings : allKunReadings;
@@ -46,8 +55,9 @@ function mapToQuestions(pool: (RawKanji & { grade: number })[], count: number, a
     const wrongChoices = new Set<string>();
     while (wrongChoices.size < 3) {
       const randomReading = targetReadings[Math.floor(Math.random() * targetReadings.length)];
-      if (randomReading !== reading) {
-        wrongChoices.add(randomReading);
+      const cleanRandom = randomReading.replace('.', '');
+      if (cleanRandom !== reading) {
+        wrongChoices.add(cleanRandom);
       }
     }
 
@@ -57,6 +67,7 @@ function mapToQuestions(pool: (RawKanji & { grade: number })[], count: number, a
       id: `${k.grade}-${k.kanji}-${index}`,
       grade: k.grade,
       word: k.kanji,
+      okurigana: okurigana || undefined,
       reading,
       type,
       choices,

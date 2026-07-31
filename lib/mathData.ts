@@ -2,6 +2,7 @@ export type MathQuestion = {
   id: string;
   grade: number;
   word: string; // The math equation (e.g. "5 + 3")
+  okurigana?: string; // Not used for math
   reading: string; // The correct answer as a string (e.g. "8")
   type: "math";
   choices: string[]; // 4 choices including the correct answer
