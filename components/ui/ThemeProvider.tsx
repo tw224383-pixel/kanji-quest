@@ -22,14 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       <div className="fixed inset-0 -z-50 pointer-events-none">
-        {isDefaultTheme ? (
-          <>
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/kanji-quest/images/ui/fantasy_bg.jpg')" }} />
-            <div className="absolute inset-0 bg-black/40" />
-          </>
-        ) : (
-          <ThemeBackground theme={activeTheme} />
-        )}
+        <ThemeBackground theme={activeTheme} />
       </div>
       {children}
     </>

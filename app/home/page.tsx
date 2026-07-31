@@ -58,12 +58,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-6 relative">
-      {/* Dark overlay for readability */}
-      {(!userData.theme || userData.theme === 'default') && (
-        <div className="absolute inset-0 bg-black/30 pointer-events-none z-0"></div>
-      )}
-      
-      <ThemeBackground theme={userData.theme || 'default'} />
+      {/* Dark overlay is now handled globally by ThemeBackground */}
+      {/* ThemeBackground is handled globally by ThemeProvider */}
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
