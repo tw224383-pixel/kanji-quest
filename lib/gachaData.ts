@@ -126,11 +126,11 @@ export const allRichGachaItems: GachaItem[] = [
   { id: "rich_cool_griffin", type: "avatar", name: "アバター「グリフォン」", icon: "/kanji-quest/avatars/cool_griffin.jpg", rarity: "激レア", weight: 1000 },
 
   // --- かわいい枠 (Cute) ---
-  { id: "rich_princess", type: "avatar", name: "アバター「プリンセス」", icon: "/kanji-quest/avatars/cute_princess_v2.jpg", rarity: "神レア", weight: 20 },
+  { id: "rich_princess", type: "avatar", name: "アバター「プリンセス」", icon: "/kanji-quest/avatars/cute_princess_v2.png", rarity: "神レア", weight: 20 },
   { id: "rich_angel", type: "avatar", name: "アバター「エンジェル」", icon: "/kanji-quest/avatars/cute_angel.jpg", rarity: "超激レア", weight: 200 },
   { id: "rich_magical", type: "avatar", name: "アバター「魔法少女」", icon: "/kanji-quest/avatars/cute_magical.jpg", rarity: "超激レア", weight: 200 },
   { id: "rich_fairy", type: "avatar", name: "アバター「フェアリー」", icon: "/kanji-quest/avatars/cute_fairy.jpg", rarity: "激レア", weight: 1000 },
-  { id: "rich_mermaid", type: "avatar", name: "アバター「マーメイド」", icon: "/kanji-quest/avatars/cute_mermaid_v2.jpg", rarity: "激レア", weight: 1000 },
+  { id: "rich_mermaid", type: "avatar", name: "アバター「マーメイド」", icon: "/kanji-quest/avatars/cute_mermaid_v2.png", rarity: "激レア", weight: 1000 },
 ];
 
 export function pullRichGachaItem(): GachaItem {
