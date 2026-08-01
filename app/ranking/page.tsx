@@ -36,16 +36,16 @@ export default function RankingPage() {
       setLoading(true);
       try {
         const usersRef = collection(db, "users");
-        // Firebase composite index (grade + xp) is likely missing. 
-        // We will fetch users by grade and sort them client-side.
+        const currentWeekString = getCurrentJSTWeekString();
+        // We will fetch users by grade and active week, then sort them client-side.
         const q = query(
           usersRef, 
-          where("grade", "==", gradeFilter)
+          where("grade", "==", gradeFilter),
+          where("lastWeekString", "==", currentWeekString)
         );
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RankingUser));
         
-        const currentWeekString = getCurrentJSTWeekString();
         // Client-side sort and limit, safe against undefined weeklyXp
         const sortedData = data.sort((a, b) => {
           const aXp = a.lastWeekString === currentWeekString ? (a.weeklyXp || 0) : 0;

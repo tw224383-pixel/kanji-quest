@@ -53,9 +53,7 @@ export default function ShopPage() {
     if (category === "theme") {
       const isOwned = userData.effects.includes(`theme_${id}`);
       if (!isOwned) {
-        await updateUserData({ pt: newPt, effects: [...userData.effects, `theme_${id}`], theme: id });
-      } else {
-        await updateUserData({ theme: id });
+        await updateUserData({ pt: newPt, effects: [...userData.effects, `theme_${id}`] });
       }
     } else if (category === "effect" && !userData.effects.includes(id)) {
       await updateUserData({ pt: newPt, effects: [...userData.effects, id] });
