@@ -1,4 +1,4 @@
-import { allGachaItems, allRichGachaItems, allRichGacha2Items } from './gachaData';
+import { allGachaItems, allRichGachaItems, allRichGacha2Items, Rarity } from './gachaData';
 
 export const shopThemes = [
   { id: "default", name: "いつもの", price: 0, icon: "📄" },
@@ -149,3 +149,72 @@ export function getAllAvatars(): UnifiedItem[] {
   }));
   return [...shopAvatars.map(i => ({...i, icon: i.id, isGachaOnly: false})), ...gachaAvatars, ...richGachaAvatars];
 }
+
+export interface AvatarInfo {
+  id: string;
+  name: string;
+  rarity: Rarity;
+  icon: string;
+}
+
+export function getAvatarInfo(avatarIdOrUrl?: string): AvatarInfo | null {
+  if (!avatarIdOrUrl) return null;
+
+  // Check Rich Gacha 2
+  const rg2 = allRichGacha2Items.find(i => i.id === avatarIdOrUrl || i.icon === avatarIdOrUrl);
+  if (rg2) {
+    return {
+      id: rg2.id,
+      name: rg2.name.replace(/^アバター「|」$/g, ''),
+      rarity: rg2.rarity,
+      icon: rg2.icon
+    };
+  }
+
+  // Check Rich Gacha 1
+  const rg1 = allRichGachaItems.find(i => i.id === avatarIdOrUrl || i.icon === avatarIdOrUrl);
+  if (rg1) {
+    return {
+      id: rg1.id,
+      name: rg1.name.replace(/^アバター「|」$/g, ''),
+      rarity: rg1.rarity,
+      icon: rg1.icon
+    };
+  }
+
+  // Check Regular Gacha
+  const g1 = allGachaItems.find(i => (i.id === avatarIdOrUrl || i.icon === avatarIdOrUrl) && i.type === 'avatar');
+  if (g1) {
+    return {
+      id: g1.id,
+      name: g1.name.replace(/^アバター「|」$/g, ''),
+      rarity: g1.rarity,
+      icon: g1.icon
+    };
+  }
+
+  // Check Shop Avatars
+  const shopAv = shopAvatars.find(i => i.id === avatarIdOrUrl || i.name === avatarIdOrUrl);
+  if (shopAv) {
+    let rarity: Rarity = "ノーマル";
+    if (["🏅", "🏆"].includes(shopAv.id)) rarity = "神レア";
+    else if (["🦁", "🦅", "🦖", "🚀", "🛸"].includes(shopAv.id)) rarity = "超激レア";
+    else if (["🤖", "👾", "🧙‍♂️", "🧛", "🧚", "🦸", "🥷"].includes(shopAv.id)) rarity = "激レア";
+    else if (["🐲", "🦄", "👽", "👻"].includes(shopAv.id)) rarity = "レア";
+
+    return {
+      id: shopAv.id,
+      name: shopAv.name,
+      rarity,
+      icon: shopAv.id
+    };
+  }
+
+  return {
+    id: avatarIdOrUrl,
+    name: avatarIdOrUrl,
+    rarity: "ノーマル",
+    icon: avatarIdOrUrl
+  };
+}
+
