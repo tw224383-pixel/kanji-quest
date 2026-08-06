@@ -36,6 +36,11 @@ export const allGachaItems: GachaItem[] = [
   { id: "divine_thunder", type: "effect", name: "エフェクト「神の雷」", icon: "⚡", rarity: "超激レア", weight: 326 },
   { id: "skycastle", type: "theme", name: "テーマ「天空の城」", icon: "🏰", rarity: "超激レア", weight: 330 },
   { id: "magma", type: "theme", name: "テーマ「マグマ地帯」", icon: "🌋", rarity: "超激レア", weight: 330 },
+  { id: "ssr_equip_1", type: "avatar", name: "冥界の兜", icon: "/kanji-quest/images/avatars/ssr_equip_1.jpg", rarity: "超激レア", weight: 326 },
+  { id: "ssr_equip_2", type: "avatar", name: "聖騎士の剣", icon: "/kanji-quest/images/avatars/ssr_equip_2.jpg", rarity: "超激レア", weight: 326 },
+  { id: "ssr_equip_3", type: "avatar", name: "炎の魔導書", icon: "/kanji-quest/images/avatars/ssr_equip_3.jpg", rarity: "超激レア", weight: 326 },
+  { id: "ssr_equip_4", type: "avatar", name: "魔剣ブラッドアイ", icon: "/kanji-quest/images/avatars/ssr_equip_4.jpg", rarity: "超激レア", weight: 326 },
+  { id: "ssr_equip_5", type: "avatar", name: "メドゥーサの盾", icon: "/kanji-quest/images/avatars/ssr_equip_5.jpg", rarity: "超激レア", weight: 326 },
 
   // --- 激レア (SR) 10.0% ---
   { id: "炎の剣士", type: "title", name: "称号「炎の剣士」", icon: "🔥", rarity: "激レア", weight: 400 },
