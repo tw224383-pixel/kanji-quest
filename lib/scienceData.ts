@@ -69,10 +69,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_05",
     "grade": 3,
     "word": "タンポポの花が終わったあと、できるものは何ですか？",
-    "reading": "綿毛（種）",
+    "reading": "綿毛",
     "choices": [
       "ドングリ",
-      "綿毛（種）",
+      "綿毛",
       "松ぼっくり",
       "栗"
     ],
@@ -265,11 +265,11 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_19",
     "grade": 3,
     "word": "光が進む道筋について正しいものはどれですか？",
-    "reading": "まっすぐ（直線に）進む",
+    "reading": "まっすぐ進む",
     "choices": [
       "ジグザグに進む",
       "曲がりくねって進む",
-      "まっすぐ（直線に）進む",
+      "まっすぐ進む",
       "丸を描きながら進む"
     ],
     "category": "光の性質",
@@ -293,10 +293,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_21",
     "grade": 3,
     "word": "磁石のまわりにある、鉄を引きつける力の強い部分を何といいますか？",
-    "reading": "きょく（極）",
+    "reading": "きょく",
     "choices": [
       "中心",
-      "きょく（極）",
+      "きょく",
       "はんこ",
       "はしっこ"
     ],
@@ -307,10 +307,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_22",
     "grade": 3,
     "word": "磁石のN極とS極を近づけたとき、どうなりますか？",
-    "reading": "引きつけ合う（引き合う）",
+    "reading": "引きつけ合う",
     "choices": [
-      "引きつけ合う（引き合う）",
-      "退け合う（しりぞけ合う）",
+      "引きつけ合う",
+      "退け合う",
       "何も起きない",
       "消滅する"
     ],
@@ -419,9 +419,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_30",
     "grade": 3,
     "word": "モーターの回る向きを反対にするには、どうすればよいですか？",
-    "reading": "乾電池の向きを反対（プラスとマイナスを逆）にする",
+    "reading": "乾電池の向きを反対にする",
     "choices": [
-      "乾電池の向きを反対（プラスとマイナスを逆）にする",
+      "乾電池の向きを反対にする",
       "モーターを冷やす",
       "導線を細いものに変える",
       "スイッチを切る"
@@ -433,10 +433,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_31",
     "grade": 3,
     "word": "モノを強くたたいて大きな音を出したとき、モノのようすはどうなっていますか？",
-    "reading": "大きく震えている（振動している）",
+    "reading": "大きく震えている",
     "choices": [
       "まったく動かない",
-      "大きく震えている（振動している）",
+      "大きく震えている",
       "冷たくなっている",
       "軽くなっている"
     ],
@@ -447,10 +447,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_32",
     "grade": 3,
     "word": "音が出ているトライアングルに手を軽くふれると、どうなりますか？",
-    "reading": "音が消える（震えが止まる）",
+    "reading": "音が消える",
     "choices": [
       "音が大きくなる",
-      "音が消える（震えが止まる）",
+      "音が消える",
       "熱くなる",
       "光る"
     ],
@@ -601,10 +601,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_43",
     "grade": 3,
     "word": "ものの重さを比べるために使う道具はどれですか？",
-    "reading": "上皿てんびん（またははかり）",
+    "reading": "上皿てんびん",
     "choices": [
       "温度計",
-      "上皿てんびん（またははかり）",
+      "上皿てんびん",
       "メジャー",
       "方位磁針"
     ],
@@ -615,10 +615,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_44",
     "grade": 3,
     "word": "おもりを水に入れたとき、ものの重さ（てんびんのつりあい）はどうなりますか？",
-    "reading": "水に入えると軽くなったように感じる（浮力がはたらく）",
+    "reading": "水に入えると軽くなったように感じる",
     "choices": [
-      "水に入れる前より重く感じる（重くなる）",
-      "水に入えると軽くなったように感じる（浮力がはたらく）",
+      "水に入れる前より重く感じる",
+      "水に入えると軽くなったように感じる",
       "重さは全く変わらない",
       "消滅する"
     ],
@@ -629,10 +629,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g3_45",
     "grade": 3,
     "word": "ビーカーに入った水の重さをはかるとき、はじめに何をしなければいけませんか？",
-    "reading": "容器（ビーカー）だけの重さを引くか、ゼロに合わせる（風袋引き）",
+    "reading": "容器だけの重さを引くか、ゼロに合わせる",
     "choices": [
       "水をあたためる",
-      "容器（ビーカー）だけの重さを引くか、ゼロに合わせる（風袋引き）",
+      "容器だけの重さを引くか、ゼロに合わせる",
       "水を半分にする",
       "記録用紙に名前を書く"
     ],
@@ -853,9 +853,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_11",
     "grade": 4,
     "word": "人間の体で、腕を曲げたときに縮む筋肉の名前は何ですか？",
-    "reading": "力こぶの筋肉（上腕二頭筋）",
+    "reading": "力こぶの筋肉",
     "choices": [
-      "力こぶの筋肉（上腕二頭筋）",
+      "力こぶの筋肉",
       "背中の筋肉",
       "太ももの筋肉",
       "お腹の筋肉"
@@ -881,11 +881,11 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_13",
     "grade": 4,
     "word": "食べたものは、体の中でどのように消化・吸収されますか？最初に通る消化器官はどれですか？",
-    "reading": "食道（口から入る）",
+    "reading": "食道",
     "choices": [
       "胃",
       "小腸",
-      "食道（口から入る）",
+      "食道",
       "大腸"
     ],
     "category": "人の体のつくりと動き",
@@ -937,10 +937,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_17",
     "grade": 4,
     "word": "サクラの木の冬のようすとして、正しいものはどれですか？",
-    "reading": "葉がすべて落ちて、次の年の芽（冬芽）ができている",
+    "reading": "葉がすべて落ちて、次の年の芽ができている",
     "choices": [
       "葉も花も青々と茂っている",
-      "葉がすべて落ちて、次の年の芽（冬芽）ができている",
+      "葉がすべて落ちて、次の年の芽ができている",
       "真っ赤な紅葉に包まれている",
       "実が鈴なりになっている"
     ],
@@ -951,10 +951,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_18",
     "grade": 4,
     "word": "カブトムシの幼虫が好んで食べる場所やものはどれですか？",
-    "reading": "腐葉土（ふようど）や朽ち木の中",
+    "reading": "腐葉土や朽ち木の中",
     "choices": [
       "きれいな川の水",
-      "腐葉土（ふようど）や朽ち木の中",
+      "腐葉土や朽ち木の中",
       "乾燥した砂漠の砂",
       "新鮮な生の葉"
     ],
@@ -1063,10 +1063,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_26",
     "grade": 4,
     "word": "空気を温めたとき、その体積（かさ）はどうなりますか？",
-    "reading": "大きくなる（膨らむ）",
+    "reading": "大きくなる",
     "choices": [
       "小さくなる",
-      "大きくなる（膨らむ）",
+      "大きくなる",
       "まったく変わらない",
       "重さだけが軽くなる"
     ],
@@ -1091,9 +1091,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_28",
     "grade": 4,
     "word": "水を温めたとき、水の体積はどうなりますか？",
-    "reading": "少し大きくなる（膨らむ）",
+    "reading": "少し大きくなる",
     "choices": [
-      "少し大きくなる（膨らむ）",
+      "少し大きくなる",
       "半分に縮む",
       "完全に消えてなくなる",
       "重さが重くなる"
@@ -1133,10 +1133,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_31",
     "grade": 4,
     "word": "水を加熱し続けると、100℃付近で盛んに泡が出て沸騰します。このとき出てくる泡の正体は何ですか？",
-    "reading": "水蒸気（気体の水）",
+    "reading": "水蒸気",
     "choices": [
       "空気",
-      "水蒸気（気体の水）",
+      "水蒸気",
       "二酸化炭素",
       "水素"
     ],
@@ -1147,10 +1147,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_32",
     "grade": 4,
     "word": "氷がとけて水になると、体積（かさ）はどうなりますか？",
-    "reading": "小さくなる（減る）",
+    "reading": "小さくなる",
     "choices": [
       "大きくなる",
-      "小さくなる（減る）",
+      "小さくなる",
       "まったく変わらない",
       "無限に増える"
     ],
@@ -1175,9 +1175,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_34",
     "grade": 4,
     "word": "鍋のふたの裏につく水滴や、やかんの口から出る白い湯気は、何が変化したものですか？",
-    "reading": "水蒸気が冷やされて液体（水）に戻ったもの",
+    "reading": "水蒸気が冷やされて液体に戻ったもの",
     "choices": [
-      "水蒸気が冷やされて液体（水）に戻ったもの",
+      "水蒸気が冷やされて液体に戻ったもの",
       "空気が固まったもの",
       "金属が溶けたもの",
       "火の粉"
@@ -1217,11 +1217,11 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_37",
     "grade": 4,
     "word": "栓抜きやくるみ割り器のように、支点が端にあり、真ん中に物を置いて持ち上げる道具は、どこが「作用点」になりますか？",
-    "reading": "力が働く（物を挟む・支える）場所",
+    "reading": "力が働く場所",
     "choices": [
       "手で押さえる場所",
       "支えになっている部分",
-      "力が働く（物を挟む・支える）場所",
+      "力が働く場所",
       "何もない場所"
     ],
     "category": "金づちと釘・てこの規則性（※参考：力の働き）",
@@ -1301,10 +1301,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_43",
     "grade": 4,
     "word": "北極星を見つけるために目印とされる、明るい7つの星の並びの名前は何ですか？",
-    "reading": "北斗七星（またはカシオペヤ座）",
+    "reading": "北斗七星",
     "choices": [
       "夏の大三角",
-      "北斗七星（またはカシオペヤ座）",
+      "北斗七星",
       "オリオン座",
       "アンドロメダ銀河"
     ],
@@ -1357,10 +1357,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g4_47",
     "grade": 4,
     "word": "大雨が降ったとき、川の水が急に増えて危険な状態になることを何と言いますか？",
-    "reading": "洪水（増水）",
+    "reading": "洪水",
     "choices": [
       "日照り",
-      "洪水（増水）",
+      "洪水",
       "竜巻",
       "霜柱"
     ],
@@ -1441,9 +1441,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_03",
     "grade": 5,
     "word": "メダカの卵が孵化（ふか）して稚魚が生まれたとき、おなかに持っている栄養の袋を何といいますか？",
-    "reading": "さいのう（卵黄嚢）",
+    "reading": "さいのう",
     "choices": [
-      "さいのう（卵黄嚢）",
+      "さいのう",
       "胃袋",
       "浮き袋",
       "肝臓"
@@ -1459,7 +1459,7 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "choices": [
       "水",
       "適度な温度",
-      "空気（酸素）",
+      "空気",
       "日光"
     ],
     "category": "メダカの誕生と植物の発芽",
@@ -1483,9 +1483,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_06",
     "grade": 5,
     "word": "アサガオなどの花で、花粉がめしべの先につくことを何といいますか？",
-    "reading": "受粉（じゅふん）",
+    "reading": "受粉",
     "choices": [
-      "受粉（じゅふん）",
+      "受粉",
       "結実",
       "光合成",
       "蒸散"
@@ -1497,10 +1497,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_07",
     "grade": 5,
     "word": "受粉が終わったあと、めしべの根もとにある「子房」は最終的にどうなりますか？",
-    "reading": "実（果実）になる",
+    "reading": "実になる",
     "choices": [
       "枯れ落ちる",
-      "実（果実）になる",
+      "実になる",
       "葉に変わる",
       "根になる"
     ],
@@ -1511,10 +1511,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_08",
     "grade": 5,
     "word": "川の水が流れるとき、まわりの土や石を削り取るはたらきを何といいますか？",
-    "reading": "浸食（しんしょく）",
+    "reading": "浸食",
     "choices": [
-      "堆積（たいせき）",
-      "浸食（しんしょく）",
+      "堆積",
+      "浸食",
       "運搬",
       "風化"
     ],
@@ -1553,9 +1553,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_11",
     "grade": 5,
     "word": "日本付近の天気が西から東へ変わりやすい主な原因は何ですか？",
-    "reading": "偏西風（へんせいふう）が吹いているから",
+    "reading": "偏西風が吹いているから",
     "choices": [
-      "偏西風（へんせいふう）が吹いているから",
+      "偏西風が吹いているから",
       "日本が海の真ん中にあるから",
       "台風がいつも北上するから",
       "季節風が同じ方向だから"
@@ -1609,9 +1609,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_15",
     "grade": 5,
     "word": "メダカのえさや雲の動きを調べるために、空全体を10等分したとき、雲が占める割合を何と呼びますか？",
-    "reading": "雲量（うんりょう）",
+    "reading": "雲量",
     "choices": [
-      "雲量（うんりょう）",
+      "雲量",
       "降水量",
       "湿度",
       "気圧"
@@ -1623,10 +1623,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_16",
     "grade": 5,
     "word": "メダカなどの魚は卵から生まれますが、このように卵を産んで増える生き物のことを何と呼びますか？",
-    "reading": "卵生（らんせい）",
+    "reading": "卵生",
     "choices": [
-      "胎生（たいせい）",
-      "卵生（らんせい）",
+      "胎生",
+      "卵生",
       "哺乳類",
       "両生類"
     ],
@@ -1637,10 +1637,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_17",
     "grade": 5,
     "word": "ヒト（人間）の赤ちゃんが母親の胎内で育つとき、赤ちゃんが栄養や酸素を受け取るために母体とつながっている器官は何ですか？",
-    "reading": "へその緒（胎盤）",
+    "reading": "へその緒",
     "choices": [
       "胃袋",
-      "へその緒（胎盤）",
+      "へその緒",
       "肺",
       "心臓"
     ],
@@ -1665,9 +1665,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_19",
     "grade": 5,
     "word": "母親の胎内で、赤ちゃんを包み込んで守っている袋の名前は何ですか？",
-    "reading": "羊膜（ようまく）と羊水",
+    "reading": "羊膜と羊水",
     "choices": [
-      "羊膜（ようまく）と羊水",
+      "羊膜と羊水",
       "胃液の袋",
       "空気の袋",
       "血液の袋"
@@ -1693,10 +1693,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_21",
     "grade": 5,
     "word": "月が太陽の光を反射して光っているとき、地球から見て月が太陽の方向にある（真ん中が地球ではなく太陽と地球の間）ときに見える月の形は何ですか？",
-    "reading": "新月（しんげつ）",
+    "reading": "新月",
     "choices": [
       "満月",
-      "新月（しんげつ）",
+      "新月",
       "上弦の月",
       "下弦の月"
     ],
@@ -1749,10 +1749,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_25",
     "grade": 5,
     "word": "川が海に流れ込むあたり（河口）では、流れてきた土砂はどうなりますか？",
-    "reading": "堆積して平らな土地（三角州など）をつくる",
+    "reading": "堆積して平らな土地をつくる",
     "choices": [
       "すべて吹き飛ぶ",
-      "堆積して平らな土地（三角州など）をつくる",
+      "堆積して平らな土地をつくる",
       "巨大な山になる",
       "金属に変化する"
     ],
@@ -1766,7 +1766,7 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "reading": "振り子のひもの長さ",
     "choices": [
       "おもりの重さ",
-      "ふれはば（振れ幅の大きさ）",
+      "ふれはば",
       "振り子のひもの長さ",
       "おもりの色"
     ],
@@ -1777,10 +1777,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_27",
     "grade": 5,
     "word": "振り子のひもの長さを短くすると、1往復する時間はどうなりますか？",
-    "reading": "短くなる（速く揺れる）",
+    "reading": "短くなる",
     "choices": [
       "長くなる",
-      "短くなる（速く揺れる）",
+      "短くなる",
       "まったく変わらない",
       "揺れが止まる"
     ],
@@ -1833,10 +1833,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_31",
     "grade": 5,
     "word": "エナメル線を巻いた鉄心（釘など）に電流を流すと、鉄心はどうなりますか？",
-    "reading": "磁石（電磁石）になって鉄を引きつける",
+    "reading": "磁石になって鉄を引きつける",
     "choices": [
       "ただ熱くなる",
-      "磁石（電磁石）になって鉄を引きつける",
+      "磁石になって鉄を引きつける",
       "ガラスのように透明になる",
       "音を鳴らし始める"
     ],
@@ -1861,10 +1861,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_33",
     "grade": 5,
     "word": "電磁石のN極とS極を入れ替える（逆にする）には、どうすればよいですか？",
-    "reading": "乾電池の向き（プラスとマイナス）を逆にする",
+    "reading": "乾電池の向きを逆にする",
     "choices": [
       "鉄心を太いものに変える",
-      "乾電池の向き（プラスとマイナス）を逆にする",
+      "乾電池の向きを逆にする",
       "コイルの巻き方をほどく",
       "磁石を遠ざける"
     ],
@@ -1931,10 +1931,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_38",
     "grade": 5,
     "word": "水に溶けた食塩を取り出す方法として、最も適切なものはどれですか？",
-    "reading": "水を蒸発させる（水分を飛ばす）",
+    "reading": "水を蒸発させる",
     "choices": [
       "ろ紙でこしとる",
-      "水を蒸発させる（水分を飛ばす）",
+      "水を蒸発させる",
       "磁石を近づける",
       "冷たい冷蔵庫に入れる"
     ],
@@ -1945,11 +1945,11 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_39",
     "grade": 5,
     "word": "食塩を水に入れて溶かしたとき、ビーカー全体の重さ（質量）はどうなりますか？",
-    "reading": "溶かす前（水と食塩の合計）と変わらない",
+    "reading": "溶かす前と変わらない",
     "choices": [
       "軽くなる",
       "重くなる",
-      "溶かす前（水と食塩の合計）と変わらない",
+      "溶かす前と変わらない",
       "消えてなくなる"
     ],
     "category": "物の溶け方",
@@ -1959,10 +1959,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_40",
     "grade": 5,
     "word": "ミョウバンがたくさん溶けた熱い水溶液を冷やすと、どうなりますか？",
-    "reading": "ミョウバンの粒（結晶）が出てくる",
+    "reading": "ミョウバンの粒が出てくる",
     "choices": [
       "完全に消える",
-      "ミョウバンの粒（結晶）が出てくる",
+      "ミョウバンの粒が出てくる",
       "カチカチの氷になる",
       "気体に変わる"
     ],
@@ -1973,10 +1973,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_41",
     "grade": 5,
     "word": "雨が降ったあと、山の斜面が崩れたり土砂が流れ出したりする災害を何と言いますか？",
-    "reading": "土砂災害（がけ崩れ・土石流など）",
+    "reading": "土砂災害",
     "choices": [
       "津波",
-      "土砂災害（がけ崩れ・土石流など）",
+      "土砂災害",
       "火山噴火",
       "竜巻"
     ],
@@ -1987,10 +1987,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_42",
     "grade": 5,
     "word": "日本にやってくる台風は、主にどの方角からやってくることが多いですか？",
-    "reading": "南の海（太平洋）から北や北東へ",
+    "reading": "南の海から北や北東へ",
     "choices": [
       "北のシベリアから南へ",
-      "南の海（太平洋）から北や北東へ",
+      "南の海から北や北東へ",
       "西の砂漠から東へ",
       "東の海から西へ"
     ],
@@ -2001,10 +2001,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_43",
     "grade": 5,
     "word": "天気予報で使われる「前線」とは、何の境界線のことですか？",
-    "reading": "性質の違う2つの空気の塊（気団）の境界線",
+    "reading": "性質の違う2つの空気の塊の境界線",
     "choices": [
       "海と陸の境界線",
-      "性質の違う2つの空気の塊（気団）の境界線",
+      "性質の違う2つの空気の塊の境界線",
       "山と平野の境界線",
       "昼と夜の境界線"
     ],
@@ -2029,9 +2029,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_45",
     "grade": 5,
     "word": "台風や大雨に備えて、日頃から家庭で確認しておくべき大切なことはどれですか？",
-    "reading": "ハザードマップ（避難場所や危険な場所）の確認",
+    "reading": "ハザードマップの確認",
     "choices": [
-      "ハザードマップ（避難場所や危険な場所）の確認",
+      "ハザードマップの確認",
       "窓を全部取り外しておくこと",
       "川の真ん中にテントを張ること",
       "電気を一切使わない生活をすること"
@@ -2071,10 +2071,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_48",
     "grade": 5,
     "word": "植物の葉で作られたデンプンが、夜間などに根や茎などに蓄えられるとき、主にどのような物質に変えられて運ばれますか？",
-    "reading": "糖（糖分）",
+    "reading": "糖",
     "choices": [
-      "油（脂肪）",
-      "糖（糖分）",
+      "油",
+      "糖",
       "鉄分",
       "塩分"
     ],
@@ -2099,10 +2099,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g5_50",
     "grade": 5,
     "word": "植物の一生（発芽から成長、開花、結実、枯れるまで）で、最後にできるものは何ですか？",
-    "reading": "たくさんの種（実）",
+    "reading": "たくさんの種",
     "choices": [
       "新しい根",
-      "たくさんの種（実）",
+      "たくさんの種",
       "新しい葉っぱ",
       "硬い幹"
     ],
@@ -2113,9 +2113,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_01",
     "grade": 6,
     "word": "植物の根から吸い上げられた水は、葉まで運ばれてからどこから空気中へ出ていきますか？",
-    "reading": "気孔（きこう）",
+    "reading": "気孔",
     "choices": [
-      "気孔（きこう）",
+      "気孔",
       "花びら",
       "種",
       "茎の皮"
@@ -2141,10 +2141,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_03",
     "grade": 6,
     "word": "根から吸収された水が葉まで運ばれる通路の名前は何ですか？",
-    "reading": "導管（どうかん）",
+    "reading": "導管",
     "choices": [
-      "導管（どうかん）",
-      "篩管（しかん）",
+      "導管",
+      "篩管",
       "気管",
       "血管"
     ],
@@ -2155,10 +2155,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_04",
     "grade": 6,
     "word": "葉で作られた養分（糖など）が、体全体に運ばれるときの通路の名前は何ですか？",
-    "reading": "篩管（しかん）",
+    "reading": "篩管",
     "choices": [
       "導管",
-      "篩管（しかん）",
+      "篩管",
       "神経",
       "リンパ管"
     ],
@@ -2169,10 +2169,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_05",
     "grade": 6,
     "word": "ジャガイモの葉に日光を当ててデンプンができているかを調べるとき、葉の色を抜くために使う液体は何ですか？",
-    "reading": "お湯（または熱したエタノール）",
+    "reading": "お湯",
     "choices": [
       "食塩水",
-      "お湯（または熱したエタノール）",
+      "お湯",
       "うすい塩酸",
       "石灰水"
     ],
@@ -2183,10 +2183,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_06",
     "grade": 6,
     "word": "食べたデンプンは、口の中のだ液に含まれる何という消化酵素によって別の物質（麦芽糖など）に変えられますか？",
-    "reading": "アミラーゼ（プチアリン）",
+    "reading": "アミラーゼ",
     "choices": [
       "ペプシン",
-      "アミラーゼ（プチアリン）",
+      "アミラーゼ",
       "リパーゼ",
       "インスリン"
     ],
@@ -2211,9 +2211,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_08",
     "grade": 6,
     "word": "小腸の壁の内側にある、栄養を効率よく吸収するための無数の細かい突起の名前は何ですか？",
-    "reading": "柔毛（じゅうもう）",
+    "reading": "柔毛",
     "choices": [
-      "柔毛（じゅうもう）",
+      "柔毛",
       "気泡",
       "毛細血管の網",
       "繊毛"
@@ -2225,10 +2225,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_09",
     "grade": 6,
     "word": "肺から取り入れられた酸素は、血液中の何という成分によって全身に運ばれますか？",
-    "reading": "赤血球（ヘモグロビン）",
+    "reading": "赤血球",
     "choices": [
       "白血球",
-      "赤血球（ヘモグロビン）",
+      "赤血球",
       "血しょう",
       "血小板"
     ],
@@ -2239,9 +2239,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_10",
     "grade": 6,
     "word": "腎臓（じんぞう）の主な働きとして正しいものはどれですか？",
-    "reading": "血液中の不要な老廃物をこし出してみりょう（尿）をつくる",
+    "reading": "血液中の不要な老廃物をこし出して尿をつくる",
     "choices": [
-      "血液中の不要な老廃物をこし出してみりょう（尿）をつくる",
+      "血液中の不要な老廃物をこし出して尿をつくる",
       "食べたものを細かく噛み砕く",
       "全身の筋肉を動かす",
       "呼吸のリズムを整える"
@@ -2295,11 +2295,11 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_14",
     "grade": 6,
     "word": "空き缶のプルトップや、くるみ割り器、栓抜きなどは、どのタイプのてこですか？",
-    "reading": "作用点が端（または支点と力点の間）にあるてこ",
+    "reading": "作用点が端にあるてこ",
     "choices": [
       "支点が真ん中にあるてこ",
       "力点が真ん中にあるてこ",
-      "作用点が端（または支点と力点の間）にあるてこ",
+      "作用点が端にあるてこ",
       "てこではない"
     ],
     "category": "てこの規則性",
@@ -2393,10 +2393,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_21",
     "grade": 6,
     "word": "手回し発電機を回して電気を作るとき、エネルギーの変換として正しいものはどれですか？",
-    "reading": "運動（力学的）エネルギーが電気エネルギーに変わる",
+    "reading": "運動エネルギーが電気エネルギーに変わる",
     "choices": [
       "電気エネルギーが運動エネルギーに変わる",
-      "運動（力学的）エネルギーが電気エネルギーに変わる",
+      "運動エネルギーが電気エネルギーに変わる",
       "光エネルギーが音エネルギーに変わる",
       "化学エネルギーが熱に変わる"
     ],
@@ -2449,9 +2449,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_25",
     "grade": 6,
     "word": "電気を蓄えることができる道具（蓄電器）の代表例はどれですか？",
-    "reading": "コンデンサーや充電池（リチウムイオン電池など）",
+    "reading": "コンデンサーや充電池",
     "choices": [
-      "コンデンサーや充電池（リチウムイオン電池など）",
+      "コンデンサーや充電池",
       "ただの銅線",
       "ガラスのコップ",
       "木製の板"
@@ -2505,10 +2505,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_29",
     "grade": 6,
     "word": "太陽の表面に見える、まわりより黒く見える部分の名前は何ですか？",
-    "reading": "黒点（こくてん）",
+    "reading": "黒点",
     "choices": [
       "プロミネンス",
-      "黒点（こくてん）",
+      "黒点",
       "コロナ",
       "フレア"
     ],
@@ -2561,10 +2561,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_33",
     "grade": 6,
     "word": "地層が斜めに傾いたり、途中でズレて切れたりする大地の大きな力を何と言いますか？",
-    "reading": "地殻変動（しゅう曲や断層）",
+    "reading": "地殻変動",
     "choices": [
       "風化",
-      "地殻変動（しゅう曲や断層）",
+      "地殻変動",
       "浸食",
       "蒸発"
     ],
@@ -2575,12 +2575,12 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_34",
     "grade": 6,
     "word": "堆積岩（たいせきがん）のうち、火山から噴出した軽石や火山灰などが積もってできた岩石の名前は何ですか？",
-    "reading": "凝灰岩（ぎょうかいがん）",
+    "reading": "凝灰岩",
     "choices": [
       "れき岩",
       "砂岩",
       "泥岩",
-      "凝灰岩（ぎょうかいがん）"
+      "凝灰岩"
     ],
     "category": "地層の重なりと大地の変動",
     "rationale": "火山灰などが積もってできた白っぽい岩石を「凝灰岩」と呼び、地層の重なりを調べる目印（鍵層）になります。"
@@ -2617,11 +2617,11 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_37",
     "grade": 6,
     "word": "食物連鎖のピラミッドで、一番下の土台（生産者）になることが多い生き物は何ですか？",
-    "reading": "植物（緑色植物）",
+    "reading": "植物",
     "choices": [
       "肉食動物",
       "草食動物",
-      "植物（緑色植物）",
+      "植物",
       "分解者"
     ],
     "category": "生物と環境（食物連鎖と自然のバランス）",
@@ -2659,11 +2659,11 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_40",
     "grade": 6,
     "word": "人間が自然環境や地球温暖化を防ぐために、二酸化炭素の排出を減らす取り組みとして正しいものはどれですか？",
-    "reading": "省エネルギーの推進や再生可能エネルギー（太陽光など）の活用",
+    "reading": "省エネルギーの推進や再生可能エネルギーの活用",
     "choices": [
       "化石燃料を大量に燃やし続ける",
       "森林の伐採を増やし、プラスチックを海に捨てる",
-      "省エネルギーの推進や再生可能エネルギー（太陽光など）の活用",
+      "省エネルギーの推進や再生可能エネルギーの活用",
       "電気を無駄に使い切る"
     ],
     "category": "生物と環境（食物連鎖と自然のバランス）",
@@ -2687,10 +2687,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_42",
     "grade": 6,
     "word": "太陽のまわりを公転している地球や火星、木星などの星の総称を何と言いますか？",
-    "reading": "惑星（わくせい）",
+    "reading": "惑星",
     "choices": [
       "恒星",
-      "惑星（わくせい）",
+      "惑星",
       "衛星",
       "彗星"
     ],
@@ -2701,11 +2701,11 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_43",
     "grade": 6,
     "word": "地球のまわりを回る「月」のように、惑星のまわりを回る天体のことを何と言いますか？",
-    "reading": "衛星（えいせい）",
+    "reading": "衛星",
     "choices": [
       "恒星",
       "惑星",
-      "衛星（えいせい）",
+      "衛星",
       "隕石"
     ],
     "category": "月と太陽・天体のまとめ",
@@ -2715,9 +2715,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_44",
     "grade": 6,
     "word": "自分で光を出して輝いている星（太陽など）のグループを何と言いますか？",
-    "reading": "恒星（こうせい）",
+    "reading": "恒星",
     "choices": [
-      "恒星（こうせい）",
+      "恒星",
       "惑星",
       "衛星",
       "彗星"
@@ -2729,10 +2729,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_45",
     "grade": 6,
     "word": "北極星が1年中ほぼ同じ場所にあるように見えるのは、地球の何という軸が北極星の方向を指しているからですか？",
-    "reading": "地軸（ちじく）",
+    "reading": "地軸",
     "choices": [
       "赤道",
-      "地軸（ちじく）",
+      "地軸",
       "公転軌道",
       "磁石の軸"
     ],
@@ -2743,9 +2743,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_46",
     "grade": 6,
     "word": "大地震が起きたとき、海岸付近で最も恐れられている巨大な波の災害は何ですか？",
-    "reading": "津波（つなみ）",
+    "reading": "津波",
     "choices": [
-      "津波（つなみ）",
+      "津波",
       "洪水",
       "台風",
       "潮汐"
@@ -2757,10 +2757,10 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_47",
     "grade": 6,
     "word": "地球温暖化が進む主な原因の一つとされている、大気中で熱を閉じ込める気体の名前は何ですか？",
-    "reading": "二酸化炭素（温室効果ガス）",
+    "reading": "二酸化炭素",
     "choices": [
       "酸素",
-      "二酸化炭素（温室効果ガス）",
+      "二酸化炭素",
       "窒素",
       "ヘリウム"
     ],
@@ -2771,9 +2771,9 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_48",
     "grade": 6,
     "word": "火山が噴火したとき、山から流れ出るドロドロの熱い液体を何と言いますか？",
-    "reading": "マグマ（地表に出てからは溶岩）",
+    "reading": "マグマ",
     "choices": [
-      "マグマ（地表に出てからは溶岩）",
+      "マグマ",
       "地下水",
       "温泉",
       "石油"
@@ -2799,12 +2799,12 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
     "id": "sci_g6_50",
     "grade": 6,
     "word": "私たちが持続可能な地球環境を守るために、ごみを減らす3R（スリーアール）に含まれないものはどれですか？",
-    "reading": "リプレイス（全て新品に買い換えること）",
+    "reading": "リプレイス",
     "choices": [
-      "リデュース（発生抑制）",
-      "リユース（再使用）",
-      "リサイクル（再資源化）",
-      "リプレイス（全て新品に買い換えること）"
+      "リデュース",
+      "リユース",
+      "リサイクル",
+      "リプレイス"
     ],
     "category": "自然災害と地球環境の総まとめ",
     "rationale": "3Rとは「Reduce（減らす）」「Reuse（再利用）」そして「Recycle（再資源化）」の3つを指します。"
