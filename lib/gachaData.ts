@@ -162,3 +162,48 @@ export const richGachaRates = [
   { rarity: "超激レア", rate: "16.5%", color: "text-red-500", bg: "bg-red-100", items: allRichGachaItems.filter(i => i.rarity === "超激レア") },
   { rarity: "激レア", rate: "82.6%", color: "text-amber-500", bg: "bg-amber-100", items: allRichGachaItems.filter(i => i.rarity === "激レア") },
 ];
+
+export const allRichGacha2Items: GachaItem[] = [
+  { id: "ノーマル_堅牢の山岳ドワーフ", type: "avatar", name: "アバター「堅牢の山岳ドワーフ」", icon: "/kanji-quest/images/gacha2/ノーマル_堅牢の山岳ドワーフ.png", rarity: "ノーマル", weight: 250 },
+  { id: "ノーマル_堕落した聖騎士", type: "avatar", name: "アバター「堕落した聖騎士」", icon: "/kanji-quest/images/gacha2/ノーマル_堕落した聖騎士.png", rarity: "ノーマル", weight: 250 },
+  { id: "ノーマル_嵐を呼ぶハーピー・リーダー", type: "avatar", name: "アバター「嵐を呼ぶハーピー・リーダー」", icon: "/kanji-quest/images/gacha2/ノーマル_嵐を呼ぶハーピー・リーダー.png", rarity: "ノーマル", weight: 250 },
+  { id: "ノーマル_災厄の双頭キマイラ", type: "avatar", name: "アバター「災厄の双頭キマイラ」", icon: "/kanji-quest/images/gacha2/ノーマル_災厄の双頭キマイラ.png", rarity: "ノーマル", weight: 250 },
+  { id: "ノーマル_炎獄の魔戦士", type: "avatar", name: "アバター「炎獄の魔戦士」", icon: "/kanji-quest/images/gacha2/ノーマル_炎獄の魔戦士.png", rarity: "ノーマル", weight: 250 },
+  { id: "ノーマル_猛火のサラマンダーマン", type: "avatar", name: "アバター「猛火のサラマンダーマン」", icon: "/kanji-quest/images/gacha2/ノーマル_猛火のサラマンダーマン.png", rarity: "ノーマル", weight: 250 },
+  { id: "ノーマル_荒野の大剣豪", type: "avatar", name: "アバター「荒野の大剣豪」", icon: "/kanji-quest/images/gacha2/ノーマル_荒野の大剣豪.png", rarity: "ノーマル", weight: 250 },
+  { id: "ノーマル_近衛兵リーダー槍使い", type: "avatar", name: "アバター「近衛兵リーダー槍使い」", icon: "/kanji-quest/images/gacha2/ノーマル_近衛兵リーダー槍使い.png", rarity: "ノーマル", weight: 250 },
+  { id: "レア_エルフの森の射手", type: "avatar", name: "アバター「エルフの森の射手」", icon: "/kanji-quest/images/gacha2/レア_エルフの森の射手.png", rarity: "レア", weight: 625 },
+  { id: "レア_呪われし死霊騎士", type: "avatar", name: "アバター「呪われし死霊騎士」", icon: "/kanji-quest/images/gacha2/レア_呪われし死霊騎士.png", rarity: "レア", weight: 625 },
+  { id: "レア_氷結の魔女", type: "avatar", name: "アバター「氷結の魔女」", icon: "/kanji-quest/images/gacha2/レア_氷結の魔女.png", rarity: "レア", weight: 625 },
+  { id: "レア_雲の", type: "avatar", name: "アバター「雲の戦士」", icon: "/kanji-quest/images/gacha2/レア_雲の.png", rarity: "レア", weight: 625 },
+  { id: "激レア_天才魔導士", type: "avatar", name: "アバター「天才魔導士」", icon: "/kanji-quest/images/gacha2/激レア_天才魔導士.png", rarity: "激レア", weight: 875 },
+  { id: "激レア_狂気の道化師", type: "avatar", name: "アバター「狂気の道化師」", icon: "/kanji-quest/images/gacha2/激レア_狂気の道化師.png", rarity: "激レア", weight: 875 },
+  { id: "激レア_蒼き魔法剣士", type: "avatar", name: "アバター「蒼き魔法剣士」", icon: "/kanji-quest/images/gacha2/激レア_蒼き魔法剣士.png", rarity: "激レア", weight: 875 },
+  { id: "激レア_闇の精霊使い", type: "avatar", name: "アバター「闇の精霊使い」", icon: "/kanji-quest/images/gacha2/激レア_闇の精霊使い.png", rarity: "激レア", weight: 875 },
+  { id: "神レア_漆黒の魔王軍将軍", type: "avatar", name: "アバター「漆黒の魔王軍将軍」", icon: "/kanji-quest/images/gacha2/神レア_漆黒の魔王軍将軍.png", rarity: "神レア", weight: 100 },
+  { id: "神レア_終焉の魔王", type: "avatar", name: "アバター「終焉の魔王」", icon: "/kanji-quest/images/gacha2/神レア_終焉の魔王.png", rarity: "神レア", weight: 100 },
+  { id: "神レア_聖なるホワイトドラゴン", type: "avatar", name: "アバター「聖なるホワイトドラゴン」", icon: "/kanji-quest/images/gacha2/神レア_聖なるホワイトドラゴン.png", rarity: "神レア", weight: 100 },
+  { id: "神レア_虚無の使者・カオスエージェント", type: "avatar", name: "アバター「虚無の使者・カオスエージェント」", icon: "/kanji-quest/images/gacha2/神レア_虚無の使者・カオスエージェント.png", rarity: "神レア", weight: 100 },
+  { id: "神レア_虚空の堕天使", type: "avatar", name: "アバター「虚空の堕天使」", icon: "/kanji-quest/images/gacha2/神レア_虚空の堕天使.png", rarity: "神レア", weight: 100 },
+  { id: "超激レア_大賢者", type: "avatar", name: "アバター「大賢者」", icon: "/kanji-quest/images/gacha2/超激レア_大賢者.png", rarity: "超激レア", weight: 500 },
+  { id: "超激レア_異次元の魔法使い", type: "avatar", name: "アバター「異次元の魔法使い」", icon: "/kanji-quest/images/gacha2/超激レア_異次元の魔法使い.png", rarity: "超激レア", weight: 500 },
+  { id: "超激レア_雷光の精霊・サンダービースト", type: "avatar", name: "アバター「雷光の精霊・サンダービースト」", icon: "/kanji-quest/images/gacha2/超激レア_雷光の精霊・サンダービースト.png", rarity: "超激レア", weight: 500 },
+];
+
+export function pullRichGacha2Item(): GachaItem {
+  const totalWeight = allRichGacha2Items.reduce((acc, item) => acc + item.weight, 0);
+  let random = Math.random() * totalWeight;
+  for (const item of allRichGacha2Items) {
+    if (random < item.weight) return item;
+    random -= item.weight;
+  }
+  return allRichGacha2Items[0];
+}
+
+export const richGacha2Rates = [
+  { rarity: "神レア", rate: "5.0%", color: "text-purple-500", bg: "bg-purple-100", items: allRichGacha2Items.filter(i => i.rarity === "神レア") },
+  { rarity: "超激レア", rate: "15.0%", color: "text-red-500", bg: "bg-red-100", items: allRichGacha2Items.filter(i => i.rarity === "超激レア") },
+  { rarity: "激レア", rate: "35.0%", color: "text-amber-500", bg: "bg-amber-100", items: allRichGacha2Items.filter(i => i.rarity === "激レア") },
+  { rarity: "レア", rate: "25.0%", color: "text-blue-500", bg: "bg-blue-100", items: allRichGacha2Items.filter(i => i.rarity === "レア") },
+  { rarity: "ノーマル", rate: "20.0%", color: "text-slate-500", bg: "bg-slate-200", items: allRichGacha2Items.filter(i => i.rarity === "ノーマル") },
+];

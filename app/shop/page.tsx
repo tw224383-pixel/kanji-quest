@@ -11,7 +11,7 @@ import { RankPlate } from "../../components/ui/RankPlate";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems, richGachaRates } from "../../lib/gachaData";
+import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems, richGachaRates, pullRichGacha2Item, richGacha2Rates } from "../../lib/gachaData";
 import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
 import { RegularGachaAnimation } from "../../components/game/RegularGachaAnimation";
 import { RichGachaAnimation } from "../../components/game/RichGachaAnimation";
@@ -34,11 +34,11 @@ export default function ShopPage() {
   const [previewEffect, setPreviewEffect] = useState<string | null>(null);
 
   // Gacha state
-  const [pullingType, setPullingType] = useState<"regular" | "rich" | null>(null);
+  const [pullingType, setPullingType] = useState<"regular" | "rich" | "rich2" | null>(null);
   const [gachaResult, setGachaResult] = useState<any>(null);
   const [pendingGachaResult, setPendingGachaResult] = useState<any>(null);
   const [gachaTargetStage, setGachaTargetStage] = useState(1);
-  const [showGachaRates, setShowGachaRates] = useState<"regular" | "rich" | null>(null);
+  const [showGachaRates, setShowGachaRates] = useState<"regular" | "rich" | "rich2" | null>(null);
   const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
 
   useEffect(() => {
@@ -70,15 +70,19 @@ export default function ShopPage() {
 
   // Equipment is now handled only in the Profile page
 
-  const pullGacha = async (isRich: boolean = false) => {
-    const cost = isRich ? 3000 : 100;
+  const pullGacha = async (type: "regular" | "rich" | "rich2" = "regular") => {
+    const cost = type === "regular" ? 100 : 3000;
     if (userData.pt < cost || pullingType) return;
-    setPullingType(isRich ? "rich" : "regular");
+    setPullingType(type);
     setGachaResult(null);
     setShowGachaRates(null);
     await updateUserData({ pt: userData.pt - cost });
     
-    const result = isRich ? pullRichGachaItem() : pullGachaItem();
+    let result;
+    if (type === "rich") result = pullRichGachaItem();
+    else if (type === "rich2") result = pullRichGacha2Item();
+    else result = pullGachaItem();
+
     let duplicated = false;
     
     if (result.type === 'effect') {
@@ -97,7 +101,7 @@ export default function ShopPage() {
     }
     
     if (duplicated || result.type === 'xp') {
-      if (isRich) {
+      if (type !== "regular") {
         await updateUserData({ pt: userData.pt + 1000 });
         (result as any).duplicated = true;
         (result as any).refund = "1000 PT";
@@ -127,7 +131,7 @@ export default function ShopPage() {
   return (
     <>
       {/* Gacha animation full screen */}
-      {pullingType === "rich" && pendingGachaResult && (
+      {(pullingType === "rich" || pullingType === "rich2") && pendingGachaResult && (
         <RichGachaAnimation
           targetStage={gachaTargetStage}
           onComplete={() => {
@@ -261,7 +265,7 @@ export default function ShopPage() {
                       </div>
                       <button
                         className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap bg-amber-400 hover:bg-amber-300 text-amber-900 font-black rounded-xl shadow-[0_4px_0_0_#b45309] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || userData.pt < 100 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => pullGacha(false)}
+                        onClick={() => pullGacha("regular")}
                         disabled={pullingType !== null || userData.pt < 100}
                       >
                         {pullingType ? "..." : userData.pt < 100 ? "PT不足" : "100 PT でまわす！"}
@@ -273,7 +277,7 @@ export default function ShopPage() {
                       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
                       <div className="relative z-10 text-center">
                         <div className="text-amber-500 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
-                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">💎</span> リッチガチャ <span className="text-sm">(3000 PT)</span>
+                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">💎</span> リッチガチャ１ <span className="text-sm">(3000 PT)</span>
                         </div>
                         <button
                           onClick={() => setShowGachaRates(showGachaRates === "rich" ? null : "rich")}
@@ -284,10 +288,32 @@ export default function ShopPage() {
                       </div>
                         <button
                           className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          onClick={() => pullGacha(true)}
+                          onClick={() => pullGacha("rich")}
                           disabled={pullingType !== null || userData.pt < 3000}
                         >
-                          {pullingType ? "..." : "3000 PT でまわす！"}
+                          {pullingType ? "..." : "3000 PT でまわす"}
+                        </button>
+                    </div>
+
+                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-purple-50/90 to-purple-200/90 border-[3px] border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.3)] flex flex-col justify-between relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
+                      <div className="relative z-10 text-center">
+                        <div className="text-purple-600 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
+                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">✨</span> リッチガチャ２ <span className="text-sm">(3000 PT)</span>
+                        </div>
+                        <button
+                          onClick={() => setShowGachaRates(showGachaRates === "rich2" ? null : "rich2")}
+                          className="mb-6 px-6 py-2 bg-[#fdf8e1] hover:bg-[#faedb9] text-[#5c3a21] font-black text-sm rounded-full shadow-md border-2 border-[#e6c770] transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
+                        >
+                          <span className="text-lg">🔍</span> 中身を見る
+                        </button>
+                      </div>
+                        <button
+                          className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          onClick={() => pullGacha("rich2")}
+                          disabled={pullingType !== null || userData.pt < 3000}
+                        >
+                          {pullingType ? "..." : "3000 PT でまわす"}
                         </button>
                     </div>
                   </div>
@@ -301,7 +327,7 @@ export default function ShopPage() {
                       >
                         <h3 className="font-black text-blue-900 mb-4 border-b-2 border-blue-200 pb-2">提供割合</h3>
                         <div className="space-y-4">
-                          {(showGachaRates === "rich" ? richGachaRates : gachaRates).map((tier, idx) => (
+                          {(showGachaRates === "rich" ? richGachaRates : showGachaRates === "rich2" ? richGacha2Rates : gachaRates).map((tier, idx) => (
                             <div key={idx} className={`p-4 rounded-lg border ${tier.bg} shadow-inner`}>
                               <div className="flex justify-between items-center mb-3 border-b border-black/10 pb-2">
                                 <span className={`font-black text-xl ${tier.color} drop-shadow-sm`}>{tier.rarity}</span>
