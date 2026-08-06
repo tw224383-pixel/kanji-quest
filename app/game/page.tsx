@@ -352,7 +352,7 @@ export default function GamePage() {
 
   return (
     <main className={`min-h-screen p-4 flex flex-col relative overflow-hidden transition-colors duration-1000 bg-cover bg-center bg-fixed ${
-      (!userData?.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""
+      (!userData?.theme || userData.theme === 'default') ? "bg-[url('/images/ui/fantasy_bg.jpg')]" : ""
     } ${isBossBattle && !isFinished && userData?.scaryMode ? 'text-red-50' : ''}`}>
       {/* Background Overlay */}
       {!isBossBattle && !isFinished && (!userData?.theme || userData.theme === 'default') && (

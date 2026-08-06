@@ -29,7 +29,7 @@ export function AvatarPreviewModal({
           exit={{ scale: 0.8, opacity: 0 }}
         >
           {/* Sparkles background */}
-          <div className="absolute inset-0 bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')] bg-cover opacity-20 pointer-events-none mix-blend-screen" />
+          <div className="absolute inset-0 bg-[url('/images/ui/fantasy_bg.jpg')] bg-cover opacity-20 pointer-events-none mix-blend-screen" />
           
           <h2 className="text-2xl font-black text-white mb-6 drop-shadow-md relative z-10">{name || "アバター"}</h2>
           

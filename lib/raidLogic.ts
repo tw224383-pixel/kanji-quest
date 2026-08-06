@@ -28,7 +28,7 @@ export function getRaidBossIcon(level: number): string {
 }
 
 export function getRaidBossImagePath(level: number, isScary: boolean = true): string {
-  const dir = isScary ? "/kanji-quest/images/boss" : "/kanji-quest/images/boss/cute";
+  const dir = isScary ? "/images/boss" : "/images/boss/cute";
   if (level <= 1) return `${dir}/slime.jpg`;
   if (level === 2) return `${dir}/bat.jpg`;
   if (level === 3) return `${dir}/wolf.jpg`;

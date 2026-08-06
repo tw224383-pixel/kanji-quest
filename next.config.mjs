@@ -2,7 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'export',
-  basePath: '/kanji-quest',
   images: {
     unoptimized: true,
   }

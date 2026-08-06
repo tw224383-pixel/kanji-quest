@@ -92,7 +92,7 @@ export default function TopPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 relative bg-cover bg-center bg-fixed bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 relative bg-cover bg-center bg-fixed bg-[url('/images/ui/fantasy_bg.jpg')]">
       <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
       
       <motion.div 
@@ -207,7 +207,7 @@ export default function TopPage() {
             <h2 className="text-2xl font-black text-blue-900 mb-4">スマホであそぶ</h2>
             <p className="text-slate-600 font-bold mb-6 text-sm">カメラでこのQRコードを読み取ってね！</p>
             <div className="bg-white p-4 rounded-xl border-4 border-slate-200 flex justify-center mb-6">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://tw224383-pixel.github.io/kanji-quest/" alt="QR Code" className="w-48 h-48" />
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://tw224383-pixel.github.io/" alt="QR Code" className="w-48 h-48" />
             </div>
             <Button variant="outline" onClick={() => setShowQR(false)} className="w-full">
               とじる

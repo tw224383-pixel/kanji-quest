@@ -22,7 +22,7 @@ export function RankPlate({ level, name, title, avatar, isMvp, onAvatarClick, on
       )}
       {avatarIcon && (avatarIcon.startsWith('/') || avatarIcon.endsWith('.jpg') || avatarIcon.endsWith('.png')) ? (
         <div className="relative mx-auto mb-4 w-24 h-24">
-          {avatarIcon.startsWith('/kanji-quest/avatars/') && (
+          {avatarIcon.startsWith('/avatars/') && (
             <>
               {/* Rich effect back aura */}
               <div className="absolute inset-[-8px] bg-gradient-to-tr from-yellow-300 via-amber-400 to-yellow-200 rounded-full animate-spin opacity-50 blur-sm" style={{ animationDuration: '4s' }}></div>

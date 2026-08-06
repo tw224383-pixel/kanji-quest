@@ -119,18 +119,18 @@ export function pullGachaItem(): GachaItem {
 
 export const allRichGachaItems: GachaItem[] = [
   // --- かっこいい枠 (Cool) ---
-  { id: "rich_dragon", type: "avatar", name: "アバター「神竜」", icon: "/kanji-quest/avatars/dragon.jpg", rarity: "神レア", weight: 20 },
-  { id: "rich_knight", type: "avatar", name: "アバター「暗黒騎士」", icon: "/kanji-quest/avatars/knight.jpg", rarity: "超激レア", weight: 200 },
-  { id: "rich_cyborg", type: "avatar", name: "アバター「サイボーグ」", icon: "/kanji-quest/avatars/cyborg.jpg", rarity: "超激レア", weight: 200 },
-  { id: "rich_cool_wolf", type: "avatar", name: "アバター「孤高の狼」", icon: "/kanji-quest/avatars/cool_wolf.jpg", rarity: "激レア", weight: 1000 },
-  { id: "rich_cool_griffin", type: "avatar", name: "アバター「グリフォン」", icon: "/kanji-quest/avatars/cool_griffin.jpg", rarity: "激レア", weight: 1000 },
+  { id: "rich_dragon", type: "avatar", name: "アバター「神竜」", icon: "/avatars/dragon.jpg", rarity: "神レア", weight: 20 },
+  { id: "rich_knight", type: "avatar", name: "アバター「暗黒騎士」", icon: "/avatars/knight.jpg", rarity: "超激レア", weight: 200 },
+  { id: "rich_cyborg", type: "avatar", name: "アバター「サイボーグ」", icon: "/avatars/cyborg.jpg", rarity: "超激レア", weight: 200 },
+  { id: "rich_cool_wolf", type: "avatar", name: "アバター「孤高の狼」", icon: "/avatars/cool_wolf.jpg", rarity: "激レア", weight: 1000 },
+  { id: "rich_cool_griffin", type: "avatar", name: "アバター「グリフォン」", icon: "/avatars/cool_griffin.jpg", rarity: "激レア", weight: 1000 },
 
   // --- かわいい枠 (Cute) ---
-  { id: "rich_princess", type: "avatar", name: "アバター「プリンセス」", icon: "/kanji-quest/avatars/cute_princess_v4.jpg", rarity: "神レア", weight: 20 },
-  { id: "rich_angel", type: "avatar", name: "アバター「エンジェル」", icon: "/kanji-quest/avatars/cute_angel_v4.jpg", rarity: "超激レア", weight: 200 },
-  { id: "rich_magical", type: "avatar", name: "アバター「魔法少女」", icon: "/kanji-quest/avatars/cute_magical_v4.jpg", rarity: "超激レア", weight: 200 },
-  { id: "rich_fairy", type: "avatar", name: "アバター「フェアリー」", icon: "/kanji-quest/avatars/cute_fairy_v4.jpg", rarity: "激レア", weight: 1000 },
-  { id: "rich_mermaid", type: "avatar", name: "アバター「マーメイド」", icon: "/kanji-quest/avatars/cute_mermaid_v4.jpg", rarity: "激レア", weight: 1000 },
+  { id: "rich_princess", type: "avatar", name: "アバター「プリンセス」", icon: "/avatars/cute_princess_v4.jpg", rarity: "神レア", weight: 20 },
+  { id: "rich_angel", type: "avatar", name: "アバター「エンジェル」", icon: "/avatars/cute_angel_v4.jpg", rarity: "超激レア", weight: 200 },
+  { id: "rich_magical", type: "avatar", name: "アバター「魔法少女」", icon: "/avatars/cute_magical_v4.jpg", rarity: "超激レア", weight: 200 },
+  { id: "rich_fairy", type: "avatar", name: "アバター「フェアリー」", icon: "/avatars/cute_fairy_v4.jpg", rarity: "激レア", weight: 1000 },
+  { id: "rich_mermaid", type: "avatar", name: "アバター「マーメイド」", icon: "/avatars/cute_mermaid_v4.jpg", rarity: "激レア", weight: 1000 },
 ];
 
 export function pullRichGachaItem(): GachaItem {
@@ -164,30 +164,30 @@ export const richGachaRates = [
 ];
 
 export const allRichGacha2Items: GachaItem[] = [
-  { id: "ノーマル_堅牢の山岳ドワーフ", type: "avatar", name: "アバター「堅牢の山岳ドワーフ」", icon: "/kanji-quest/images/gacha2/ノーマル_堅牢の山岳ドワーフ.png", rarity: "ノーマル", weight: 6875 },
-  { id: "ノーマル_堕落した聖騎士", type: "avatar", name: "アバター「堕落した聖騎士」", icon: "/kanji-quest/images/gacha2/ノーマル_堕落した聖騎士.png", rarity: "ノーマル", weight: 6875 },
-  { id: "ノーマル_嵐を呼ぶハーピー・リーダー", type: "avatar", name: "アバター「嵐を呼ぶハーピー・リーダー」", icon: "/kanji-quest/images/gacha2/ノーマル_嵐を呼ぶハーピー・リーダー.png", rarity: "ノーマル", weight: 6875 },
-  { id: "ノーマル_災厄の双頭キマイラ", type: "avatar", name: "アバター「災厄の双頭キマイラ」", icon: "/kanji-quest/images/gacha2/ノーマル_災厄の双頭キマイラ.png", rarity: "ノーマル", weight: 6875 },
-  { id: "ノーマル_炎獄の魔戦士", type: "avatar", name: "アバター「炎獄の魔戦士」", icon: "/kanji-quest/images/gacha2/ノーマル_炎獄の魔戦士.png", rarity: "ノーマル", weight: 6875 },
-  { id: "ノーマル_猛火のサラマンダーマン", type: "avatar", name: "アバター「猛火のサラマンダーマン」", icon: "/kanji-quest/images/gacha2/ノーマル_猛火のサラマンダーマン.png", rarity: "ノーマル", weight: 6875 },
-  { id: "ノーマル_荒野の大剣豪", type: "avatar", name: "アバター「荒野の大剣豪」", icon: "/kanji-quest/images/gacha2/ノーマル_荒野の大剣豪.png", rarity: "ノーマル", weight: 6875 },
-  { id: "ノーマル_近衛兵リーダー槍使い", type: "avatar", name: "アバター「近衛兵リーダー槍使い」", icon: "/kanji-quest/images/gacha2/ノーマル_近衛兵リーダー槍使い.png", rarity: "ノーマル", weight: 6875 },
-  { id: "レア_エルフの森の射手", type: "avatar", name: "アバター「エルフの森の射手」", icon: "/kanji-quest/images/gacha2/レア_エルフの森の射手.png", rarity: "レア", weight: 7500 },
-  { id: "レア_呪われし死霊騎士", type: "avatar", name: "アバター「呪われし死霊騎士」", icon: "/kanji-quest/images/gacha2/レア_呪われし死霊騎士.png", rarity: "レア", weight: 7500 },
-  { id: "レア_氷結の魔女", type: "avatar", name: "アバター「氷結の魔女」", icon: "/kanji-quest/images/gacha2/レア_氷結の魔女.png", rarity: "レア", weight: 7500 },
-  { id: "レア_雲の", type: "avatar", name: "アバター「雲の戦士」", icon: "/kanji-quest/images/gacha2/レア_雲の.png", rarity: "レア", weight: 7500 },
-  { id: "激レア_天才魔導士", type: "avatar", name: "アバター「天才魔導士」", icon: "/kanji-quest/images/gacha2/激レア_天才魔導士.png", rarity: "激レア", weight: 2500 },
-  { id: "激レア_狂気の道化師", type: "avatar", name: "アバター「狂気の道化師」", icon: "/kanji-quest/images/gacha2/激レア_狂気の道化師.png", rarity: "激レア", weight: 2500 },
-  { id: "激レア_蒼き魔法剣士", type: "avatar", name: "アバター「蒼き魔法剣士」", icon: "/kanji-quest/images/gacha2/激レア_蒼き魔法剣士.png", rarity: "激レア", weight: 2500 },
-  { id: "激レア_闇の精霊使い", type: "avatar", name: "アバター「闇の精霊使い」", icon: "/kanji-quest/images/gacha2/激レア_闇の精霊使い.png", rarity: "激レア", weight: 2500 },
-  { id: "神レア_漆黒の魔王軍将軍", type: "avatar", name: "アバター「漆黒の魔王軍将軍」", icon: "/kanji-quest/images/gacha2/神レア_漆黒の魔王軍将軍.png", rarity: "神レア", weight: 20 },
-  { id: "神レア_終焉の魔王", type: "avatar", name: "アバター「終焉の魔王」", icon: "/kanji-quest/images/gacha2/神レア_終焉の魔王.png", rarity: "神レア", weight: 20 },
-  { id: "神レア_聖なるホワイトドラゴン", type: "avatar", name: "アバター「聖なるホワイトドラゴン」", icon: "/kanji-quest/images/gacha2/神レア_聖なるホワイトドラゴン.png", rarity: "神レア", weight: 20 },
-  { id: "神レア_虚無の使者・カオスエージェント", type: "avatar", name: "アバター「虚無の使者・カオスエージェント」", icon: "/kanji-quest/images/gacha2/神レア_虚無の使者・カオスエージェント.png", rarity: "神レア", weight: 20 },
-  { id: "神レア_虚空の堕天使", type: "avatar", name: "アバター「虚空の堕天使」", icon: "/kanji-quest/images/gacha2/神レア_虚空の堕天使.png", rarity: "神レア", weight: 20 },
-  { id: "超激レア_大賢者", type: "avatar", name: "アバター「大賢者」", icon: "/kanji-quest/images/gacha2/超激レア_大賢者.png", rarity: "超激レア", weight: 1633 },
-  { id: "超激レア_異次元の魔法使い", type: "avatar", name: "アバター「異次元の魔法使い」", icon: "/kanji-quest/images/gacha2/超激レア_異次元の魔法使い.png", rarity: "超激レア", weight: 1633 },
-  { id: "超激レア_雷光の精霊・サンダービースト", type: "avatar", name: "アバター「雷光の精霊・サンダービースト」", icon: "/kanji-quest/images/gacha2/超激レア_雷光の精霊・サンダービースト.png", rarity: "超激レア", weight: 1634 },
+  { id: "ノーマル_堅牢の山岳ドワーフ", type: "avatar", name: "アバター「堅牢の山岳ドワーフ」", icon: "/images/gacha2/ノーマル_堅牢の山岳ドワーフ.png", rarity: "ノーマル", weight: 6875 },
+  { id: "ノーマル_堕落した聖騎士", type: "avatar", name: "アバター「堕落した聖騎士」", icon: "/images/gacha2/ノーマル_堕落した聖騎士.png", rarity: "ノーマル", weight: 6875 },
+  { id: "ノーマル_嵐を呼ぶハーピー・リーダー", type: "avatar", name: "アバター「嵐を呼ぶハーピー・リーダー」", icon: "/images/gacha2/ノーマル_嵐を呼ぶハーピー・リーダー.png", rarity: "ノーマル", weight: 6875 },
+  { id: "ノーマル_災厄の双頭キマイラ", type: "avatar", name: "アバター「災厄の双頭キマイラ」", icon: "/images/gacha2/ノーマル_災厄の双頭キマイラ.png", rarity: "ノーマル", weight: 6875 },
+  { id: "ノーマル_炎獄の魔戦士", type: "avatar", name: "アバター「炎獄の魔戦士」", icon: "/images/gacha2/ノーマル_炎獄の魔戦士.png", rarity: "ノーマル", weight: 6875 },
+  { id: "ノーマル_猛火のサラマンダーマン", type: "avatar", name: "アバター「猛火のサラマンダーマン」", icon: "/images/gacha2/ノーマル_猛火のサラマンダーマン.png", rarity: "ノーマル", weight: 6875 },
+  { id: "ノーマル_荒野の大剣豪", type: "avatar", name: "アバター「荒野の大剣豪」", icon: "/images/gacha2/ノーマル_荒野の大剣豪.png", rarity: "ノーマル", weight: 6875 },
+  { id: "ノーマル_近衛兵リーダー槍使い", type: "avatar", name: "アバター「近衛兵リーダー槍使い」", icon: "/images/gacha2/ノーマル_近衛兵リーダー槍使い.png", rarity: "ノーマル", weight: 6875 },
+  { id: "レア_エルフの森の射手", type: "avatar", name: "アバター「エルフの森の射手」", icon: "/images/gacha2/レア_エルフの森の射手.png", rarity: "レア", weight: 7500 },
+  { id: "レア_呪われし死霊騎士", type: "avatar", name: "アバター「呪われし死霊騎士」", icon: "/images/gacha2/レア_呪われし死霊騎士.png", rarity: "レア", weight: 7500 },
+  { id: "レア_氷結の魔女", type: "avatar", name: "アバター「氷結の魔女」", icon: "/images/gacha2/レア_氷結の魔女.png", rarity: "レア", weight: 7500 },
+  { id: "レア_雲の", type: "avatar", name: "アバター「雲の戦士」", icon: "/images/gacha2/レア_雲の.png", rarity: "レア", weight: 7500 },
+  { id: "激レア_天才魔導士", type: "avatar", name: "アバター「天才魔導士」", icon: "/images/gacha2/激レア_天才魔導士.png", rarity: "激レア", weight: 2500 },
+  { id: "激レア_狂気の道化師", type: "avatar", name: "アバター「狂気の道化師」", icon: "/images/gacha2/激レア_狂気の道化師.png", rarity: "激レア", weight: 2500 },
+  { id: "激レア_蒼き魔法剣士", type: "avatar", name: "アバター「蒼き魔法剣士」", icon: "/images/gacha2/激レア_蒼き魔法剣士.png", rarity: "激レア", weight: 2500 },
+  { id: "激レア_闇の精霊使い", type: "avatar", name: "アバター「闇の精霊使い」", icon: "/images/gacha2/激レア_闇の精霊使い.png", rarity: "激レア", weight: 2500 },
+  { id: "神レア_漆黒の魔王軍将軍", type: "avatar", name: "アバター「漆黒の魔王軍将軍」", icon: "/images/gacha2/神レア_漆黒の魔王軍将軍.png", rarity: "神レア", weight: 20 },
+  { id: "神レア_終焉の魔王", type: "avatar", name: "アバター「終焉の魔王」", icon: "/images/gacha2/神レア_終焉の魔王.png", rarity: "神レア", weight: 20 },
+  { id: "神レア_聖なるホワイトドラゴン", type: "avatar", name: "アバター「聖なるホワイトドラゴン」", icon: "/images/gacha2/神レア_聖なるホワイトドラゴン.png", rarity: "神レア", weight: 20 },
+  { id: "神レア_虚無の使者・カオスエージェント", type: "avatar", name: "アバター「虚無の使者・カオスエージェント」", icon: "/images/gacha2/神レア_虚無の使者・カオスエージェント.png", rarity: "神レア", weight: 20 },
+  { id: "神レア_虚空の堕天使", type: "avatar", name: "アバター「虚空の堕天使」", icon: "/images/gacha2/神レア_虚空の堕天使.png", rarity: "神レア", weight: 20 },
+  { id: "超激レア_大賢者", type: "avatar", name: "アバター「大賢者」", icon: "/images/gacha2/超激レア_大賢者.png", rarity: "超激レア", weight: 1633 },
+  { id: "超激レア_異次元の魔法使い", type: "avatar", name: "アバター「異次元の魔法使い」", icon: "/images/gacha2/超激レア_異次元の魔法使い.png", rarity: "超激レア", weight: 1633 },
+  { id: "超激レア_雷光の精霊・サンダービースト", type: "avatar", name: "アバター「雷光の精霊・サンダービースト」", icon: "/images/gacha2/超激レア_雷光の精霊・サンダービースト.png", rarity: "超激レア", weight: 1634 },
 ];
 
 export function pullRichGacha2Item(): GachaItem {

@@ -8,7 +8,7 @@ export function ThemeBackground({ theme }: { theme: string }) {
   
   // AI-generated background image paths
   const bgImageTheme = isDefault ? 'fantasy_bg' : (theme === 'time_space' ? 'space' : theme);
-  const bgImageUrl = isDefault ? `/kanji-quest/images/ui/fantasy_bg.jpg` : `/kanji-quest/images/themes/bg_${bgImageTheme}.jpg`;
+  const bgImageUrl = isDefault ? `/images/ui/fantasy_bg.jpg` : `/images/themes/bg_${bgImageTheme}.jpg`;
 
   return (
     <div className={`absolute inset-0 pointer-events-none overflow-hidden ${theme === 'time_space' ? 'hue-rotate-180' : ''}`}>

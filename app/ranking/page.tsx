@@ -65,7 +65,7 @@ export default function RankingPage() {
   }, [gradeFilter]);
 
   return (
-    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData?.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData?.theme || userData.theme === 'default') ? "bg-[url('/images/ui/fantasy_bg.jpg')]" : ""}`}>
       {/* Dark overlay */}
       {(!userData?.theme || userData.theme === 'default') && (
         <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
@@ -118,7 +118,7 @@ export default function RankingPage() {
                 
                 const isDefault = !user.theme || user.theme === 'default';
                 const themeName = user.theme === 'time_space' ? 'space' : user.theme;
-                const bgUrl = isDefault ? "/kanji-quest/images/ui/fantasy_bg.jpg" : `/kanji-quest/images/themes/bg_${themeName}.jpg`;
+                const bgUrl = isDefault ? "/images/ui/fantasy_bg.jpg" : `/images/themes/bg_${themeName}.jpg`;
 
                 return (
                   <div key={user.id} className="relative flex items-center gap-4 bg-slate-800/80 border-2 border-slate-500/50 p-4 rounded-2xl shadow-inner overflow-hidden">

@@ -26,7 +26,7 @@ export default function EncyclopediaPage() {
   const progress = Math.round((masteredCount / kanjiForGrade.length) * 100) || 0;
 
   return (
-    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/kanji-quest/images/ui/fantasy_bg.jpg')]" : ""}`}>
+    <main className={`min-h-screen p-6 relative bg-cover bg-center bg-fixed ${(!userData.theme || userData.theme === 'default') ? "bg-[url('/images/ui/fantasy_bg.jpg')]" : ""}`}>
       {/* Dark overlay */}
       {(!userData.theme || userData.theme === 'default') && (
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
