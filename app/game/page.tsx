@@ -192,17 +192,14 @@ export default function GamePage() {
   const currentQ = questions[currentIndex];
 
   const renderMathWord = (word: string) => {
-    if (!word.includes('/')) return word;
-    const parts = word.split(' ');
+    const parts = word.split(/([➕➖✖️➗＝＝])/);
     return (
-      <span className="flex items-center justify-center gap-2">
+      <span className="flex items-center justify-center flex-wrap gap-1 md:gap-2">
         {parts.map((part, idx) => {
-          if (part.includes('/')) {
-            const [n, d] = part.split('/');
+          if (["➕", "➖", "✖️", "➗", "＝"].includes(part)) {
             return (
-              <span key={idx} className="inline-flex flex-col items-center justify-center text-[0.8em]">
-                <span className="border-b-[4px] md:border-b-[6px] border-current w-full text-center leading-tight pb-1 px-1">{n}</span>
-                <span className="text-center leading-tight pt-1 px-1">{d}</span>
+              <span key={idx} className="text-amber-500 font-extrabold mx-1 md:mx-2 scale-110 inline-block drop-shadow">
+                {part}
               </span>
             );
           }
@@ -224,7 +221,6 @@ export default function GamePage() {
   const handleAnswer = (ans: string) => {
     if (isReviewMode) {
       if (ans === currentQ.reading) {
-        // レビューモード（答え合わせ中）で正解してもマスターとはみなさない
         nextQuestion();
       } else {
         setFeedback("incorrect");
@@ -248,7 +244,11 @@ export default function GamePage() {
       setTotalMistakes(m => m + 1);
       newMistakes.current.add(currentQ.word);
       setFeedback("incorrect");
-      setTimeout(() => setFeedback(null), 1000);
+      if (subjectType === "science" || subjectType === "social" || ('rationale' in currentQ && currentQ.rationale)) {
+        setIsReviewMode(true);
+      } else {
+        setTimeout(() => setFeedback(null), 1000);
+      }
     }
   };
 
@@ -537,34 +537,61 @@ export default function GamePage() {
             )}
           </div>
 
-          {/* パス時の正解表示 */}
+          {/* パス・不正解時の正解・解説表示 */}
           <AnimatePresence>
             {isReviewMode && (
               <motion.div 
-                initial={{ opacity: 0, y: -20, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                className="mb-6 bg-red-100 border-4 border-red-300 text-red-700 px-6 py-4 rounded-2xl shadow-sm text-center font-bold w-full"
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="mb-6 bg-slate-900/95 border-4 border-amber-400 text-amber-100 p-6 rounded-3xl shadow-2xl text-left w-full relative z-30"
               >
-                <div className="text-sm text-red-600 mb-1">正解は...</div>
-                <div className="text-3xl tracking-widest font-black">「{currentQ.reading}」</div>
-                <div className="text-sm mt-2">入力して次へ進もう！</div>
+                <div className="flex items-center justify-between border-b border-slate-700 pb-2 mb-3">
+                  <span className="text-red-400 font-black text-xl flex items-center gap-1">❌ 不正解！</span>
+                  <span className="text-xs text-slate-400 font-bold">解説を確認して次へ進もう</span>
+                </div>
+
+                <div className="text-lg font-bold text-slate-200 mb-3">
+                  正解： <span className="text-2xl font-black text-amber-300">「{currentQ.reading}」</span>
+                </div>
+
+                {'rationale' in currentQ && currentQ.rationale && (
+                  <div className="bg-slate-800/90 p-4 rounded-xl border border-amber-500/30 mb-4 text-sm sm:text-base text-slate-100 leading-relaxed font-sans">
+                    <div className="font-bold text-amber-400 mb-1 flex items-center gap-1">
+                      💡 <span>解説</span>
+                    </div>
+                    {currentQ.rationale}
+                  </div>
+                )}
+
+                <Button 
+                  variant="fun" 
+                  size="lg" 
+                  className="w-full text-xl py-3 border-2 border-amber-400 shadow-lg"
+                  onClick={() => {
+                    setFeedback(null);
+                    nextQuestion();
+                  }}
+                >
+                  つぎへ進む ➔
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* 解答エリア */}
           <div className="w-full">
-            {mode === "4choice" ? (
+            {mode === "4choice" || subjectType === "science" || subjectType === "social" ? (
               <AnswerOptions 
                 choices={currentQ.choices} 
                 onAnswer={handleAnswer} 
-                disabled={feedback !== null}
+                disabled={feedback !== null || isReviewMode}
               />
             ) : (
               <KeyboardInput 
                 onAnswer={handleAnswer} 
-                disabled={feedback !== null}
-                placeholder={subjectType === "math" ? "こたえをいれてね" : (subjectType === "science" || subjectType === "social") ? "こたえをいれてね" : ('type' in currentQ && currentQ.type === "onyomi" ? "よみをカタカナでいれてね" : "よみをひらがなでいれてね")}
+                disabled={feedback !== null || isReviewMode}
+                placeholder={subjectType === "math" ? "こたえをいれてね" : ('type' in currentQ && currentQ.type === "onyomi" ? "よみをカタカナでいれてね" : "よみをひらがなでいれてね")}
                 isFraction={isMath && currentQ.reading.includes('/')}
               />
             )}

@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { MATH_SKILLS } from "../../lib/mathData";
 import { getScienceCategories } from "../../lib/scienceData";
+import { getSocialCategories } from "../../lib/socialData";
 import { ThemeBackground } from "../../components/ui/ThemeBackground";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 
@@ -26,6 +27,7 @@ export default function Home() {
   const [targetGrades, setTargetGrades] = useState<number[]>([1]);
   const [targetMathSkills, setTargetMathSkills] = useState<string[]>([]);
   const [targetScienceCategories, setTargetScienceCategories] = useState<string[]>([]);
+  const [targetSocialCategories, setTargetSocialCategories] = useState<string[]>([]);
   const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
   const [previewingEquipmentModal, setPreviewingEquipmentModal] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(5);
@@ -48,6 +50,11 @@ export default function Home() {
         const allScienceCats = getScienceCategories();
         const userScienceCats = allScienceCats.filter(c => c.grade === userData.grade).map(c => c.id);
         setTargetScienceCategories(userScienceCats.length > 0 ? userScienceCats : allScienceCats.map(c => c.id));
+      }
+      if (targetSocialCategories.length === 0) {
+        const allSocialCats = getSocialCategories();
+        const userSocialCats = allSocialCats.filter(c => c.grade === userData.grade).map(c => c.id);
+        setTargetSocialCategories(userSocialCats.length > 0 ? userSocialCats : allSocialCats.map(c => c.id));
       }
     }
     setMode(storage.getAnswerMode() as "4choice" | "keyboard");
@@ -151,7 +158,7 @@ export default function Home() {
              </div>
 
              {/* Subject specifics */}
-             {(subject === "kanji" || subject === "social") && (
+             {subject === "kanji" && (
                 <div className="space-y-4 mb-6">
                   <div className="flex flex-wrap justify-center gap-2">
                     {[1, 2, 3, 4, 5, 6].map(g => (
@@ -217,6 +224,60 @@ export default function Home() {
                                 className={`px-3 py-2 rounded-lg font-bold text-sm transition-all border-b-[3px] shadow-sm whitespace-nowrap ${
                                   isSelected
                                     ? "bg-emerald-600 text-white border-emerald-800 translate-y-1 border-b-0"
+                                    : "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600"
+                                }`}
+                              >
+                                {isSelected && <span className="mr-1">✔️</span>}{cat.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+             )}
+
+             {subject === "social" && (
+                <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {[3, 4, 5, 6].map(g => {
+                    const gradeCategories = getSocialCategories().filter(c => c.grade === g);
+                    if (gradeCategories.length === 0) return null;
+                    const allSelected = gradeCategories.every(c => targetSocialCategories.includes(c.id));
+                    
+                    return (
+                      <div key={g} className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 shadow-inner">
+                        <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
+                          <h3 className="text-xl font-black text-orange-300 drop-shadow-md whitespace-nowrap">{g}年生</h3>
+                          <Button size="sm" variant={allSelected ? "fun" : "outline"} className={`whitespace-nowrap ${allSelected ? "bg-amber-500 text-white text-xs border-amber-700" : "text-xs border-slate-500"}`} onClick={() => {
+                            if (allSelected) {
+                              if (targetSocialCategories.length > gradeCategories.length) {
+                                setTargetSocialCategories(prev => prev.filter(id => !gradeCategories.find(c => c.id === id)));
+                              }
+                            } else {
+                              const newCats = new Set([...targetSocialCategories, ...gradeCategories.map(c => c.id)]);
+                              setTargetSocialCategories(Array.from(newCats));
+                            }
+                          }}>
+                            {allSelected ? "すべて外す" : "すべて選ぶ"}
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {gradeCategories.map(cat => {
+                            const isSelected = targetSocialCategories.includes(cat.id);
+                            return (
+                              <button
+                                key={cat.id}
+                                onClick={() => {
+                                  if (isSelected && targetSocialCategories.length > 1) {
+                                    setTargetSocialCategories(targetSocialCategories.filter(id => id !== cat.id));
+                                  } else if (!isSelected) {
+                                    setTargetSocialCategories([...targetSocialCategories, cat.id]);
+                                  }
+                                }}
+                                className={`px-3 py-2 rounded-lg font-bold text-sm transition-all border-b-[3px] shadow-sm whitespace-nowrap ${
+                                  isSelected
+                                    ? "bg-orange-600 text-white border-orange-800 translate-y-1 border-b-0"
                                     : "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600"
                                 }`}
                               >
@@ -312,7 +373,7 @@ export default function Home() {
                 } else if (subject === "science") {
                   router.push(`/game?subject=science&categories=${encodeURIComponent(targetScienceCategories.join(","))}&count=${questionCount}`);
                 } else if (subject === "social") {
-                  router.push(`/game?subject=social&grades=${targetGrades.join(",")}&count=${questionCount}`);
+                  router.push(`/game?subject=social&categories=${encodeURIComponent(targetSocialCategories.join(","))}&count=${questionCount}`);
                 }
               }} 
               className={`w-full text-xl md:text-3xl h-20 shadow-lg group relative overflow-hidden whitespace-nowrap ${
