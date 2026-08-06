@@ -1,15 +1,15 @@
 export function getRaidBossMaxHp(level: number): number {
   const hps = [
-    250000,   // Lv 1
-    350000,   // Lv 2
-    400000,   // Lv 3
-    500000,   // Lv 4
-    750000,   // Lv 5
-    1000000,  // Lv 6
-    1250000,  // Lv 7
-    1750000,  // Lv 8
-    2000000,  // Lv 9
-    2550000   // Lv 10 (Total cumulated ~ 10,800,000)
+    25000,   // Lv 1
+    35000,   // Lv 2
+    40000,   // Lv 3
+    50000,   // Lv 4
+    75000,   // Lv 5
+    100000,  // Lv 6
+    125000,  // Lv 7
+    175000,  // Lv 8
+    200000,  // Lv 9
+    255000   // Lv 10 (Total cumulated ~ 1,080,000)
   ];
   return hps[Math.min(Math.max(1, level) - 1, 9)];
 }

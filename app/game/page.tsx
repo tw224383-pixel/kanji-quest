@@ -212,7 +212,7 @@ export default function GamePage() {
     let lowGradeCount = 0;
 
     questions.forEach(q => {
-      if (isMath && !isRevenge && q.grade < (userData?.grade || 1)) {
+      if (!isRevenge && q.grade < (userData?.grade || 1)) {
         baseXP += 1;
         basePT += 0;
         lowGradeCount++;
