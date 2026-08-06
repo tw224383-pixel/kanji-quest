@@ -69,7 +69,7 @@ export function RaidBoss() {
       });
       return () => unsub();
     }
-  }, [isGuest, user, currentMonth]);
+  }, [isGuest, user, currentMonth, userData?.grade]);
 
   // Give titles based on current level
   useEffect(() => {

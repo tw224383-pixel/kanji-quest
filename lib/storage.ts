@@ -47,6 +47,10 @@ export const storage = {
       theme: localStorage.getItem("kq_theme") || "default",
       equippedEffect: localStorage.getItem("kq_eq_effect") || "",
       totalDamage: parseInt(localStorage.getItem("kq_total_damage") || "0", 10),
+      weeklyXp: parseInt(localStorage.getItem("kq_weekly_xp") || "0", 10),
+      lastWeekString: localStorage.getItem("kq_last_week") || "",
+      monthlyDamage: parseInt(localStorage.getItem("kq_monthly_damage") || "0", 10),
+      lastMonthString: localStorage.getItem("kq_last_month") || "",
     };
   },
   updateGuestData: (updates: any) => {
@@ -63,6 +67,10 @@ export const storage = {
     if (updates.theme !== undefined) localStorage.setItem("kq_theme", updates.theme);
     if (updates.equippedEffect !== undefined) localStorage.setItem("kq_eq_effect", updates.equippedEffect);
     if (updates.totalDamage !== undefined) localStorage.setItem("kq_total_damage", updates.totalDamage.toString());
+    if (updates.weeklyXp !== undefined) localStorage.setItem("kq_weekly_xp", updates.weeklyXp.toString());
+    if (updates.lastWeekString !== undefined) localStorage.setItem("kq_last_week", updates.lastWeekString);
+    if (updates.monthlyDamage !== undefined) localStorage.setItem("kq_monthly_damage", updates.monthlyDamage.toString());
+    if (updates.lastMonthString !== undefined) localStorage.setItem("kq_last_month", updates.lastMonthString);
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("kq_guest_update"));

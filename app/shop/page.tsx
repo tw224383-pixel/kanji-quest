@@ -252,7 +252,7 @@ export default function ShopPage() {
                   <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
                   <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT、リッチガチャは3000PTで限定アバターやエフェクトが当たる！</p>
                   
-                  <div className="flex flex-col md:flex-row gap-4 justify-center mb-6 items-stretch">
+                  <div className="flex flex-col gap-6 justify-center mb-6 items-stretch max-w-md mx-auto">
                     <div className="flex-1 game-panel-light p-4 bg-slate-800/80 border-2 border-amber-900/50 flex flex-col justify-between">
                       <div>
                         <div className="text-amber-200 font-black mb-2">通常ガチャ (100 PT)</div>

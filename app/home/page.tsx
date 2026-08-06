@@ -340,6 +340,14 @@ export default function Home() {
              </h3>
              <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                <li>
+                 <div className="text-xs text-amber-400 mb-0.5">2026/08/06</div>
+                 <div>リッチガチャ２追加！ガチャ画面のレイアウトも修正し、見やすくしました！</div>
+               </li>
+               <li>
+                 <div className="text-xs text-amber-400 mb-0.5">2026/08/06</div>
+                 <div>6年生のダメージがレイドボスに反映されない不具合を修正しました。</div>
+               </li>
+               <li>
                  <div className="text-xs text-amber-400 mb-0.5">2026/07/31</div>
                  <div>超豪華な「リッチガチャ」が登場！かっこいい・かわいいアバターが当たるよ！</div>
                </li>

@@ -115,7 +115,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               theme: data.theme || "default",
               totalDamage: data.totalDamage || 0,
               equippedEffect: data.equippedEffect || "",
-              scaryMode: data.scaryMode || false
+              scaryMode: data.scaryMode || false,
+              weeklyXp: data.weeklyXp || 0,
+              lastWeekString: data.lastWeekString || "",
+              monthlyDamage: data.monthlyDamage || 0,
+              lastMonthString: data.lastMonthString || ""
             };
             setUserData(newData);
             localStorage.setItem("kq_user_cache", JSON.stringify(newData));

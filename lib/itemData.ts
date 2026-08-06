@@ -1,4 +1,4 @@
-import { allGachaItems, allRichGachaItems } from './gachaData';
+import { allGachaItems, allRichGachaItems, allRichGacha2Items } from './gachaData';
 
 export const shopThemes = [
   { id: "default", name: "いつもの", price: 0, icon: "📄" },
@@ -86,7 +86,14 @@ export function getAllThemes(): UnifiedItem[] {
     icon: i.icon,
     isGachaOnly: true
   }));
-  return [...shopThemes.map(i => ({...i, isGachaOnly: false})), ...gachaThemes];
+  const richGachaThemes = [...allRichGachaItems, ...allRichGacha2Items].filter(i => i.type === 'theme').map(i => ({
+    id: i.id,
+    name: i.name.replace('テーマ「', '').replace('」', ''),
+    price: null,
+    icon: i.icon,
+    isGachaOnly: true
+  }));
+  return [...shopThemes.map(i => ({...i, isGachaOnly: false})), ...gachaThemes, ...richGachaThemes];
 }
 
 export function getAllEffects(): UnifiedItem[] {
@@ -97,7 +104,14 @@ export function getAllEffects(): UnifiedItem[] {
     icon: i.icon,
     isGachaOnly: true
   }));
-  return [...shopEffects.map(i => ({...i, isGachaOnly: false})), ...gachaEffects];
+  const richGachaEffects = [...allRichGachaItems, ...allRichGacha2Items].filter(i => i.type === 'effect').map(i => ({
+    id: i.id,
+    name: i.name.replace('エフェクト「', '').replace('」', ''),
+    price: null,
+    icon: i.icon,
+    isGachaOnly: true
+  }));
+  return [...shopEffects.map(i => ({...i, isGachaOnly: false})), ...gachaEffects, ...richGachaEffects];
 }
 
 export function getAllTitles(): UnifiedItem[] {
@@ -108,7 +122,14 @@ export function getAllTitles(): UnifiedItem[] {
     icon: i.icon,
     isGachaOnly: true
   }));
-  return [...shopTitles.map(i => ({...i, name: i.id, icon: undefined, isGachaOnly: false})), ...gachaTitles];
+  const richGachaTitles = [...allRichGachaItems, ...allRichGacha2Items].filter(i => i.type === 'title').map(i => ({
+    id: i.id,
+    name: i.name.replace('称号「', '').replace('」', ''),
+    price: null,
+    icon: i.icon,
+    isGachaOnly: true
+  }));
+  return [...shopTitles.map(i => ({...i, name: i.id, icon: undefined, isGachaOnly: false})), ...gachaTitles, ...richGachaTitles];
 }
 
 export function getAllAvatars(): UnifiedItem[] {
@@ -119,7 +140,7 @@ export function getAllAvatars(): UnifiedItem[] {
     icon: i.icon,
     isGachaOnly: true
   }));
-  const richGachaAvatars = allRichGachaItems.filter(i => i.type === 'avatar').map(i => ({
+  const richGachaAvatars = [...allRichGachaItems, ...allRichGacha2Items].filter(i => i.type === 'avatar').map(i => ({
     id: i.id,
     name: i.name.replace('アバター「', '').replace('」', ''),
     price: null,
