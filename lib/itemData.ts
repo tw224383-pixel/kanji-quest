@@ -160,41 +160,52 @@ export interface AvatarInfo {
 export function getAvatarInfo(avatarIdOrUrl?: string): AvatarInfo | null {
   if (!avatarIdOrUrl) return null;
 
-  // Check Rich Gacha 2
-  const rg2 = allRichGacha2Items.find(i => i.id === avatarIdOrUrl || i.icon === avatarIdOrUrl);
-  if (rg2) {
+  let decoded = avatarIdOrUrl;
+  try {
+    decoded = decodeURIComponent(avatarIdOrUrl);
+  } catch(e) {}
+
+  const clean = decoded
+    .replace(/^.*[\\/]/, '') // filename only
+    .replace(/\.(png|jpg|jpeg|webp)$/i, '')
+    .replace(/^(神レア|超激レア|激レア|レア|ノーマル)_/, '')
+    .replace(/^アバター「|」$/g, '');
+
+  const allGacha = [...allRichGacha2Items, ...allRichGachaItems, ...allGachaItems.filter(i => i.type === 'avatar')];
+
+  // 1. Exact match on id or icon (decoded or original)
+  let found = allGacha.find(i => 
+    i.id === avatarIdOrUrl || i.icon === avatarIdOrUrl ||
+    i.id === decoded || i.icon === decoded
+  );
+
+  // 2. Partial/Clean match on gacha items
+  if (!found) {
+    found = allGacha.find(i => {
+      const iCleanId = i.id.replace(/^(神レア|超激レア|激レア|レア|ノーマル)_/, '').replace(/^アバター「|」$/g, '');
+      const iCleanName = i.name.replace(/^アバター「|」$/g, '');
+      const iCleanIcon = i.icon.replace(/^.*[\\/]/, '').replace(/\.(png|jpg|jpeg|webp)$/i, '').replace(/^(神レア|超激レア|激レア|レア|ノーマル)_/, '');
+      
+      return (
+        iCleanId === clean ||
+        iCleanName === clean ||
+        iCleanIcon === clean ||
+        (clean && (i.id.includes(clean) || decoded.includes(iCleanId) || decoded.includes(iCleanIcon)))
+      );
+    });
+  }
+
+  if (found) {
     return {
-      id: rg2.id,
-      name: rg2.name.replace(/^アバター「|」$/g, ''),
-      rarity: rg2.rarity,
-      icon: rg2.icon
+      id: found.id,
+      name: found.name.replace(/^アバター「|」$/g, ''),
+      rarity: found.rarity,
+      icon: found.icon
     };
   }
 
-  // Check Rich Gacha 1
-  const rg1 = allRichGachaItems.find(i => i.id === avatarIdOrUrl || i.icon === avatarIdOrUrl);
-  if (rg1) {
-    return {
-      id: rg1.id,
-      name: rg1.name.replace(/^アバター「|」$/g, ''),
-      rarity: rg1.rarity,
-      icon: rg1.icon
-    };
-  }
-
-  // Check Regular Gacha
-  const g1 = allGachaItems.find(i => (i.id === avatarIdOrUrl || i.icon === avatarIdOrUrl) && i.type === 'avatar');
-  if (g1) {
-    return {
-      id: g1.id,
-      name: g1.name.replace(/^アバター「|」$/g, ''),
-      rarity: g1.rarity,
-      icon: g1.icon
-    };
-  }
-
-  // Check Shop Avatars
-  const shopAv = shopAvatars.find(i => i.id === avatarIdOrUrl || i.name === avatarIdOrUrl);
+  // 3. Check Shop Avatars
+  const shopAv = shopAvatars.find(i => i.id === avatarIdOrUrl || i.name === avatarIdOrUrl || i.id === clean || i.name === clean);
   if (shopAv) {
     let rarity: Rarity = "ノーマル";
     if (["🏅", "🏆"].includes(shopAv.id)) rarity = "神レア";
@@ -210,10 +221,17 @@ export function getAvatarInfo(avatarIdOrUrl?: string): AvatarInfo | null {
     };
   }
 
+  // Fallback: Check if filename contains rarity keywords
+  let fallbackRarity: Rarity = "ノーマル";
+  if (decoded.includes("神レア") || avatarIdOrUrl.includes("神レア")) fallbackRarity = "神レア";
+  else if (decoded.includes("超激レア") || avatarIdOrUrl.includes("超激レア")) fallbackRarity = "超激レア";
+  else if (decoded.includes("激レア") || avatarIdOrUrl.includes("激レア")) fallbackRarity = "激レア";
+  else if (decoded.includes("レア") || avatarIdOrUrl.includes("レア")) fallbackRarity = "レア";
+
   return {
     id: avatarIdOrUrl,
-    name: avatarIdOrUrl,
-    rarity: "ノーマル",
+    name: clean || avatarIdOrUrl,
+    rarity: fallbackRarity,
     icon: avatarIdOrUrl
   };
 }

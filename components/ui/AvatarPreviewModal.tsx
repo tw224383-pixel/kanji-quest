@@ -18,9 +18,9 @@ export function AvatarPreviewModal({
 }) {
   if (!isOpen) return null;
 
-  const info = getAvatarInfo(avatarUrl || avatarId);
+  const info = getAvatarInfo(avatarId) || getAvatarInfo(avatarUrl);
   const rarity = info?.rarity || "ノーマル";
-  const avatarName = info?.name || avatarId || "アバター";
+  const avatarName = info?.name || (avatarId && !avatarId.startsWith('/') ? avatarId : "アバター");
   const displayIcon = avatarUrl || info?.icon || avatarId || "👦";
 
   return (
