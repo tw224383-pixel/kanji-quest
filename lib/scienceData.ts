@@ -2811,8 +2811,35 @@ export const SCIENCE_QUESTIONS: ScienceQuestion[] = [
   }
 ];
 
-export function getRandomScienceQuestions(grades: number[], count: number = 5): ScienceQuestion[] {
-  const filtered = SCIENCE_QUESTIONS.filter(q => grades.includes(q.grade));
+export interface ScienceCategoryInfo {
+  id: string;
+  name: string;
+  grade: number;
+}
+
+export function getScienceCategories(): ScienceCategoryInfo[] {
+  const map = new Map<string, ScienceCategoryInfo>();
+  SCIENCE_QUESTIONS.forEach(q => {
+    if (q.category && !map.has(q.category)) {
+      map.set(q.category, {
+        id: q.category,
+        name: q.category,
+        grade: q.grade
+      });
+    }
+  });
+  return Array.from(map.values());
+}
+
+export function getRandomScienceQuestions(target: (number | string)[], count: number = 5): ScienceQuestion[] {
+  let filtered: ScienceQuestion[] = [];
+  if (target && target.length > 0) {
+    if (typeof target[0] === 'number') {
+      filtered = SCIENCE_QUESTIONS.filter(q => target.includes(q.grade));
+    } else {
+      filtered = SCIENCE_QUESTIONS.filter(q => q.category && target.includes(q.category));
+    }
+  }
   const pool = filtered.length > 0 ? filtered : SCIENCE_QUESTIONS;
   
   const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => ({...q, choices: [...q.choices].sort(() => Math.random() - 0.5)}));

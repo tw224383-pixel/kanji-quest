@@ -127,7 +127,13 @@ export default function GamePage() {
           const targetSkills = skillsParam ? skillsParam.split(",") : [];
           setQuestions(getRandomMathQuestions(targetSkills, targetCount));
         } else if (subjectParam === "science") {
-          setQuestions(getRandomScienceQuestions(targetGrades, targetCount));
+          const categoriesParam = params.get("categories");
+          if (categoriesParam) {
+            const targetCategories = categoriesParam.split(",");
+            setQuestions(getRandomScienceQuestions(targetCategories, targetCount));
+          } else {
+            setQuestions(getRandomScienceQuestions(targetGrades, targetCount));
+          }
         } else if (subjectParam === "social") {
           setQuestions(getRandomSocialQuestions(targetGrades, targetCount));
         } else {
