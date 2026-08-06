@@ -37,6 +37,7 @@ export const storage = {
       grade: parseInt(localStorage.getItem(GUEST_GRADE) || "1", 10),
       xp: parseInt(localStorage.getItem(XP_KEY) || "0", 10),
       pt: parseInt(localStorage.getItem(PT_KEY) || "0", 10),
+      sp: parseInt(localStorage.getItem("kq_sp") || "0", 10),
       effects: JSON.parse(localStorage.getItem(EFFECTS_KEY) || '["default"]'),
       mistakeIds: JSON.parse(localStorage.getItem("kq_mistakes") || "[]"),
       masteredIds: JSON.parse(localStorage.getItem("kq_mastered") || "[]"),
@@ -44,6 +45,8 @@ export const storage = {
       equippedTitle: localStorage.getItem("kq_eq_title") || "見習い",
       avatars: JSON.parse(localStorage.getItem("kq_avatars") || '["👦"]'),
       equippedAvatar: localStorage.getItem("kq_eq_avatar") || "👦",
+      equipments: JSON.parse(localStorage.getItem("kq_equipments") || "[]"),
+      equippedEquipment: localStorage.getItem("kq_eq_equipment") || "",
       theme: localStorage.getItem("kq_theme") || "default",
       equippedEffect: localStorage.getItem("kq_eq_effect") || "",
       totalDamage: parseInt(localStorage.getItem("kq_total_damage") || "0", 10),
@@ -57,6 +60,7 @@ export const storage = {
     if (typeof window === "undefined") return;
     if (updates.xp !== undefined) localStorage.setItem(XP_KEY, updates.xp.toString());
     if (updates.pt !== undefined) localStorage.setItem(PT_KEY, updates.pt.toString());
+    if (updates.sp !== undefined) localStorage.setItem("kq_sp", updates.sp.toString());
     if (updates.effects !== undefined) localStorage.setItem(EFFECTS_KEY, JSON.stringify(updates.effects));
     if (updates.mistakeIds !== undefined) localStorage.setItem("kq_mistakes", JSON.stringify(updates.mistakeIds));
     if (updates.masteredIds !== undefined) localStorage.setItem("kq_mastered", JSON.stringify(updates.masteredIds));
@@ -64,6 +68,8 @@ export const storage = {
     if (updates.equippedTitle !== undefined) localStorage.setItem("kq_eq_title", updates.equippedTitle);
     if (updates.avatars !== undefined) localStorage.setItem("kq_avatars", JSON.stringify(updates.avatars));
     if (updates.equippedAvatar !== undefined) localStorage.setItem("kq_eq_avatar", updates.equippedAvatar);
+    if (updates.equipments !== undefined) localStorage.setItem("kq_equipments", JSON.stringify(updates.equipments));
+    if (updates.equippedEquipment !== undefined) localStorage.setItem("kq_eq_equipment", updates.equippedEquipment);
     if (updates.theme !== undefined) localStorage.setItem("kq_theme", updates.theme);
     if (updates.equippedEffect !== undefined) localStorage.setItem("kq_eq_effect", updates.equippedEffect);
     if (updates.totalDamage !== undefined) localStorage.setItem("kq_total_damage", updates.totalDamage.toString());

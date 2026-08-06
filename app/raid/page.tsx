@@ -130,7 +130,7 @@ export default function RaidPage() {
           <span>🔥</span> わたしたちの学年（{userData?.grade || 1}年生）
         </h2>
         <div className="relative">
-          <RaidBoss />
+          <RaidBoss showButtons={false} />
         </div>
       </section>
 

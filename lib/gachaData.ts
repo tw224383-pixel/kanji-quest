@@ -2,16 +2,13 @@ export type Rarity = "ノーマル" | "レア" | "激レア" | "超激レア" | 
 
 export interface GachaItem {
   id: string;
-  type: "title" | "avatar" | "effect" | "theme" | "xp";
+  type: "title" | "avatar" | "effect" | "theme" | "xp" | "equipment";
   name: string;
   icon: string;
   rarity: Rarity;
   weight: number; // for lottery probability
 }
 
-// Probabilities: N: 55%, R: 30%, SR: 10%, SSR: 4.9%, UR: 0.1%
-// Weights out of 100,000 total weight to easily support 0.1% (100 weight).
-// Total weight = 100,000
 // UR (0.1%) = 100 weight (divided by 5 items = 20 weight each)
 // SSR (4.9%) = 4,900 weight (divided by 15 items = ~326 weight each)
 // SR (10%) = 10,000 weight (divided by 25 items = 400 weight each)
@@ -206,4 +203,39 @@ export const richGacha2Rates = [
   { rarity: "激レア", rate: "10.0%", color: "text-amber-500", bg: "bg-amber-100", items: allRichGacha2Items.filter(i => i.rarity === "激レア") },
   { rarity: "レア", rate: "30.0%", color: "text-blue-500", bg: "bg-blue-100", items: allRichGacha2Items.filter(i => i.rarity === "レア") },
   { rarity: "ノーマル", rate: "55.0%", color: "text-slate-500", bg: "bg-slate-200", items: allRichGacha2Items.filter(i => i.rarity === "ノーマル") },
+];
+
+export const allSpEquipmentGachaItems: GachaItem[] = [
+  { id: "eq_beginner_sword", type: "equipment", name: "装備「初心者用の剣」", icon: "🗡️", rarity: "ノーマル", weight: 5500 },
+  { id: "eq_iron_shield", type: "equipment", name: "装備「鉄の丸盾」", icon: "🛡️", rarity: "ノーマル", weight: 5500 },
+  { id: "eq_magic_cap", type: "equipment", name: "装備「とんがり帽子」", icon: "🎩", rarity: "レア", weight: 3000 },
+  { id: "eq_steel_sword", type: "equipment", name: "装備「鋼鉄の大剣」", icon: "⚔️", rarity: "レア", weight: 3000 },
+  { id: "eq_ranger_bow", type: "equipment", name: "装備「精霊の弓」", icon: "🏹", rarity: "激レア", weight: 1000 },
+  { id: "eq_fire_axe", type: "equipment", name: "装備「火炎の戦斧」", icon: "🪓", rarity: "激レア", weight: 1000 },
+  { id: "eq_silver_crown", type: "equipment", name: "装備「銀の王冠」", icon: "👑", rarity: "激レア", weight: 1000 },
+  { id: "eq_crystal_orb", type: "equipment", name: "装備「予言の水晶玉」", icon: "🔮", rarity: "超激レア", weight: 490 },
+  { id: "eq_poseidon_trident", type: "equipment", name: "装備「深海の三叉槍」", icon: "🔱", rarity: "超激レア", weight: 490 },
+  { id: "eq_angel_wings", type: "equipment", name: "装備「大天使の聖翼」", icon: "🪽", rarity: "超激レア", weight: 490 },
+  { id: "eq_demon_wings", type: "equipment", name: "装備「宵闇の魔翼」", icon: "🦇", rarity: "超激レア", weight: 490 },
+  { id: "eq_holy_sword", type: "equipment", name: "装備「聖剣エクスカリバー」", icon: "✨", rarity: "神レア", weight: 10 },
+  { id: "eq_god_crown", type: "equipment", name: "装備「全知全能の神冠」", icon: "🌌", rarity: "神レア", weight: 10 },
+  { id: "eq_star_aura", type: "equipment", name: "装備「銀河のリング」", icon: "💎", rarity: "神レア", weight: 10 }
+];
+
+export function pullSpEquipmentGachaItem(): GachaItem {
+  const totalWeight = allSpEquipmentGachaItems.reduce((acc, item) => acc + item.weight, 0);
+  let random = Math.random() * totalWeight;
+  for (const item of allSpEquipmentGachaItems) {
+    if (random < item.weight) return item;
+    random -= item.weight;
+  }
+  return allSpEquipmentGachaItems[0];
+}
+
+export const spEquipmentGachaRates = [
+  { rarity: "神レア", rate: "0.1%", color: "text-purple-500", bg: "bg-purple-100", items: allSpEquipmentGachaItems.filter(i => i.rarity === "神レア") },
+  { rarity: "超激レア", rate: "4.9%", color: "text-red-500", bg: "bg-red-100", items: allSpEquipmentGachaItems.filter(i => i.rarity === "超激レア") },
+  { rarity: "激レア", rate: "10.0%", color: "text-amber-500", bg: "bg-amber-100", items: allSpEquipmentGachaItems.filter(i => i.rarity === "激レア") },
+  { rarity: "レア", rate: "30.0%", color: "text-blue-500", bg: "bg-blue-100", items: allSpEquipmentGachaItems.filter(i => i.rarity === "レア") },
+  { rarity: "ノーマル", rate: "55.0%", color: "text-slate-500", bg: "bg-slate-200", items: allSpEquipmentGachaItems.filter(i => i.rarity === "ノーマル") },
 ];

@@ -9,7 +9,12 @@ import { storage } from "../../lib/storage";
 import Link from "next/link";
 import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth } from "../../lib/raidLogic";
 
-export function RaidBoss() {
+interface RaidBossProps {
+  showButtons?: boolean;
+  showOtherGradesLink?: boolean;
+}
+
+export function RaidBoss({ showButtons = true, showOtherGradesLink = true }: RaidBossProps) {
   const { user, isGuest, userData, updateUserData } = useUser();
   const [hp, setHp] = useState(getRaidBossMaxHp(1));
   const [maxHp, setMaxHp] = useState(getRaidBossMaxHp(1));
@@ -179,14 +184,18 @@ export function RaidBoss() {
         ※クエストをクリアしてXPを稼ぐと、ボスにダメージを与えられるぞ！
       </div>
 
-      <div className="mt-4 text-center relative z-10 flex flex-col md:flex-row justify-center gap-3">
-        <button className={`inline-block font-bold px-6 py-2 rounded-full text-sm shadow transition-all border ${isScary ? 'bg-black/80 text-red-400 border-red-900/50 group-hover:bg-red-900 group-hover:text-white group-hover:border-red-500' : 'bg-white/50 text-indigo-700 border-indigo-200 group-hover:bg-indigo-100'}`}>
-          📖 ボスの詳細・討伐記録
-        </button>
-        <Link href="/raid" onClick={(e) => e.stopPropagation()} className={`inline-block font-bold px-6 py-2 rounded-full text-sm shadow transition-all border ${isScary ? 'bg-red-950/80 text-red-300 border-red-500/50 hover:bg-red-900 hover:text-white shadow-[0_0_10px_rgba(220,38,38,0.3)]' : 'bg-white/80 text-purple-700 hover:bg-white border-purple-200'}`}>
-          ⚔️ 他の学年の戦況を見る
-        </Link>
-      </div>
+      {showButtons && (
+        <div className="mt-4 text-center relative z-10 flex flex-col md:flex-row justify-center gap-3">
+          <button className={`inline-block font-bold px-6 py-2 rounded-full text-sm shadow transition-all border ${isScary ? 'bg-black/80 text-red-400 border-red-900/50 group-hover:bg-red-900 group-hover:text-white group-hover:border-red-500' : 'bg-white/50 text-indigo-700 border-indigo-200 group-hover:bg-indigo-100'}`}>
+            📖 ボスの詳細・討伐記録
+          </button>
+          {showOtherGradesLink && (
+            <Link href="/raid" onClick={(e) => e.stopPropagation()} className={`inline-block font-bold px-6 py-2 rounded-full text-sm shadow transition-all border ${isScary ? 'bg-red-950/80 text-red-300 border-red-500/50 hover:bg-red-900 hover:text-white shadow-[0_0_10px_rgba(220,38,38,0.3)]' : 'bg-white/80 text-purple-700 hover:bg-white border-purple-200'}`}>
+              ⚔️ 他の学年の戦況を見る
+            </Link>
+          )}
+        </div>
+      )}
     </div>
 
     {showModal && (

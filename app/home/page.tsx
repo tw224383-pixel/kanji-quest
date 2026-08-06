@@ -4,6 +4,7 @@ import { useUser } from "../../hooks/useUser";
 import { calculateLevel } from "../../lib/gameLogic";
 import { RankPlate } from "../../components/ui/RankPlate";
 import { AvatarPreviewModal } from "../../components/ui/AvatarPreviewModal";
+import { EquipmentPreviewModal } from "../../components/ui/EquipmentPreviewModal";
 import { RaidBoss } from "../../components/game/RaidBoss";
 import { Button } from "../../components/ui/Button";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
@@ -19,11 +20,12 @@ export default function Home() {
   const { userData, updateUserData, loading, isGuest } = useUser();
   const router = useRouter();
   const [mode, setMode] = useState<"4choice" | "keyboard">("4choice");
-  const [subject, setSubject] = useState<"kanji" | "math">("kanji");
+  const [subject, setSubject] = useState<"kanji" | "math" | "science" | "social">("kanji");
   const [isAnimating, setIsAnimating] = useState(false);
   const [targetGrades, setTargetGrades] = useState<number[]>([1]);
   const [targetMathSkills, setTargetMathSkills] = useState<string[]>([]);
   const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
+  const [previewingEquipmentModal, setPreviewingEquipmentModal] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(5);
 
   useEffect(() => {
@@ -59,8 +61,10 @@ export default function Home() {
   const { level, currentLevelXp, nextLevelRequiredXp } = calculateLevel(userData.xp);
   const xpPercent = nextLevelRequiredXp === 0 ? 100 : (currentLevelXp / nextLevelRequiredXp) * 100;
 
-  const kanjiMistakes = (userData.mistakeIds || []).filter(id => !id.startsWith("math_")).length;
+  const kanjiMistakes = (userData.mistakeIds || []).filter(id => !id.startsWith("math_") && !id.startsWith("sci_") && !id.startsWith("soc_")).length;
   const mathMistakes = (userData.mistakeIds || []).filter(id => id.startsWith("math_")).length;
+  const scienceMistakes = (userData.mistakeIds || []).filter(id => id.startsWith("sci_")).length;
+  const socialMistakes = (userData.mistakeIds || []).filter(id => id.startsWith("soc_")).length;
 
   const handleModeChange = (m: "4choice" | "keyboard") => {
     setMode(m);
@@ -100,9 +104,7 @@ export default function Home() {
                 onClick={() => handleModeChange("keyboard")}
               >
                 <div>⌨️ キーボード</div>
-                <div className="text-[10px] md:text-xs text-red-500 font-black bg-white/80 px-2 py-1 rounded-full shadow-sm border border-red-200">
-                  XP＆PT 3倍ボーナス!
-                </div>
+                <div className="text-xs text-amber-300 font-bold">★経験値・PT・SPが3倍！★</div>
               </Button>
             </div>
           </div>
@@ -110,25 +112,39 @@ export default function Home() {
           {/* Subject Selection */}
           <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-600 shadow-inner">
              <h3 className="text-xl font-black text-amber-200 drop-shadow-md mb-4 text-center border-b border-slate-700 pb-2 whitespace-nowrap">かもく</h3>
-             <div className="flex gap-4 mb-6">
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
                <Button 
                  variant={subject === "kanji" ? "primary" : "outline"} 
-                 className="flex-1 text-xl py-4 whitespace-nowrap"
+                 className="text-base md:text-lg py-3 whitespace-nowrap"
                  onClick={() => setSubject("kanji")}
                >
                  📝 漢字
                </Button>
                <Button 
                  variant={subject === "math" ? "primary" : "outline"} 
-                 className="flex-1 text-xl py-4 whitespace-nowrap"
+                 className="text-base md:text-lg py-3 whitespace-nowrap"
                  onClick={() => setSubject("math")}
                >
                  🔢 算数
                </Button>
+               <Button 
+                 variant={subject === "science" ? "primary" : "outline"} 
+                 className="text-base md:text-lg py-3 whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 border-emerald-500"
+                 onClick={() => setSubject("science")}
+               >
+                 🔬 理科 (SP)
+               </Button>
+               <Button 
+                 variant={subject === "social" ? "primary" : "outline"} 
+                 className="text-base md:text-lg py-3 whitespace-nowrap bg-orange-600 hover:bg-orange-700 border-orange-500"
+                 onClick={() => setSubject("social")}
+               >
+                 🗺️ 社会 (SP)
+               </Button>
              </div>
 
              {/* Subject specifics */}
-             {subject === "kanji" && (
+             {(subject === "kanji" || subject === "science" || subject === "social") && (
                 <div className="space-y-4 mb-6">
                   <div className="flex flex-wrap justify-center gap-2">
                     {[1, 2, 3, 4, 5, 6].map(g => (
@@ -230,23 +246,35 @@ export default function Home() {
               onClick={() => {
                 if (subject === "kanji") {
                   router.push(`/game?subject=kanji&grades=${targetGrades.join(",")}&count=${questionCount}`);
-                } else {
+                } else if (subject === "math") {
                   router.push(`/game?subject=math&skills=${targetMathSkills.join(",")}&count=${questionCount}`);
+                } else if (subject === "science") {
+                  router.push(`/game?subject=science&grades=${targetGrades.join(",")}&count=${questionCount}`);
+                } else if (subject === "social") {
+                  router.push(`/game?subject=social&grades=${targetGrades.join(",")}&count=${questionCount}`);
                 }
               }} 
-              className={`w-full text-xl md:text-3xl h-20 shadow-lg group relative overflow-hidden whitespace-nowrap ${subject === 'math' ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30 border-blue-700' : 'shadow-orange-500/30'}`}
+              className={`w-full text-xl md:text-3xl h-20 shadow-lg group relative overflow-hidden whitespace-nowrap ${
+                subject === 'math' ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30 border-blue-700' :
+                subject === 'science' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30 border-emerald-700' :
+                subject === 'social' ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/30 border-orange-700' :
+                'shadow-orange-500/30'
+              }`}
             >
-              {subject === "kanji" ? "漢字バトルへ出発！" : "算数バトルへ出発！"}
+              {subject === "kanji" ? "漢字バトルへ出発！" :
+               subject === "math" ? "算数バトルへ出発！" :
+               subject === "science" ? "理科バトルへ出発！（SP GET）" :
+               "社会バトルへ出発！（SP GET）"}
               <motion.span 
                 className="absolute right-4 text-4xl opacity-50 group-hover:opacity-100 transition-opacity"
                 animate={{ x: [0, 5, 0] }}
                 transition={{ repeat: Infinity, duration: 1 }}
               >
-                {subject === "kanji" ? "⚔️" : "🔢"}
+                {subject === "kanji" ? "⚔️" : subject === "math" ? "🔢" : subject === "science" ? "🔬" : "🗺️"}
               </motion.span>
             </Button>
             
-            {kanjiMistakes > 0 || mathMistakes > 0 ? (
+                {kanjiMistakes > 0 || mathMistakes > 0 || scienceMistakes > 0 || socialMistakes > 0 ? (
               <div className="flex flex-col md:flex-row gap-4">
                 {kanjiMistakes > 0 ? (
                   <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=kanji&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30 whitespace-nowrap">
@@ -276,28 +304,40 @@ export default function Home() {
               name={userData.name} 
               title={userData.equippedTitle} 
               avatar={userData.equippedAvatar}
+              equipment={userData.equippedEquipment}
               onAvatarClick={(url, id) => setPreviewingAvatar({url, id, name: userData.name})}
+              onEquipmentClick={(eqId) => eqId && setPreviewingEquipmentModal(eqId)}
               isMvp={userData.totalDamage > 0}
               onSettingsClick={() => router.push("/profile")}
             />
           </div>
           
           <div className="game-panel p-6 flex-1 flex flex-col justify-center gap-4">
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div className="flex gap-4 items-center">
-                <div className="bg-primary text-white font-black px-4 py-1 rounded-full text-sm shadow-md border-2 border-blue-400 whitespace-nowrap">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <div className="bg-primary text-white font-black px-4 py-1.5 rounded-full text-sm shadow-md border-2 border-blue-400 whitespace-nowrap">
                   小学 {userData.grade} 年生
                 </div>
-                <div className="text-3xl font-black text-amber-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] flex items-center gap-2 whitespace-nowrap">
-                  <span className="text-4xl animate-bounce-slight">⭐</span> {userData.pt} <span className="text-lg text-amber-500">PT</span>
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  <div className="bg-slate-900/90 border border-amber-400/50 px-3.5 py-1.5 rounded-xl flex items-center gap-2 shadow-inner">
+                    <span className="text-lg">⭐</span>
+                    <span className="text-lg font-black text-amber-400 tracking-tight">{userData.pt.toLocaleString()}</span>
+                    <span className="text-xs font-black text-amber-500">PT</span>
+                  </div>
+                  <div className="bg-slate-900/90 border border-emerald-400/50 px-3.5 py-1.5 rounded-xl flex items-center gap-2 shadow-inner">
+                    <span className="text-lg">🧪</span>
+                    <span className="text-lg font-black text-emerald-400 tracking-tight">{(userData.sp || 0).toLocaleString()}</span>
+                    <span className="text-xs font-black text-emerald-500">SP</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex w-full md:w-auto gap-2 mt-2 md:mt-0">
-                <button onClick={() => router.push("/shop")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 whitespace-nowrap">
+
+              <div className="flex w-full lg:w-auto gap-2">
+                <button onClick={() => router.push("/shop")} className="flex-1 lg:flex-initial game-panel-light flex justify-center items-center gap-1.5 px-3.5 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 whitespace-nowrap">
                   <span className="text-lg md:text-xl">🛍️</span>
                   <span className="font-black text-slate-800 text-xs md:text-base">ショップ</span>
                 </button>
-                <button onClick={() => router.push("/achievements")} className="flex-1 game-panel-light flex justify-center items-center gap-1 px-2 md:px-4 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 whitespace-nowrap">
+                <button onClick={() => router.push("/achievements")} className="flex-1 lg:flex-initial game-panel-light flex justify-center items-center gap-1.5 px-3.5 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 whitespace-nowrap">
                   <span className="text-lg md:text-xl">🏆</span>
                   <span className="font-black text-slate-800 text-xs md:text-base">じっせき</span>
                 </button>
@@ -330,6 +370,7 @@ export default function Home() {
             <span className="text-3xl">👑</span> 今週のヒーロー
           </Button>
         </div>
+
 
         {/* 4. お知らせと広告 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 mb-4">
@@ -411,6 +452,12 @@ export default function Home() {
         avatarUrl={previewingAvatar?.url}
         avatarId={previewingAvatar?.id}
         name={previewingAvatar?.name}
+      />
+
+      <EquipmentPreviewModal
+        isOpen={!!previewingEquipmentModal}
+        onClose={() => setPreviewingEquipmentModal(null)}
+        equipmentId={previewingEquipmentModal}
       />
     </main>
   );

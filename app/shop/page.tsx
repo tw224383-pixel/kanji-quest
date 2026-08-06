@@ -11,8 +11,9 @@ import { RankPlate } from "../../components/ui/RankPlate";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems, richGachaRates, pullRichGacha2Item, richGacha2Rates } from "../../lib/gachaData";
+import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems, richGachaRates, pullRichGacha2Item, richGacha2Rates, pullSpEquipmentGachaItem, spEquipmentGachaRates } from "../../lib/gachaData";
 import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
+import { getAllEquipment } from "../../lib/equipmentData";
 import { RegularGachaAnimation } from "../../components/game/RegularGachaAnimation";
 import { RichGachaAnimation } from "../../components/game/RichGachaAnimation";
 
@@ -20,8 +21,9 @@ const themes = getAllThemes();
 const effects = getAllEffects();
 const titles = getAllTitles();
 const avatars = getAllAvatars();
+const equipments = getAllEquipment();
 
-type Tab = "themes" | "effects" | "titles" | "avatars" | "gacha";
+type Tab = "themes" | "effects" | "titles" | "avatars" | "equipments" | "gacha";
 
 export default function ShopPage() {
   const { userData, updateUserData, loading } = useUser();
@@ -30,15 +32,16 @@ export default function ShopPage() {
 
   const [previewTitle, setPreviewTitle] = useState<string | null>(null);
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+  const [previewEquipment, setPreviewEquipment] = useState<string | null>(null);
   const { previewTheme, setPreviewTheme } = useThemeContext();
   const [previewEffect, setPreviewEffect] = useState<string | null>(null);
 
   // Gacha state
-  const [pullingType, setPullingType] = useState<"regular" | "rich" | "rich2" | null>(null);
+  const [pullingType, setPullingType] = useState<"regular" | "rich" | "rich2" | "sp_equipment" | null>(null);
   const [gachaResult, setGachaResult] = useState<any>(null);
   const [pendingGachaResult, setPendingGachaResult] = useState<any>(null);
   const [gachaTargetStage, setGachaTargetStage] = useState(1);
-  const [showGachaRates, setShowGachaRates] = useState<"regular" | "rich" | "rich2" | null>(null);
+  const [showGachaRates, setShowGachaRates] = useState<"regular" | "rich" | "rich2" | "sp_equipment" | null>(null);
   const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
 
   useEffect(() => {
@@ -52,6 +55,16 @@ export default function ShopPage() {
   }
 
   const handleBuy = async (category: string, id: string, price: number) => {
+    if (category === "equipment") {
+      if ((userData.sp || 0) < price) return;
+      const newSp = (userData.sp || 0) - price;
+      const userEquips = userData.equipments || [];
+      if (!userEquips.includes(id)) {
+        await updateUserData({ sp: newSp, equipments: [...userEquips, id] });
+      }
+      return;
+    }
+
     if (userData.pt < price) return;
     const newPt = userData.pt - price;
     if (category === "theme") {
@@ -68,9 +81,32 @@ export default function ShopPage() {
     }
   };
 
-  // Equipment is now handled only in the Profile page
+  const pullGacha = async (type: "regular" | "rich" | "rich2" | "sp_equipment" = "regular") => {
+    if (type === "sp_equipment") {
+      if ((userData.sp || 0) < 1000 || pullingType) return;
+      setPullingType(type);
+      setGachaResult(null);
+      setShowGachaRates(null);
+      await updateUserData({ sp: (userData.sp || 0) - 1000 });
 
-  const pullGacha = async (type: "regular" | "rich" | "rich2" = "regular") => {
+      const resultItem: any = pullSpEquipmentGachaItem();
+      let duplicated = false;
+      const userEquips = userData.equipments || [];
+      if (userEquips.includes(resultItem.id)) {
+        duplicated = true;
+        await updateUserData({ sp: (userData.sp || 0) - 1000 + 500 });
+        resultItem.duplicated = true;
+        resultItem.refund = "500 SP";
+      } else {
+        await updateUserData({ equipments: [...userEquips, resultItem.id] });
+      }
+
+      const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
+      setGachaTargetStage(rarityLevels[resultItem.rarity] || 1);
+      setPendingGachaResult(resultItem);
+      return;
+    }
+
     const cost = type === "regular" ? 100 : 3000;
     if (userData.pt < cost || pullingType) return;
     setPullingType(type);
@@ -78,7 +114,7 @@ export default function ShopPage() {
     setShowGachaRates(null);
     await updateUserData({ pt: userData.pt - cost });
     
-    let result;
+    let result: any;
     if (type === "rich") result = pullRichGachaItem();
     else if (type === "rich2") result = pullRichGacha2Item();
     else result = pullGachaItem();
@@ -103,12 +139,12 @@ export default function ShopPage() {
     if (duplicated || result.type === 'xp') {
       if (type !== "regular") {
         await updateUserData({ pt: userData.pt + 1000 });
-        (result as any).duplicated = true;
-        (result as any).refund = "1000 PT";
+        result.duplicated = true;
+        result.refund = "1000 PT";
       } else {
         await updateUserData({ xp: userData.xp + 50 });
-        (result as any).duplicated = true;
-        (result as any).refund = "50 XP";
+        result.duplicated = true;
+        result.refund = "50 XP";
       }
     }
     
@@ -119,6 +155,7 @@ export default function ShopPage() {
 
   const tabs: { id: Tab, label: string }[] = [
     { id: "gacha", label: "🎁 ガチャ" },
+    { id: "equipments", label: "⚔️ 装備品 (SP)" },
     { id: "themes", label: "🎨 テーマ" },
     { id: "effects", label: "✨ エフェクト" },
     { id: "titles", label: "📛 しょうごう" },
@@ -131,7 +168,7 @@ export default function ShopPage() {
   return (
     <>
       {/* Gacha animation full screen */}
-      {(pullingType === "rich" || pullingType === "rich2") && pendingGachaResult && (
+      {(pullingType === "rich" || pullingType === "rich2" || pullingType === "sp_equipment") && pendingGachaResult && (
         <RichGachaAnimation
           targetStage={gachaTargetStage}
           onComplete={() => {
@@ -193,14 +230,21 @@ export default function ShopPage() {
             <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
           </div>
 
-          <div className="game-panel p-6 mb-6 flex justify-between items-center">
-            <div className="font-bold text-slate-300">もっている PT</div>
-            <div className="text-4xl font-black text-amber-400 drop-shadow-md">{userData.pt} <span className="text-xl text-amber-200">PT</span></div>
+          <div className="game-panel p-6 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="font-bold text-slate-300">⭐ もっている PT</div>
+              <div className="text-3xl font-black text-amber-400 drop-shadow-md">{userData.pt} <span className="text-lg text-amber-200">PT</span></div>
+            </div>
+            <div className="hidden sm:block h-8 w-px bg-slate-600"></div>
+            <div className="flex items-center gap-3">
+              <div className="font-bold text-slate-300">🧪 もっている SP</div>
+              <div className="text-3xl font-black text-emerald-400 drop-shadow-md">{userData.sp || 0} <span className="text-lg text-emerald-200">SP</span></div>
+            </div>
           </div>
 
-          {/* Preview Area for Titles and Avatars */}
+          {/* Preview Area for Titles, Avatars, and Equipments */}
           <AnimatePresence>
-            {(previewTitle || previewAvatar || activeTab === "titles" || activeTab === "avatars") && (
+            {(previewTitle || previewAvatar || previewEquipment || activeTab === "titles" || activeTab === "avatars" || activeTab === "equipments") && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -215,6 +259,7 @@ export default function ShopPage() {
                       name={userData.name}
                       title={previewTitle || userData.equippedTitle}
                       avatar={previewAvatar || userData.equippedAvatar}
+                      equipment={previewEquipment !== null ? previewEquipment : userData.equippedEquipment}
                       isMvp={userData.totalDamage > 0}
                     />
                   </div>
@@ -308,13 +353,35 @@ export default function ShopPage() {
                           <span className="text-lg">🔍</span> 中身を見る
                         </button>
                       </div>
+                      <button
+                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => pullGacha("rich2")}
+                        disabled={pullingType !== null || userData.pt < 3000}
+                      >
+                        {pullingType ? "..." : "3000 PT でまわす"}
+                      </button>
+                    </div>
+
+                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-emerald-50/90 to-emerald-200/90 border-[3px] border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] flex flex-col justify-between relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
+                      <div className="relative z-10 text-center">
+                        <div className="text-emerald-700 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
+                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">⚔️</span> SP装備ガチャ <span className="text-sm">(1000 SP)</span>
+                        </div>
                         <button
-                          className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          onClick={() => pullGacha("rich2")}
-                          disabled={pullingType !== null || userData.pt < 3000}
+                          onClick={() => setShowGachaRates(showGachaRates === "sp_equipment" ? null : "sp_equipment")}
+                          className="mb-6 px-6 py-2 bg-[#e6f7ed] hover:bg-[#c9f0d8] text-[#14532d] font-black text-sm rounded-full shadow-md border-2 border-emerald-300 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
                         >
-                          {pullingType ? "..." : "3000 PT でまわす"}
+                          <span className="text-lg">🔍</span> 中身を見る
                         </button>
+                      </div>
+                      <button
+                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl shadow-[0_4px_0_0_#047857] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || (userData.sp || 0) < 1000 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => pullGacha("sp_equipment")}
+                        disabled={pullingType !== null || (userData.sp || 0) < 1000}
+                      >
+                        {pullingType ? "..." : (userData.sp || 0) < 1000 ? "SP不足" : "1000 SP でまわす"}
+                      </button>
                     </div>
                   </div>
                   <AnimatePresence>
@@ -327,7 +394,7 @@ export default function ShopPage() {
                       >
                         <h3 className="font-black text-blue-900 mb-4 border-b-2 border-blue-200 pb-2">提供割合</h3>
                         <div className="space-y-4">
-                          {(showGachaRates === "rich" ? richGachaRates : showGachaRates === "rich2" ? richGacha2Rates : gachaRates).map((tier, idx) => (
+                          {(showGachaRates === "sp_equipment" ? spEquipmentGachaRates : showGachaRates === "rich" ? richGachaRates : showGachaRates === "rich2" ? richGacha2Rates : gachaRates).map((tier, idx) => (
                             <div key={idx} className={`p-4 rounded-lg border ${tier.bg} shadow-inner`}>
                               <div className="flex justify-between items-center mb-3 border-b border-black/10 pb-2">
                                 <span className={`font-black text-xl ${tier.color} drop-shadow-sm`}>{tier.rarity}</span>
@@ -406,6 +473,62 @@ export default function ShopPage() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              )}
+
+              {/* ===== EQUIPMENTS TAB ===== */}
+              {activeTab === "equipments" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {equipments.map(item => {
+                    const isOwned = (userData.equipments || []).includes(item.id);
+                    const canAfford = (userData.sp || 0) >= (item.price || 0);
+
+                    return (
+                      <div key={item.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isOwned ? 'border-emerald-500 bg-emerald-50/90' : ''}`}>
+                        <div className="flex items-center gap-4">
+                          <div className="text-5xl w-16 h-16 flex items-center justify-center bg-slate-900/80 rounded-2xl border-2 border-emerald-300 shadow-md">
+                            {item.icon.startsWith('/') ? <img src={item.icon} alt="eq" className="w-full h-full object-cover rounded-xl" /> : item.icon}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-lg text-slate-800">{item.name}</span>
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                item.rarity === '神レア' ? 'bg-purple-500 text-white' :
+                                item.rarity === '超激レア' ? 'bg-red-500 text-white' :
+                                item.rarity === '激レア' ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-700'
+                              }`}>{item.rarity}</span>
+                            </div>
+                            <div className="text-xs text-slate-600 font-bold mt-1">{item.description}</div>
+                            {!isOwned && !item.isGachaOnly && (
+                              <div className="text-emerald-600 font-black text-sm mt-1">{item.price} SP</div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-slate-200">
+                          {isOwned ? (
+                            <div className="text-sm font-bold text-emerald-600 bg-emerald-100 px-4 py-1.5 rounded-full border border-emerald-300">
+                              ✓ 所持中
+                            </div>
+                          ) : item.isGachaOnly ? (
+                            <div className="text-xs font-black text-purple-700 bg-purple-100 px-3 py-1.5 rounded-full border border-purple-300">
+                              🎲 ガチャ限定
+                            </div>
+                          ) : (
+                            <Button
+                              variant="fun"
+                              size="sm"
+                              className="bg-emerald-500 hover:bg-emerald-600 border-emerald-700 text-white text-sm"
+                              disabled={!canAfford}
+                              onClick={() => handleBuy("equipment", item.id, item.price || 0)}
+                            >
+                              {canAfford ? `${item.price} SP でこうにゅう` : "SP 不足"}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 

@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getRandomQuestions, getRevengeQuestions, KanjiQuestion } from "../../lib/kanjiData";
 import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion } from "../../lib/mathData";
+import { getRandomScienceQuestions, getRevengeScienceQuestions, ScienceQuestion } from "../../lib/scienceData";
+import { getRandomSocialQuestions, getRevengeSocialQuestions, SocialQuestion } from "../../lib/socialData";
 import { getRaidBossImagePath, getCurrentJSTMonth, getCurrentJSTWeekString } from "../../lib/raidLogic";
 import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
@@ -18,8 +20,9 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function GamePage() {
   const router = useRouter();
   const { userData, updateUserData, loading } = useUser();
-  const [questions, setQuestions] = useState<(KanjiQuestion | MathQuestion)[]>([]);
+  const [questions, setQuestions] = useState<(KanjiQuestion | MathQuestion | ScienceQuestion | SocialQuestion)[]>([]);
   const [isMath, setIsMath] = useState(false);
+  const [subjectType, setSubjectType] = useState<"kanji" | "math" | "science" | "social">("kanji");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mode, setMode] = useState<"4choice" | "keyboard">("4choice");
   const [isFinished, setIsFinished] = useState(false);
@@ -77,15 +80,32 @@ export default function GamePage() {
       
       setIsRevenge(revengeParam);
 
-      const subjectParam = params.get("subject");
+      const subjectParam = (params.get("subject") || "kanji") as "kanji" | "math" | "science" | "social";
+      setSubjectType(subjectParam);
       const isMathMode = subjectParam === "math";
       setIsMath(isMathMode);
 
       if (revengeParam) {
-        if (isMathMode) {
+        if (subjectParam === "math") {
           const revQ = getRevengeMathQuestions(userData.mistakeIds, 10);
           if (revQ.length === 0) {
             alert("にがてな算数の問題は まだ ありません！");
+            router.push("/home");
+            return;
+          }
+          setQuestions(revQ);
+        } else if (subjectParam === "science") {
+          const revQ = getRevengeScienceQuestions(userData.mistakeIds, 10);
+          if (revQ.length === 0) {
+            alert("にがてな理科の問題は まだ ありません！");
+            router.push("/home");
+            return;
+          }
+          setQuestions(revQ);
+        } else if (subjectParam === "social") {
+          const revQ = getRevengeSocialQuestions(userData.mistakeIds, 10);
+          if (revQ.length === 0) {
+            alert("にがてな社会の問題は まだ ありません！");
             router.push("/home");
             return;
           }
@@ -102,10 +122,14 @@ export default function GamePage() {
       } else {
         const targetGrades = gradesParam ? gradesParam.split(",").map(Number) : [userData.grade];
         const targetCount = countParam ? parseInt(countParam, 10) : 5;
-        if (isMathMode) {
+        if (subjectParam === "math") {
           const skillsParam = params.get("skills");
           const targetSkills = skillsParam ? skillsParam.split(",") : [];
           setQuestions(getRandomMathQuestions(targetSkills, targetCount));
+        } else if (subjectParam === "science") {
+          setQuestions(getRandomScienceQuestions(targetGrades, targetCount));
+        } else if (subjectParam === "social") {
+          setQuestions(getRandomSocialQuestions(targetGrades, targetCount));
         } else {
           setQuestions(getRandomQuestions(targetGrades, targetCount));
         }
@@ -126,6 +150,36 @@ export default function GamePage() {
       return () => clearTimeout(timer);
     }
   }, [isBossBattle, isReviewMode, feedback, isFinished, timeLeft, questions.length]);
+
+  const multiplier = 1 + (maxCombo * 0.1);
+  const revengeBonus = isRevenge ? 2.0 : 1.0;
+  const keyboardBonus = mode === "keyboard" ? 3.0 : 1.0;
+
+  const { finalXP, finalPT, hasPenalty } = useMemo(() => {
+    let baseXP = 0;
+    let basePT = 0;
+    let penalty = false;
+
+    questions.forEach(q => {
+      if (!isRevenge && q.grade < (userData?.grade || 1)) {
+        baseXP += 1;
+        basePT += 0;
+        penalty = true;
+      } else {
+        baseXP += 10;
+        basePT += 5;
+      }
+    });
+
+    const penaltyXP = totalMistakes * 5;
+    const penaltyPT = totalMistakes * 2;
+    
+    return {
+      finalXP: Math.max(0, Math.floor((baseXP - penaltyXP) * multiplier * revengeBonus * keyboardBonus)),
+      finalPT: Math.max(0, Math.floor((basePT - penaltyPT) * multiplier * revengeBonus * keyboardBonus)),
+      hasPenalty: penalty
+    };
+  }, [questions, isRevenge, userData?.grade, totalMistakes, multiplier, revengeBonus, keyboardBonus]);
 
   if (loading || questions.length === 0) return <div>ロード中...</div>;
 
@@ -201,32 +255,6 @@ export default function GamePage() {
 
   const finishGame = async () => {
     setIsFinished(true);
-    const qCount = questions.length;
-    
-    const multiplier = 1 + (maxCombo * 0.1);
-    const revengeBonus = isRevenge ? 2.0 : 1.0;
-    const keyboardBonus = mode === "keyboard" ? 3.0 : 1.0;
-
-    let baseXP = 0;
-    let basePT = 0;
-    let lowGradeCount = 0;
-
-    questions.forEach(q => {
-      if (!isRevenge && q.grade < (userData?.grade || 1)) {
-        baseXP += 1;
-        basePT += 0;
-        lowGradeCount++;
-      } else {
-        baseXP += 10;
-        basePT += 5;
-      }
-    });
-
-    const penaltyXP = totalMistakes * 5;
-    const penaltyPT = totalMistakes * 2;
-    
-    const finalXP = Math.max(0, Math.floor((baseXP - penaltyXP) * multiplier * revengeBonus * keyboardBonus));
-    const finalPT = Math.max(0, Math.floor((basePT - penaltyPT) * multiplier * revengeBonus * keyboardBonus));
     
     if (userData) {
       const updatedMastered = Array.from(new Set([...userData.masteredIds, ...Array.from(newMastered.current)]));
@@ -272,9 +300,12 @@ export default function GamePage() {
       const currentMonthString = getCurrentJSTMonth();
       const newMonthlyDamage = (userData.lastMonthString === currentMonthString ? (userData.monthlyDamage || 0) : 0) + finalXP;
 
+      const isSpSubject = subjectType === "science" || subjectType === "social";
+
       await updateUserData({
         xp: userData.xp + finalXP,
-        pt: userData.pt + finalPT,
+        pt: isSpSubject ? userData.pt : userData.pt + finalPT,
+        sp: isSpSubject ? (userData.sp || 0) + finalPT : (userData.sp || 0),
         masteredIds: updatedMastered,
         mistakeIds: updatedMistakes,
         totalDamage: (userData.totalDamage || 0) + finalXP,
@@ -293,6 +324,8 @@ export default function GamePage() {
       }
     }
   };
+
+  const isSpSubject = subjectType === "science" || subjectType === "social";
 
   if (isFinished) {
     return (
@@ -331,13 +364,15 @@ export default function GamePage() {
               まちがえた回数: {totalMistakes} 回
             </div>
           )}
-          {isMath && !isRevenge && questions.some(q => q.grade < (userData?.grade || 1)) && (
+          {hasPenalty && (
             <div className="text-sm font-bold text-blue-500 mb-4 bg-blue-50 p-2 rounded-xl border border-blue-200">
               ℹ️ 自分の学年より下の問題があったため、もらえる経験値が少なくなったよ！
             </div>
           )}
-          <div className="text-4xl font-black mb-4 text-cyan-400 drop-shadow-md">+ {Math.max(0, Math.floor((questions.reduce((acc, q) => acc + (isMath && !isRevenge && q.grade < (userData?.grade || 1) ? 1 : 10), 0) - totalMistakes * 5) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1) * (mode === "keyboard" ? 3 : 1)))} XP</div>
-          <div className="text-3xl font-black text-amber-500 mb-10 drop-shadow-sm">+ {Math.max(0, Math.floor((questions.reduce((acc, q) => acc + (isMath && !isRevenge && q.grade < (userData?.grade || 1) ? 0 : 5), 0) - totalMistakes * 2) * (1 + maxCombo * 0.1) * (isRevenge ? 2 : 1) * (mode === "keyboard" ? 3 : 1)))} PT</div>
+          <div className="text-4xl font-black mb-4 text-cyan-400 drop-shadow-md">+ {finalXP} XP</div>
+          <div className={`text-3xl font-black mb-10 drop-shadow-sm ${isSpSubject ? 'text-emerald-400' : 'text-amber-500'}`}>
+            + {finalPT} {isSpSubject ? 'SP' : 'PT'}
+          </div>
           
           <Button size="lg" className="w-full text-2xl py-6" variant="fun" onClick={() => router.push("/home")}>
             ホームにもどる
@@ -462,8 +497,16 @@ export default function GamePage() {
             )}
 
             {!isBossBattle && (
-              <div className={`absolute -top-5 ${isMath ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gradient-to-r from-primary to-blue-500'} text-white font-black px-8 py-3 rounded-full shadow-lg text-lg border-2 border-white/50 z-20`}>
-                {isMath ? "さんすう もんだい" : (currentQ.type === "onyomi" ? "音読み（カタカナ）" : "訓読み（ひらがな）")}
+              <div className={`absolute -top-5 ${
+                subjectType === "math" ? 'bg-gradient-to-r from-blue-500 to-indigo-600' :
+                subjectType === "science" ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-300' :
+                subjectType === "social" ? 'bg-gradient-to-r from-orange-600 to-amber-600 border-orange-300' :
+                'bg-gradient-to-r from-primary to-blue-500'
+              } text-white font-black px-8 py-3 rounded-full shadow-lg text-lg border-2 border-white/50 z-20`}>
+                {subjectType === "math" ? "さんすう もんだい" :
+                 subjectType === "science" ? "りか もんだい" :
+                 subjectType === "social" ? "しゃかい もんだい" :
+                 ('type' in currentQ && currentQ.type === "onyomi" ? "音読み（カタカナ）" : "訓読み（ひらがな）")}
               </div>
             )}
             
@@ -472,12 +515,20 @@ export default function GamePage() {
               <KanjiEffect effect={userData.equippedEffect} />
             )}
 
-            <div className={`${isMath ? 'text-[70px] md:text-[90px] font-sans font-black' : 'text-[120px] font-serif'} leading-none drop-shadow-md my-4 relative z-10 ${isBossBattle ? (userData?.scaryMode ? 'text-red-100' : 'text-red-900') : 'text-slate-800'}`}>
-              {isMath ? renderMathWord(currentQ.word) : currentQ.word}
-              {currentQ.okurigana && (
-                <span className="text-[0.5em] opacity-80 font-sans ml-1 tracking-normal">{currentQ.okurigana}</span>
-              )}
-            </div>
+            {(subjectType === "science" || subjectType === "social") ? (
+              <div className="w-full my-4 px-2 sm:px-6 relative z-10">
+                <div className="bg-slate-900/90 border-2 border-emerald-400/80 rounded-2xl p-4 sm:p-6 shadow-2xl text-left font-sans font-bold text-lg sm:text-2xl text-emerald-100 leading-relaxed tracking-wide">
+                  {currentQ.word}
+                </div>
+              </div>
+            ) : (
+              <div className={`${isMath ? 'text-[70px] md:text-[90px] font-sans font-black' : 'text-[120px] font-serif'} leading-none drop-shadow-md my-4 relative z-10 ${isBossBattle ? (userData?.scaryMode ? 'text-red-100' : 'text-red-900') : 'text-slate-800'}`}>
+                {isMath ? renderMathWord(currentQ.word) : currentQ.word}
+                {'okurigana' in currentQ && currentQ.okurigana && (
+                  <span className="text-[0.5em] opacity-80 font-sans ml-1 tracking-normal">{currentQ.okurigana}</span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* パス時の正解表示 */}
@@ -507,7 +558,7 @@ export default function GamePage() {
               <KeyboardInput 
                 onAnswer={handleAnswer} 
                 disabled={feedback !== null}
-                placeholder={isMath ? "こたえをいれてね" : (currentQ.type === "onyomi" ? "よみをカタカナでいれてね" : "よみをひらがなでいれてね")}
+                placeholder={subjectType === "math" ? "こたえをいれてね" : (subjectType === "science" || subjectType === "social") ? "こたえをいれてね" : ('type' in currentQ && currentQ.type === "onyomi" ? "よみをカタカナでいれてね" : "よみをひらがなでいれてね")}
                 isFraction={isMath && currentQ.reading.includes('/')}
               />
             )}

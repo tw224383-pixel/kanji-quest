@@ -5,8 +5,8 @@ import { Button } from "../../components/ui/Button";
 import { useRouter } from "next/navigation";
 
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
-import { allGachaItems, allRichGachaItems } from "../../lib/gachaData";
-import { shopThemes, shopEffects, shopTitles, shopAvatars } from "../../lib/itemData";
+import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
+import { getAllEquipment } from "../../lib/equipmentData";
 
 export default function DebugPage() {
   const { user, isGuest, userData, updateUserData, loading } = useUser();
@@ -18,14 +18,20 @@ export default function DebugPage() {
     return null;
   }
 
-  const allTitles = ["見習い", ...shopTitles.map(t => t.id), ...allGachaItems.filter(i => i.type === 'title').map(i => i.id), ...allRichGachaItems.filter(i => i.type === 'title').map(i => i.id)];
-  const allAvatars = ["👦", ...shopAvatars.map(a => a.id), ...allGachaItems.filter(i => i.type === 'avatar').map(i => i.id), ...allRichGachaItems.filter(i => i.type === 'avatar').map(i => i.id)];
-  const allThemes = ["default", ...shopThemes.map(t => t.id), ...allGachaItems.filter(i => i.type === 'theme').map(i => `theme_${i.id}`), ...allRichGachaItems.filter(i => i.type === 'theme').map(i => `theme_${i.id}`)];
-  const allEffects = ["default", ...shopEffects.map(e => e.id), ...allGachaItems.filter(i => i.type === 'effect').map(i => i.id), ...allRichGachaItems.filter(i => i.type === 'effect').map(i => i.id)];
+  const allTitles = ["見習い", ...getAllTitles().map(t => t.id)];
+  const allAvatars = ["👦", "👧", ...getAllAvatars().map(a => a.id)];
+  const allThemes = ["default", "theme_default", ...getAllThemes().map(t => t.id.startsWith("theme_") ? t.id : `theme_${t.id}`)];
+  const allEffects = ["default", ...getAllEffects().map(e => e.id)];
+  const allEquipments = getAllEquipment().map(e => e.id);
 
   const handleMaxPT = async () => {
     await updateUserData({ pt: 9999999 });
     alert("お金（PT）を最大にしました！");
+  };
+
+  const handleMaxSP = async () => {
+    await updateUserData({ sp: 9999999 });
+    alert("新通貨（SP）を最大にしました！");
   };
 
   const handleMaxXP = async () => {
@@ -37,9 +43,10 @@ export default function DebugPage() {
     await updateUserData({
       titles: Array.from(new Set([...userData.titles, ...allTitles])),
       avatars: Array.from(new Set([...userData.avatars, ...allAvatars])),
-      effects: Array.from(new Set([...userData.effects, ...allThemes, ...allEffects]))
+      effects: Array.from(new Set([...userData.effects, ...allThemes, ...allEffects])),
+      equipments: Array.from(new Set([...(userData.equipments || []), ...allEquipments]))
     });
-    alert("全アイテム（称号・アバター・テーマ・エフェクト）を解放しました！");
+    alert("全アイテム（称号・アバター・テーマ・エフェクト・全装備品）を解放しました！");
   };
 
   const handleResetRaidBoss = () => {
@@ -89,9 +96,11 @@ export default function DebugPage() {
           <div className="grid grid-cols-2 gap-4 text-lg">
             <div>ユーザー名: {userData.name}</div>
             <div>PT: {userData.pt}</div>
+            <div>SP: {userData.sp || 0}</div>
             <div>XP: {userData.xp}</div>
             <div>所持称号数: {userData.titles.length}</div>
             <div>所持アバター数: {userData.avatars.length}</div>
+            <div>所持装備数: {(userData.equipments || []).length}</div>
           </div>
         </div>
 
@@ -102,6 +111,12 @@ export default function DebugPage() {
             className="p-4 border border-green-500 hover:bg-green-900 transition-colors text-left font-bold"
           >
             💰 お金（PT）をMAXにする
+          </button>
+          <button 
+            onClick={handleMaxSP}
+            className="p-4 border border-green-500 hover:bg-green-900 transition-colors text-left font-bold"
+          >
+            🧪 通貨（SP）をMAXにする
           </button>
           <button 
             onClick={handleMaxXP}

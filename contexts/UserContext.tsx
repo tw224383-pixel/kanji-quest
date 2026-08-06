@@ -11,6 +11,7 @@ export type UserData = {
   name: string;
   xp: number;
   pt: number;
+  sp: number;
   effects: string[];
   grade: number;
   mistakeIds: string[];
@@ -19,6 +20,8 @@ export type UserData = {
   equippedTitle: string;
   avatars: string[];
   equippedAvatar: string;
+  equipments: string[];
+  equippedEquipment: string;
   theme: string;
   totalDamage: number;
   equippedEffect: string;
@@ -33,6 +36,7 @@ const DEFAULT_USER_DATA: UserData = {
   name: "名無し",
   xp: 0,
   pt: 0,
+  sp: 0,
   effects: ["default"],
   grade: 1,
   mistakeIds: [],
@@ -41,6 +45,8 @@ const DEFAULT_USER_DATA: UserData = {
   equippedTitle: "見習い",
   avatars: ["👦"],
   equippedAvatar: "👦",
+  equipments: [],
+  equippedEquipment: "",
   theme: "default",
   totalDamage: 0,
   equippedEffect: "",
@@ -104,6 +110,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               name: data.name || "名無し",
               xp: data.xp || 0,
               pt: data.pt || 0,
+              sp: data.sp || 0,
               effects: data.effects || ["default"],
               grade: data.grade || 1,
               mistakeIds: data.mistakeIds || [],
@@ -112,6 +119,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               equippedTitle: data.equippedTitle || "見習い",
               avatars: data.avatars || ["👦"],
               equippedAvatar: data.equippedAvatar || "👦",
+              equipments: data.equipments || [],
+              equippedEquipment: data.equippedEquipment || "",
               theme: data.theme || "default",
               totalDamage: data.totalDamage || 0,
               equippedEffect: data.equippedEffect || "",
