@@ -15,12 +15,13 @@ import { getCurrentJSTWeekString } from "../../lib/raidLogic";
 type RankingUser = {
   id: string;
   name: string;
-  xp: number;
   grade: number;
+  xp: number;
   equippedTitle?: string;
   equippedAvatar?: string;
   weeklyXp?: number;
   lastWeekString?: string;
+  theme?: string;
 };
 
 export default function RankingPage() {
@@ -114,19 +115,34 @@ export default function RankingPage() {
             <div className="flex flex-col gap-4">
               {ranking.map((user, index) => {
                 const { level } = calculateLevel(user.xp || 0);
+                
+                const isDefault = !user.theme || user.theme === 'default';
+                const themeName = user.theme === 'time_space' ? 'space' : user.theme;
+                const bgUrl = isDefault ? "/kanji-quest/images/ui/fantasy_bg.jpg" : `/kanji-quest/images/themes/bg_${themeName}.jpg`;
+
                 return (
-                  <div key={user.id} className="flex items-center gap-4 bg-slate-800/80 border-2 border-slate-600 p-4 rounded-2xl shadow-inner">
-                    <div className="text-3xl font-black w-8 text-center text-amber-400 drop-shadow-md">
+                  <div key={user.id} className="relative flex items-center gap-4 bg-slate-800/80 border-2 border-slate-500/50 p-4 rounded-2xl shadow-inner overflow-hidden">
+                    {/* テーマ背景レイヤー */}
+                    <div 
+                      className={`absolute inset-0 bg-cover bg-center pointer-events-none opacity-40 mix-blend-screen ${user.theme === 'time_space' ? 'hue-rotate-180' : ''}`}
+                      style={{ backgroundImage: `url('${bgUrl}')` }}
+                    />
+                    <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+
+                    {/* コンテンツ */}
+                    <div className="text-3xl font-black w-8 text-center text-amber-400 drop-shadow-md relative z-10">
                       {index + 1}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-black text-lg text-slate-200 line-clamp-1 break-all flex items-center gap-2">
+                    <div className="flex-1 relative z-10">
+                      <div className="font-black text-lg text-slate-100 line-clamp-1 break-all flex items-center gap-2 drop-shadow-sm">
                         {user.name || "名無し"}
                         {user.id === userData?.id && <span className="text-xs bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full font-black">あなた</span>}
                       </div>
-                      <div className="text-sm font-bold text-amber-300">Lv.{calculateLevel(user.xp).level} (WP: {user.lastWeekString === getCurrentJSTWeekString() ? (user.weeklyXp || 0) : 0})</div>
+                      <div className="text-sm font-bold text-amber-300 drop-shadow-sm">
+                        Lv.{calculateLevel(user.xp).level} (WP: {user.lastWeekString === getCurrentJSTWeekString() ? (user.weeklyXp || 0) : 0})
+                      </div>
                     </div>
-                    <div className="scale-75 origin-right">
+                    <div className="scale-75 origin-right relative z-10">
                       <RankPlate 
                         level={level} 
                         name="" 
