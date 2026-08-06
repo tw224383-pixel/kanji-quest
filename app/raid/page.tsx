@@ -70,9 +70,7 @@ export default function RaidPage() {
       try {
         const q = query(
           collection(db, "users"), 
-          where("lastMonthString", "==", getCurrentJSTMonth()), 
-          orderBy("monthlyDamage", "desc"), 
-          limit(5)
+          where("lastMonthString", "==", getCurrentJSTMonth())
         );
         const snap = await getDocs(q);
         const ranking = snap.docs.map(docSnap => {
@@ -82,7 +80,7 @@ export default function RaidPage() {
             damage: data.monthlyDamage || 0,
             isUser: docSnap.id === auth.currentUser?.uid
           };
-        });
+        }).sort((a, b) => b.damage - a.damage).slice(0, 5);
         setTopRanking(ranking);
       } catch (err) {
         console.error(err);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemeBackground } from "../../components/ui/ThemeBackground";
 import { useThemeContext } from "../../contexts/ThemeContext";
 import { useUser } from "../../hooks/useUser";
@@ -40,6 +40,10 @@ export default function ShopPage() {
   const [gachaTargetStage, setGachaTargetStage] = useState(1);
   const [showGachaRates, setShowGachaRates] = useState<"regular" | "rich" | null>(null);
   const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
+
+  useEffect(() => {
+    return () => setPreviewTheme(null);
+  }, [setPreviewTheme]);
 
   if (loading) return <LoadingScreen />;
   if (!userData) {

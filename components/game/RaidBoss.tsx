@@ -7,7 +7,7 @@ import { useUser } from "../../hooks/useUser";
 import { motion } from "framer-motion";
 import { storage } from "../../lib/storage";
 import Link from "next/link";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth } from "../../lib/raidLogic";
 
 export function RaidBoss() {
   const { user, isGuest, userData, updateUserData } = useUser();
@@ -16,7 +16,7 @@ export function RaidBoss() {
   const [level, setLevel] = useState(1);
   const [showModal, setShowModal] = useState(false);
 
-  const currentMonth = new Date().toISOString().slice(0, 7);
+  const currentMonth = getCurrentJSTMonth();
 
   // Local sync
   useEffect(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemeBackground } from "../../components/ui/ThemeBackground";
 import { useThemeContext } from "../../contexts/ThemeContext";
 import { useUser } from "../../hooks/useUser";
@@ -12,6 +12,9 @@ import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars } from "../../lib/itemData";
+import { auth } from "../../lib/firebase";
+import { signOut } from "firebase/auth";
+import { storage } from "../../lib/storage";
 
 const allThemes = getAllThemes();
 const allEffects = getAllEffects();
@@ -30,6 +33,18 @@ export default function ProfilePage() {
   const { previewTheme, setPreviewTheme } = useThemeContext();
   const [previewEffect, setPreviewEffect] = useState<string | null>(null);
   const [previewingAvatarModal, setPreviewingAvatarModal] = useState<{url?: string, id?: string, name?: string} | null>(null);
+
+  useEffect(() => {
+    return () => setPreviewTheme(null);
+  }, [setPreviewTheme]);
+
+  const handleLogout = async () => {
+    if (confirm("ログアウトしますか？")) {
+      await signOut(auth);
+      storage.clearGuest();
+      router.push("/");
+    }
+  };
 
   if (loading) return <LoadingScreen />;
   if (!userData) {
@@ -100,7 +115,10 @@ export default function ProfilePage() {
             <h1 className="text-3xl font-black flex items-center gap-2 text-indigo-300 drop-shadow-md text-outline-dark">
               <span>👑</span> プロフィール・着せ替え
             </h1>
-            <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
+            <div className="flex items-center gap-2">
+              <Button variant="danger" onClick={handleLogout}>ログアウト</Button>
+              <Button variant="outline" onClick={() => router.push("/home")}>もどる</Button>
+            </div>
           </div>
 
           {/* Preview Area for Titles and Avatars */}

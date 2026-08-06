@@ -77,8 +77,8 @@ export default function RankingPage() {
         </div>
 
         <div className="game-panel-light p-4 mb-6 text-center">
-          <div className="text-xl font-bold text-slate-800 drop-shadow-sm">👑 ランキングは <span className="text-amber-600 text-2xl font-black border-b-4 border-amber-300">獲得XP（けいけんち）</span> で決まるよ！</div>
-          <div className="text-sm mt-1 font-bold text-slate-600">クエストをたくさんクリアしてXPを稼ぎ、トップを目指そう！</div>
+          <div className="text-xl font-bold text-slate-800 drop-shadow-sm">👑 ランキングは <span className="text-amber-600 text-2xl font-black border-b-4 border-amber-300">獲得WP（ウィークリーポイント）</span> で決まるよ！</div>
+          <div className="text-sm mt-1 font-bold text-slate-600">クエストをクリアしてWPを稼ごう！ WPは毎週リセットされるから、いつ始めてもトップを狙えるよ！</div>
         </div>
 
         {isGuest && (
