@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URLが変わったよ！ - 漢字クエスト</title>
+  <meta http-equiv="refresh" content="3;url=https://kanji-quest-b1a45.web.app/raid">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      background-image: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.95);
+      border: 4px solid #f59e0b;
+      border-radius: 32px;
+      padding: 40px 30px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 0 50px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .badge {
+      display: inline-block;
+      background: #ef4444;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 14px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 900;
+      color: #fbdf24;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      margin-bottom: 16px;
+    }
+    p {
+      font-size: 16px;
+      font-weight: 700;
+      color: #cbd5e1;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .countdown {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+    .btn {
+      display: inline-block;
+      width: 100%;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #78350f;
+      font-size: 20px;
+      font-weight: 900;
+      padding: 18px 24px;
+      border-radius: 20px;
+      text-decoration: none;
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+      transition: all 0.2s ease;
+      border: 2px solid #fef3c7;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(245, 158, 11, 0.6);
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">✨ おしらせ ✨</div>
+    <h1>URLが変わったよ！</h1>
+    <p>漢字クエストは新しいURLに引越ししたよ！<br>下のボタンを押してあそんでね！</p>
+    <div class="countdown"><span id="timer">3</span> 秒後にあたらしページへ自動で移動します...</div>
+    <a href="https://kanji-quest-b1a45.web.app/raid" class="btn">新しい漢字クエストへいく 🚀</a>
+  </div>
+
+  <script>
+    let seconds = 3;
+    const timerEl = document.getElementById('timer');
+    const interval = setInterval(() => {
+      seconds--;
+      if (seconds >= 0 && timerEl) {
+        timerEl.textContent = seconds;
+      }
+      if (seconds <= 0) {
+        clearInterval(interval);
+        window.location.href = "https://kanji-quest-b1a45.web.app/raid";
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
