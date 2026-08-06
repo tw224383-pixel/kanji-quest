@@ -312,48 +312,51 @@ export default function Home() {
             />
           </div>
           
-          <div className="game-panel p-6 flex-1 flex flex-col justify-center gap-4">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
-              <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                <div className="bg-primary text-white font-black px-4 py-1.5 rounded-full text-sm shadow-md border-2 border-blue-400 whitespace-nowrap">
-                  小学 {userData.grade} 年生
-                </div>
-                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                  <div className="bg-slate-900/90 border border-amber-400/50 px-3.5 py-1.5 rounded-xl flex items-center gap-2 shadow-inner">
-                    <span className="text-lg">⭐</span>
-                    <span className="text-lg font-black text-amber-400 tracking-tight">{userData.pt.toLocaleString()}</span>
-                    <span className="text-xs font-black text-amber-500">PT</span>
-                  </div>
-                  <div className="bg-slate-900/90 border border-emerald-400/50 px-3.5 py-1.5 rounded-xl flex items-center gap-2 shadow-inner">
-                    <span className="text-lg">🧪</span>
-                    <span className="text-lg font-black text-emerald-400 tracking-tight">{(userData.sp || 0).toLocaleString()}</span>
-                    <span className="text-xs font-black text-emerald-500">SP</span>
-                  </div>
-                </div>
+          <div className="game-panel p-5 flex-1 flex flex-col justify-between gap-4 min-w-0">
+            <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+              <div className="bg-primary text-white font-black px-3.5 py-1.5 rounded-full text-xs sm:text-sm shadow-md border-2 border-blue-400 whitespace-nowrap">
+                小学 {userData.grade} 年生
               </div>
-
-              <div className="flex w-full lg:w-auto gap-2">
-                <button onClick={() => router.push("/shop")} className="flex-1 lg:flex-initial game-panel-light flex justify-center items-center gap-1.5 px-3.5 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 whitespace-nowrap">
-                  <span className="text-lg md:text-xl">🛍️</span>
-                  <span className="font-black text-slate-800 text-xs md:text-base">ショップ</span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => router.push("/shop")} className="game-panel-light flex justify-center items-center gap-1 px-3 py-1.5 hover:scale-105 transition-all border-2 whitespace-nowrap">
+                  <span className="text-base">🛍️</span>
+                  <span className="font-black text-slate-800 text-xs sm:text-sm">ショップ</span>
                 </button>
-                <button onClick={() => router.push("/achievements")} className="flex-1 lg:flex-initial game-panel-light flex justify-center items-center gap-1.5 px-3.5 py-2 hover:scale-105 transition-all text-sm md:text-base border-2 whitespace-nowrap">
-                  <span className="text-lg md:text-xl">🏆</span>
-                  <span className="font-black text-slate-800 text-xs md:text-base">じっせき</span>
+                <button onClick={() => router.push("/achievements")} className="game-panel-light flex justify-center items-center gap-1 px-3 py-1.5 hover:scale-105 transition-all border-2 whitespace-nowrap">
+                  <span className="text-base">🏆</span>
+                  <span className="font-black text-slate-800 text-xs sm:text-sm">じっせき</span>
                 </button>
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-900/90 border border-amber-400/50 px-3 py-2 rounded-xl flex items-center justify-between shadow-inner min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-base flex-shrink-0">⭐</span>
+                  <span className="text-xs sm:text-sm font-black text-amber-400 tracking-tight truncate">{userData.pt.toLocaleString()}</span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-black text-amber-500 ml-1 flex-shrink-0">PT</span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-emerald-400/50 px-3 py-2 rounded-xl flex items-center justify-between shadow-inner min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-base flex-shrink-0">🧪</span>
+                  <span className="text-xs sm:text-sm font-black text-emerald-400 tracking-tight truncate">{(userData.sp || 0).toLocaleString()}</span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-black text-emerald-500 ml-1 flex-shrink-0">SP</span>
+              </div>
+            </div>
+
             <div>
-              <div className="text-sm font-black text-amber-200 mb-2 drop-shadow-md whitespace-nowrap">けいけんち (XP)</div>
-              <div className="w-full bg-gray-200/80 rounded-full h-6 overflow-hidden relative shadow-inner border-2 border-white/50">
+              <div className="text-xs font-black text-amber-200 mb-1.5 drop-shadow-md whitespace-nowrap">けいけんち (XP)</div>
+              <div className="w-full bg-gray-200/80 rounded-full h-5 overflow-hidden relative shadow-inner border-2 border-white/50">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${xpPercent}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                   className="bg-gradient-to-r from-blue-400 to-primary h-full"
                 ></motion.div>
-                <div className="absolute inset-0 flex items-center justify-center text-[12px] font-black text-white drop-shadow-md whitespace-nowrap">
+                <div className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-white drop-shadow-md whitespace-nowrap">
                   {currentLevelXp} / {nextLevelRequiredXp || "MAX"}
                 </div>
               </div>
