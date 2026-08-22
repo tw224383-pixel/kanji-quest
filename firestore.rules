@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ユーザーデータ：認証済みユーザーなら他ユーザーのプロフィール・ランキング情報も読める。書き込みは本人のみ。
+    // クライアントが直接 XP/PT/SP 等を書き込む構成のため、値の型・範囲・1回の書き込みあたりの増加量を
+    // ルールで制限し、devtools からの無制限な数値改ざんを防ぐ。
+    // 注意: これは緩和策であり完全な不正防止ではない（真の対策はサーバー側計算＝Cloud Functions化）。
+    // 実績の「まとめて受け取り」機能が PT/SP を1回の書き込みで大きく増やすため、
+    // その正規の最大合計値を考慮した上限（下記コメント参照）を設定している。
+    match /users/{userId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && isValidUserDoc(request.resource.data, null);
+
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && isValidUserDoc(request.resource.data, resource.data);
+
+      allow delete: if false;
+    }
+
+    // グローバル統計（レイドボス等）：誰でも読み取り可能、ログイン済みユーザーなら書き込み可能。
+    // 全プレイヤー共有のドキュメントなので、level/hp の型・範囲を検証し、
+    // 荒らし目的での異常値書き込み（例: hp を負の巨大値にする等）を防ぐ。
+    match /globalStats/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && isValidGlobalStats(request.resource.data);
+    }
+
+    function numOr0(data, key) {
+      return (key in data) && (data[key] is number) ? data[key] : 0;
+    }
+
+    // key: フィールド名 / updateDelta: 通常更新1回あたりの最大増加量
+    // createAllowance: アカウント作成時（ゲスト引き継ぎ含む）に許容する初期値の上限
+    // ceiling: このフィールドが取りうる絶対上限値
+    function withinDelta(newData, oldData, key, updateDelta, createAllowance, ceiling) {
+      let oldVal = oldData == null ? 0 : numOr0(oldData, key);
+      let maxIncrease = oldData == null ? createAllowance : updateDelta;
+      return !(key in newData) || (
+        newData[key] is number
+        && newData[key] >= 0
+        && newData[key] <= ceiling
+        && newData[key] <= oldVal + maxIncrease
+      );
+    }
+
+    function isValidUserDoc(newData, oldData) {
+      return newData.keys().hasOnly([
+        'id', 'name', 'xp', 'pt', 'sp', 'effects', 'grade',
+        'mistakeIds', 'masteredIds', 'titles', 'equippedTitle',
+        'avatars', 'equippedAvatar', 'equipments', 'equippedEquipment',
+        'theme', 'totalDamage', 'equippedEffect', 'weeklyXp', 'lastWeekString',
+        'monthlyDamage', 'lastMonthString', 'scaryMode', 'claimedAchievements',
+        'lastLoginDate', 'loginStreak', 'categorySolved'
+      ])
+
+      && (!('name' in newData) || (newData.name is string && newData.name.size() <= 30))
+      && (!('grade' in newData) || (newData.grade is int && newData.grade >= 1 && newData.grade <= 6))
+      && (!('theme' in newData) || (newData.theme is string && newData.theme.size() <= 50))
+      && (!('equippedTitle' in newData) || (newData.equippedTitle is string && newData.equippedTitle.size() <= 50))
+      && (!('equippedAvatar' in newData) || (newData.equippedAvatar is string && newData.equippedAvatar.size() <= 50))
+      && (!('equippedEquipment' in newData) || (newData.equippedEquipment is string && newData.equippedEquipment.size() <= 50))
+      && (!('equippedEffect' in newData) || (newData.equippedEffect is string && newData.equippedEffect.size() <= 50))
+      && (!('scaryMode' in newData) || newData.scaryMode is bool)
+      && (!('lastLoginDate' in newData) || (newData.lastLoginDate is string && newData.lastLoginDate.size() <= 10))
+      && (!('lastWeekString' in newData) || (newData.lastWeekString is string && newData.lastWeekString.size() <= 10))
+      && (!('lastMonthString' in newData) || (newData.lastMonthString is string && newData.lastMonthString.size() <= 10))
+
+      && (!('effects' in newData) || (newData.effects is list && newData.effects.size() <= 300))
+      && (!('titles' in newData) || (newData.titles is list && newData.titles.size() <= 300))
+      && (!('avatars' in newData) || (newData.avatars is list && newData.avatars.size() <= 300))
+      && (!('equipments' in newData) || (newData.equipments is list && newData.equipments.size() <= 300))
+      && (!('mistakeIds' in newData) || (newData.mistakeIds is list && newData.mistakeIds.size() <= 2000))
+      && (!('masteredIds' in newData) || (newData.masteredIds is list && newData.masteredIds.size() <= 5000))
+      && (!('claimedAchievements' in newData) || (newData.claimedAchievements is list && newData.claimedAchievements.size() <= 300))
+
+      && (!('loginStreak' in newData) || (
+        newData.loginStreak is int && newData.loginStreak >= 1 && newData.loginStreak <= 5000
+        && (oldData == null || newData.loginStreak <= numOr0(oldData, 'loginStreak') + 1)
+      ))
+
+      // xp / totalDamage: 通常プレイ由来のみ（1セッション最大 約3,600 相当）→ 更新は5,000まで。
+      // 作成時はゲストで蓄積した分の引き継ぎを考慮し余裕を持たせる。上限はLv300到達に必要な量(約93万)の倍以上。
+      && withinDelta(newData, oldData, 'xp', 5000, 1000000, 2000000)
+      && withinDelta(newData, oldData, 'totalDamage', 5000, 1000000, 2000000)
+      // pt / sp: 通常プレイに加え「実績まとめ受け取り」で一度に増える（全実績合計 最大 約39万PT / 約14万SP）ため
+      // その正規最大値に余裕を持たせた値を上限とする。
+      && withinDelta(newData, oldData, 'pt', 460000, 460000, 1000000)
+      && withinDelta(newData, oldData, 'sp', 160000, 160000, 500000)
+      // 週間/月間カウンターは期間が変わるとリセットされるため増加上限チェックを免除する
+      && (!('weeklyXp' in newData) || (
+        newData.weeklyXp is number && newData.weeklyXp >= 0 && newData.weeklyXp <= 1000000
+        && (oldData == null
+            || newData.weeklyXp <= numOr0(oldData, 'weeklyXp') + 5000
+            || newData.lastWeekString != (oldData.lastWeekString is string ? oldData.lastWeekString : ''))
+      ))
+      && (!('monthlyDamage' in newData) || (
+        newData.monthlyDamage is number && newData.monthlyDamage >= 0 && newData.monthlyDamage <= 1000000
+        && (oldData == null
+            || newData.monthlyDamage <= numOr0(oldData, 'monthlyDamage') + 5000
+            || newData.lastMonthString != (oldData.lastMonthString is string ? oldData.lastMonthString : ''))
+      ));
+    }
+
+    function isValidGlobalStats(newData) {
+      return newData.keys().hasOnly(['level', 'hp', 'month'])
+        && (!('level' in newData) || (newData.level is int && newData.level >= 1 && newData.level <= 10))
+        && (!('hp' in newData) || (newData.hp is number && newData.hp >= 0 && newData.hp <= 300000))
+        && (!('month' in newData) || (newData.month is string && newData.month.size() <= 10));
+    }
+  }
+}

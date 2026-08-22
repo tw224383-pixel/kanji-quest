@@ -1,0 +1,21 @@
+{
+  "name": "漢字計算クエスト",
+  "short_name": "漢字クエスト",
+  "description": "漢字と計算を楽しく学べるバトルRPGゲーム",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
