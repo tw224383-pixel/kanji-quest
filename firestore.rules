@@ -50,13 +50,19 @@ service cloud.firestore {
     // key: フィールド名 / updateDelta: 通常更新1回あたりの最大増加量
     // createAllowance: アカウント作成時（ゲスト引き継ぎ含む）に許容する初期値の上限
     // ceiling: このフィールドが取りうる絶対上限値
+    //
+    // effectiveCeiling: 過去（旧デバッグパネル等）に ceiling を超える値が書き込まれてしまった
+    // アカウントが、以後ずっと一切の更新を拒否され続ける（実質アカウント破損）のを防ぐため、
+    // 既存値が ceiling を超えている場合はその既存値を基準にする。ただし1回の書き込みで増やせる量は
+    // 変わらず updateDelta/createAllowance に制限されるため、新規の不正な巨大値書き込みは防げる。
     function withinDelta(newData, oldData, key, updateDelta, createAllowance, ceiling) {
       let oldVal = oldData == null ? 0 : numOr0(oldData, key);
       let maxIncrease = oldData == null ? createAllowance : updateDelta;
+      let effectiveCeiling = oldVal > ceiling ? oldVal : ceiling;
       return !(key in newData) || (
         newData[key] is number
         && newData[key] >= 0
-        && newData[key] <= ceiling
+        && newData[key] <= effectiveCeiling
         && newData[key] <= oldVal + maxIncrease
       );
     }
