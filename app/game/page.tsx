@@ -7,6 +7,7 @@ import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion } from ".
 import { getRandomScienceQuestions, getRevengeScienceQuestions, ScienceQuestion } from "../../lib/scienceData";
 import { getRandomSocialQuestions, getRevengeSocialQuestions, SocialQuestion } from "../../lib/socialData";
 import { getRaidBossImagePath, getCurrentJSTMonth, getCurrentJSTWeekString } from "../../lib/raidLogic";
+import { getCurrentJSTDateString, getNextReviewDate, GRADUATION_STAGE, isDueForReview } from "../../lib/reviewSchedule";
 import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, increment } from "firebase/firestore";
@@ -20,7 +21,7 @@ import { soundManager } from "../../lib/soundManager";
 
 export default function GamePage() {
   const router = useRouter();
-  const { userData, updateUserData, loading } = useUser();
+  const { userData, updateUserDataAtomic, loading } = useUser();
   const [questions, setQuestions] = useState<(KanjiQuestion | MathQuestion | ScienceQuestion | SocialQuestion)[]>([]);
   const [isMath, setIsMath] = useState(false);
   const [subjectType, setSubjectType] = useState<"kanji" | "math" | "science" | "social">("kanji");
@@ -95,34 +96,41 @@ export default function GamePage() {
       const categoryParam = params.get("category") as "calc" | "logic" | "geometry" | null;
 
       if (revengeParam) {
+        // 分散学習: 今日が復習日になっている苦手問題だけを出題する（覚えたてを何度も出さない）
+        const todayStr = getCurrentJSTDateString();
+        const nextReviewMap = userData.mistakeNextReview || {};
+        const dueMistakeIds = (userData.mistakeIds || []).filter(id => isDueForReview(nextReviewMap[id], todayStr));
+        const hasAnyMistakes = (userData.mistakeIds || []).length > 0;
+        const notDueMessage = "今日ふくしゅうする もんだいは まだ ないよ！また あとで きてね";
+
         if (subjectParam === "math") {
-          const revQ = getRevengeMathQuestions(userData.mistakeIds, 10);
+          const revQ = getRevengeMathQuestions(dueMistakeIds, 10);
           if (revQ.length === 0) {
-            alert("にがてな算数の問題は まだ ありません！");
+            alert(hasAnyMistakes ? notDueMessage : "にがてな算数の問題は まだ ありません！");
             router.push("/home");
             return;
           }
           setQuestions(revQ);
         } else if (subjectParam === "science") {
-          const revQ = getRevengeScienceQuestions(userData.mistakeIds, 10);
+          const revQ = getRevengeScienceQuestions(dueMistakeIds, 10);
           if (revQ.length === 0) {
-            alert("にがてな理科の問題は まだ ありません！");
+            alert(hasAnyMistakes ? notDueMessage : "にがてな理科の問題は まだ ありません！");
             router.push("/home");
             return;
           }
           setQuestions(revQ);
         } else if (subjectParam === "social") {
-          const revQ = getRevengeSocialQuestions(userData.mistakeIds, 10);
+          const revQ = getRevengeSocialQuestions(dueMistakeIds, 10);
           if (revQ.length === 0) {
-            alert("にがてな社会の問題は まだ ありません！");
+            alert(hasAnyMistakes ? notDueMessage : "にがてな社会の問題は まだ ありません！");
             router.push("/home");
             return;
           }
           setQuestions(revQ);
         } else {
-          const revQ = getRevengeQuestions(userData.mistakeIds, 10); // リベンジは最大10問
+          const revQ = getRevengeQuestions(dueMistakeIds, 10); // リベンジは最大10問
           if (revQ.length === 0) {
-            alert("にがてな漢字は まだ ありません！");
+            alert(hasAnyMistakes ? notDueMessage : "にがてな漢字は まだ ありません！");
             router.push("/home");
             return;
           }
@@ -332,110 +340,166 @@ export default function GamePage() {
 
     try {
       if (userData) {
-        const updatedMastered = Array.from(new Set([...userData.masteredIds, ...Array.from(newMastered.current)]));
-        
         // Check for Mastery Unlocks
         const { getAllKanji } = await import("../../lib/kanjiData");
         const allKanji = getAllKanji();
         const validKanjiWords = new Set(allKanji.map(k => k.kanji));
-        
-        // 苦手リストから存在しない問題や、今回マスターした問題を除外
-        let updatedMistakes = Array.from(new Set([...(userData.mistakeIds || []), ...Array.from(newMistakes.current)]));
-        updatedMistakes = updatedMistakes.filter(id => {
-          if (!id || typeof id !== "string" || id.trim() === "") return false;
-          if (newMastered.current.has(id)) return false;
-          // 算数、理科、社会のプレフィックス
-          if (id.startsWith("math_") || id.startsWith("sci_") || id.startsWith("soc_")) {
-            return true;
-          }
-          // 漢字
-          return validKanjiWords.has(id);
-        });
 
-        const newTitles = new Set(userData.titles || []);
-        const newAvatars = new Set(userData.avatars || []);
+        const isSpSubject = subjectType === "science" || subjectType === "social";
+        const params = new URLSearchParams(window.location.search);
+        const catParam = params.get("category");
+        const correctQuestionsCount = Math.max(1, questions.length - totalMistakes);
+
         let newlyMastered = false;
 
-        [1, 2, 3, 4, 5, 6].forEach(g => {
-          const gradeKanji = allKanji.filter(k => k.grade === g);
-          const masteredCount = gradeKanji.filter(k => updatedMastered.includes(k.kanji)).length;
-          if (masteredCount === gradeKanji.length && gradeKanji.length > 0) {
-             const title = `${g}年生マスター`;
-             const avatar = g === 6 ? "🏆" : "🏅";
-             if (!newTitles.has(title)) {
-               newTitles.add(title);
-               newlyMastered = true;
-             }
-             if (!newAvatars.has(avatar)) {
-               newAvatars.add(avatar);
-               newlyMastered = true;
-             }
+        // 複数タブ・複数端末での同時プレイでXP/PT/苦手リスト等が上書き消失しないよう、
+        // Firestoreトランザクション内で常に最新のサーバー側データ（current）を起点に計算する。
+        const ok = await updateUserDataAtomic(current => {
+          const updatedMastered = Array.from(new Set([...current.masteredIds, ...Array.from(newMastered.current)]));
+
+          // 分散学習（間隔反復）: 正解しても即座に苦手リストから消すのではなく、
+          // 「1日後→3日後→7日後→14日後→30日後」と段階的に間隔を空けて再出題し、
+          // 5回連続でリベンジモードに正解した問題だけを苦手リストから卒業させる。
+          const stages = { ...(current.mistakeStages || {}) };
+          const nextReview = { ...(current.mistakeNextReview || {}) };
+          const todayStr = getCurrentJSTDateString();
+          const graduated = new Set<string>();
+
+          newMistakes.current.forEach(id => {
+            stages[id] = 0;
+            nextReview[id] = todayStr;
+          });
+
+          if (isRevenge) {
+            newMastered.current.forEach(id => {
+              if (newMistakes.current.has(id)) return; // 同一セッション内でまちがえ直したものは対象外
+              if (!(current.mistakeIds || []).includes(id)) return;
+              const nextStage = (stages[id] ?? 0) + 1;
+              if (nextStage >= GRADUATION_STAGE) {
+                graduated.add(id);
+                delete stages[id];
+                delete nextReview[id];
+              } else {
+                stages[id] = nextStage;
+                nextReview[id] = getNextReviewDate(nextStage, todayStr);
+              }
+            });
           }
+
+          // 苦手リストから存在しない問題・卒業した問題を除外
+          let updatedMistakes = Array.from(new Set([...(current.mistakeIds || []), ...Array.from(newMistakes.current)]));
+          updatedMistakes = updatedMistakes.filter(id => {
+            if (!id || typeof id !== "string" || id.trim() === "") return false;
+            if (graduated.has(id)) return false;
+            // 算数、理科、社会のプレフィックス
+            if (id.startsWith("math_") || id.startsWith("sci_") || id.startsWith("soc_")) {
+              return true;
+            }
+            // 漢字
+            return validKanjiWords.has(id);
+          });
+
+          const newTitles = new Set(current.titles || []);
+          const newAvatars = new Set(current.avatars || []);
+          newlyMastered = false;
+
+          [1, 2, 3, 4, 5, 6].forEach(g => {
+            const gradeKanji = allKanji.filter(k => k.grade === g);
+            const masteredCount = gradeKanji.filter(k => updatedMastered.includes(k.kanji)).length;
+            if (masteredCount === gradeKanji.length && gradeKanji.length > 0) {
+               const title = `${g}年生マスター`;
+               const avatar = g === 6 ? "🏆" : "🏅";
+               if (!newTitles.has(title)) {
+                 newTitles.add(title);
+                 newlyMastered = true;
+               }
+               if (!newAvatars.has(avatar)) {
+                 newAvatars.add(avatar);
+                 newlyMastered = true;
+               }
+            }
+          });
+
+          const currentWeekString = getCurrentJSTWeekString();
+          const newWeeklyXp = (current.lastWeekString === currentWeekString ? (current.weeklyXp || 0) : 0) + finalXP;
+
+          const currentMonthString = getCurrentJSTMonth();
+          const newMonthlyDamage = (current.lastMonthString === currentMonthString ? (current.monthlyDamage || 0) : 0) + finalXP;
+
+          // カテゴリ別の正解数を集計する。算数は1セッションに複数カテゴリ（計算・論理・図形）の
+          // 問題が混在しうるため、多数派カテゴリへまとめて計上する「推定」ではなく、
+          // 問題ごとの実際の正誤とカテゴリを個別に判定して積み上げる。
+          const categoryDelta: Record<string, number> = {};
+          if (isSpSubject) {
+            categoryDelta[subjectType === "science" ? "science" : "social"] = correctQuestionsCount;
+          } else if (subjectType === "kanji") {
+            categoryDelta["kanji"] = correctQuestionsCount;
+          } else if (subjectType === "math") {
+            if (catParam) {
+              categoryDelta[catParam] = correctQuestionsCount;
+            } else {
+              questions.forEach(q => {
+                if (!('category' in q) || !q.category) return;
+                const qid = ('id' in q && q.id) ? q.id : q.word;
+                if (!newMistakes.current.has(qid)) {
+                  categoryDelta[q.category] = (categoryDelta[q.category] || 0) + 1;
+                }
+              });
+            }
+          }
+
+          const updatedCategorySolved = { ...(current.categorySolved || {}) };
+          Object.entries(categoryDelta).forEach(([cat, cnt]) => {
+            updatedCategorySolved[cat] = (updatedCategorySolved[cat] || 0) + cnt;
+          });
+
+          // 苦手リストに残っていない問題の復習スケジュール情報は破棄してマップを肥大化させない
+          const mistakeSet = new Set(updatedMistakes);
+          Object.keys(stages).forEach(id => { if (!mistakeSet.has(id)) delete stages[id]; });
+          Object.keys(nextReview).forEach(id => { if (!mistakeSet.has(id)) delete nextReview[id]; });
+
+          return {
+            xp: current.xp + finalXP,
+            pt: isSpSubject ? current.pt : current.pt + finalPT,
+            sp: isSpSubject ? (current.sp || 0) + finalPT : (current.sp || 0),
+            masteredIds: updatedMastered,
+            mistakeIds: updatedMistakes,
+            mistakeStages: stages,
+            mistakeNextReview: nextReview,
+            categorySolved: updatedCategorySolved,
+            totalDamage: (current.totalDamage || 0) + finalXP,
+            monthlyDamage: newMonthlyDamage,
+            lastMonthString: currentMonthString,
+            weeklyXp: newWeeklyXp,
+            lastWeekString: currentWeekString,
+            titles: Array.from(newTitles),
+            avatars: Array.from(newAvatars),
+          };
         });
 
-        if (newlyMastered) {
+        if (ok && newlyMastered) {
           setUnlockedMastery(true);
         }
 
-        const currentWeekString = getCurrentJSTWeekString();
-        const newWeeklyXp = (userData.lastWeekString === currentWeekString ? (userData.weeklyXp || 0) : 0) + finalXP;
-        
-        const currentMonthString = getCurrentJSTMonth();
-        const newMonthlyDamage = (userData.lastMonthString === currentMonthString ? (userData.monthlyDamage || 0) : 0) + finalXP;
-
-        const isSpSubject = subjectType === "science" || subjectType === "social";
-
-        const params = new URLSearchParams(window.location.search);
-        const catParam = params.get("category");
-        let currentSolvedCategory = isSpSubject 
-          ? (subjectType === "science" ? "science" : "social")
-          : (subjectType === "kanji" ? "kanji" : (catParam || "calc"));
-        
-        if (subjectType === "math" && !catParam && questions.length > 0) {
-          const mathCategoriesCount: Record<string, number> = { calc: 0, logic: 0, geometry: 0 };
-          questions.forEach(q => {
-            if ('category' in q && q.category && mathCategoriesCount[q.category] !== undefined) {
-              mathCategoriesCount[q.category]++;
-            }
-          });
-          let maxCat = "calc";
-          let maxCount = -1;
-          Object.entries(mathCategoriesCount).forEach(([cat, cnt]) => {
-            if (cnt > maxCount) {
-              maxCount = cnt;
-              maxCat = cat;
-            }
-          });
-          currentSolvedCategory = maxCat;
-        }
-        
-        const prevCategorySolved = userData.categorySolved || {};
-        const correctQuestionsCount = Math.max(1, questions.length - totalMistakes);
-        const updatedCategorySolved = {
-          ...prevCategorySolved,
-          [currentSolvedCategory]: (prevCategorySolved[currentSolvedCategory] || 0) + correctQuestionsCount
-        };
-
-        await updateUserData({
-          xp: userData.xp + finalXP,
-          pt: isSpSubject ? userData.pt : userData.pt + finalPT,
-          sp: isSpSubject ? (userData.sp || 0) + finalPT : (userData.sp || 0),
-          masteredIds: updatedMastered,
-          mistakeIds: updatedMistakes,
-          categorySolved: updatedCategorySolved,
-          totalDamage: (userData.totalDamage || 0) + finalXP,
-          monthlyDamage: newMonthlyDamage,
-          lastMonthString: currentMonthString,
-          weeklyXp: newWeeklyXp,
-          lastWeekString: currentWeekString,
-          titles: Array.from(newTitles),
-          avatars: Array.from(newAvatars),
-        });
-
-        // レイドボスにダメージを与える
-        if (finalXP > 0) {
+        // レイドボスにダメージを与える。トドメを刺したら「LvN討伐隊」称号を付与する
+        // （以前はこの称号を付与する処理が存在せず、raid_1〜raid_10実績が解除不可能だった）。
+        if (ok && finalXP > 0) {
           const { dealDamageToRaidBoss } = await import("../../lib/raidLogic");
-          await dealDamageToRaidBoss(finalXP, userData?.grade || 1);
+          const { defeatedLevels } = await dealDamageToRaidBoss(finalXP, userData?.grade || 1);
+          if (defeatedLevels.length > 0) {
+            await updateUserDataAtomic(current => {
+              const newTitles = new Set(current.titles || []);
+              let changed = false;
+              defeatedLevels.forEach(lv => {
+                const title = `Lv${lv}討伐隊`;
+                if (!newTitles.has(title)) {
+                  newTitles.add(title);
+                  changed = true;
+                }
+              });
+              return changed ? { titles: Array.from(newTitles) } : null;
+            });
+          }
         }
       }
     } catch (err) {

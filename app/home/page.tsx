@@ -20,6 +20,7 @@ import { getSocialCategories } from "../../lib/socialData";
 import { ThemeBackground } from "../../components/ui/ThemeBackground";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { hasUnclaimedAchievements } from "../../lib/achievementLogic";
+import { getCurrentJSTDateString, isDueForReview } from "../../lib/reviewSchedule";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 
@@ -124,10 +125,22 @@ export default function Home() {
   const { level, currentLevelXp, nextLevelRequiredXp } = calculateLevel(userData.xp);
   const xpPercent = nextLevelRequiredXp === 0 ? 100 : (currentLevelXp / nextLevelRequiredXp) * 100;
 
-  const kanjiMistakes = (userData.mistakeIds || []).filter(id => !id.startsWith("math_") && !id.startsWith("sci_") && !id.startsWith("soc_")).length;
-  const mathMistakes = (userData.mistakeIds || []).filter(id => id.startsWith("math_")).length;
-  const scienceMistakes = (userData.mistakeIds || []).filter(id => id.startsWith("sci_")).length;
-  const socialMistakes = (userData.mistakeIds || []).filter(id => id.startsWith("soc_")).length;
+  // 分散学習: 苦手問題は「今日が復習日」のものだけを克服バトルの対象数として見せる
+  const todayStr = getCurrentJSTDateString();
+  const nextReviewMap = userData.mistakeNextReview || {};
+  const isDue = (id: string) => isDueForReview(nextReviewMap[id], todayStr);
+
+  const allMistakeIds = userData.mistakeIds || [];
+  const kanjiMistakeIds = allMistakeIds.filter(id => !id.startsWith("math_") && !id.startsWith("sci_") && !id.startsWith("soc_"));
+  const mathMistakeIds = allMistakeIds.filter(id => id.startsWith("math_"));
+  const scienceMistakeIds = allMistakeIds.filter(id => id.startsWith("sci_"));
+  const socialMistakeIds = allMistakeIds.filter(id => id.startsWith("soc_"));
+
+  const kanjiMistakes = kanjiMistakeIds.filter(isDue).length;
+  const mathMistakes = mathMistakeIds.filter(isDue).length;
+  const scienceMistakes = scienceMistakeIds.filter(isDue).length;
+  const socialMistakes = socialMistakeIds.filter(isDue).length;
+  const hasAnyMistakesNotDue = allMistakeIds.length > 0 && kanjiMistakes + mathMistakes + scienceMistakes + socialMistakes === 0;
 
   const handleModeChange = (m: "4choice" | "keyboard") => {
     setMode(m);
@@ -457,16 +470,20 @@ export default function Home() {
               <div className="flex flex-col md:flex-row gap-4">
                 {kanjiMistakes > 0 ? (
                   <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=kanji&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30 whitespace-nowrap">
-                    🔥 漢字 にがて克服 ({kanjiMistakes})
+                    🔥 漢字 きょうのふくしゅう ({kanjiMistakes})
                   </Button>
                 ) : <div className="flex-1 hidden md:block"></div>}
-                
+
                 {mathMistakes > 0 ? (
                   <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=math&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30 whitespace-nowrap">
-                    🔥 算数 にがて克服 ({mathMistakes})
+                    🔥 算数 きょうのふくしゅう ({mathMistakes})
                   </Button>
                 ) : <div className="flex-1 hidden md:block"></div>}
               </div>
+            ) : hasAnyMistakesNotDue ? (
+              <Button variant="ghost" size="lg" disabled className="h-16 text-sm md:text-lg bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed whitespace-nowrap">
+                📅 きょうの ふくしゅうは ないよ・またあとで きてね
+              </Button>
             ) : (
               <Button variant="ghost" size="lg" disabled className="h-16 text-sm md:text-lg bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed whitespace-nowrap">
                 🔒 今は苦手なもんだいがないようだ・・・（封印中）
@@ -651,6 +668,15 @@ export default function Home() {
             
             <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-orange-400/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
           </a>
+        </div>
+
+        <div className="text-center mt-8 mb-4">
+          <button
+            onClick={() => router.push("/parent")}
+            className="text-xs text-slate-400 hover:text-slate-200 font-bold underline underline-offset-2 transition-colors"
+          >
+            👨‍👩‍👧 保護者・先生の方はこちら
+          </button>
         </div>
 
       </motion.div>

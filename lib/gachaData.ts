@@ -1,3 +1,5 @@
+import { equipmentList } from "./equipmentData";
+
 export type Rarity = "ノーマル" | "レア" | "激レア" | "超激レア" | "神レア";
 
 export interface GachaItem {
@@ -8,6 +10,15 @@ export interface GachaItem {
   rarity: Rarity;
   weight: number; // for lottery probability
   gachaName?: string;
+}
+
+// 装備ガチャの景品は id/name/icon/rarity を equipmentData.ts (単一の情報源) から取得し、
+// ここではガチャ固有の抽選重みだけを指定する。以前はここに装備データを丸ごと複製していたため、
+// equipmentData.ts 側だけを更新すると内容がズレるバグの原因になっていた。
+function eqGachaItem(id: string, weight: number): GachaItem {
+  const eq = equipmentList.find(e => e.id === id);
+  if (!eq) throw new Error(`eqGachaItem: unknown equipment id "${id}" (add it to equipmentData.ts first)`);
+  return { id: eq.id, type: "equipment", name: `装備「${eq.name}」`, icon: eq.icon, rarity: eq.rarity, weight };
 }
 
 // UR (0.1%) = 100 weight (divided by 5 items = 20 weight each)
@@ -207,20 +218,20 @@ export const richGacha2Rates = [
 ];
 
 export const allSpEquipmentGachaItems: GachaItem[] = [
-  { id: "eq_beginner_sword", type: "equipment", name: "装備「初心者用の剣」", icon: "🗡️", rarity: "ノーマル", weight: 5500 },
-  { id: "eq_iron_shield", type: "equipment", name: "装備「鉄の丸盾」", icon: "🛡️", rarity: "ノーマル", weight: 5500 },
-  { id: "eq_magic_cap", type: "equipment", name: "装備「とんがり帽子」", icon: "🎩", rarity: "レア", weight: 3000 },
-  { id: "eq_steel_sword", type: "equipment", name: "装備「鋼鉄の大剣」", icon: "⚔️", rarity: "レア", weight: 3000 },
-  { id: "eq_ranger_bow", type: "equipment", name: "装備「精霊の弓」", icon: "🏹", rarity: "激レア", weight: 1000 },
-  { id: "eq_fire_axe", type: "equipment", name: "装備「火炎の戦斧」", icon: "🪓", rarity: "激レア", weight: 1000 },
-  { id: "eq_silver_crown", type: "equipment", name: "装備「銀の王冠」", icon: "👑", rarity: "激レア", weight: 1000 },
-  { id: "eq_crystal_orb", type: "equipment", name: "装備「予言の水晶玉」", icon: "🔮", rarity: "超激レア", weight: 490 },
-  { id: "eq_poseidon_trident", type: "equipment", name: "装備「深海の三叉槍」", icon: "🔱", rarity: "超激レア", weight: 490 },
-  { id: "eq_angel_wings", type: "equipment", name: "装備「大天使の聖翼」", icon: "🪽", rarity: "超激レア", weight: 490 },
-  { id: "eq_demon_wings", type: "equipment", name: "装備「宵闇の魔翼」", icon: "🦇", rarity: "超激レア", weight: 490 },
-  { id: "eq_holy_sword", type: "equipment", name: "装備「聖剣エクスカリバー」", icon: "✨", rarity: "神レア", weight: 10 },
-  { id: "eq_god_crown", type: "equipment", name: "装備「全知全能の神冠」", icon: "🌌", rarity: "神レア", weight: 10 },
-  { id: "eq_star_aura", type: "equipment", name: "装備「銀河のリング」", icon: "💎", rarity: "神レア", weight: 10 }
+  eqGachaItem("eq_beginner_sword", 5500),
+  eqGachaItem("eq_iron_shield", 5500),
+  eqGachaItem("eq_magic_cap", 3000),
+  eqGachaItem("eq_steel_sword", 3000),
+  eqGachaItem("eq_ranger_bow", 1000),
+  eqGachaItem("eq_fire_axe", 1000),
+  eqGachaItem("eq_silver_crown", 1000),
+  eqGachaItem("eq_crystal_orb", 490),
+  eqGachaItem("eq_poseidon_trident", 490),
+  eqGachaItem("eq_angel_wings", 490),
+  eqGachaItem("eq_demon_wings", 490),
+  eqGachaItem("eq_holy_sword", 10),
+  eqGachaItem("eq_god_crown", 10),
+  eqGachaItem("eq_star_aura", 10),
 ];
 
 export function pullSpEquipmentGachaItem(): GachaItem {
@@ -242,19 +253,19 @@ export const spEquipmentGachaRates = [
 ];
 
 export const allRichEquipmentGachaItems: GachaItem[] = [
-  { id: "eq_rich_longinus", type: "equipment", name: "装備「竜槍ロンギヌス」", icon: "/images/gacha_equipment/ノーマル_竜槍ロンギヌス.webp", rarity: "ノーマル", weight: 55000 },
-  { id: "eq_rich_dragon_scale", type: "equipment", name: "装備「神龍の鱗鎧」", icon: "/images/gacha_equipment/レア_神龍の鱗鎧.webp", rarity: "レア", weight: 10000 },
-  { id: "eq_rich_overlord_axe", type: "equipment", name: "装備「覇王の戦斧」", icon: "/images/gacha_equipment/レア_覇王の戦斧.webp", rarity: "レア", weight: 10000 },
-  { id: "eq_rich_dark_blades", type: "equipment", name: "装備「闇夜の双刃」", icon: "/images/gacha_equipment/レア_闇夜の双刃.webp", rarity: "レア", weight: 10000 },
-  { id: "eq_rich_aegis_shield", type: "equipment", name: "装備「守護神のイージス盾」", icon: "/images/gacha_equipment/激レア_守護神のイージス盾.webp", rarity: "激レア", weight: 3333 },
-  { id: "eq_rich_sage_staff", type: "equipment", name: "装備「賢者の星杖」", icon: "/images/gacha_equipment/激レア_賢者の星杖.webp", rarity: "激レア", weight: 3333 },
-  { id: "eq_rich_wind_bow", type: "equipment", name: "装備「風神の戦弓」", icon: "/images/gacha_equipment/激レア_風神の戦弓.webp", rarity: "激レア", weight: 3334 },
-  { id: "eq_rich_angel_robe", type: "equipment", name: "装備「天使の翼衣」", icon: "/images/gacha_equipment/超激レア_天使の翼衣.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_rich_flame_grimoire", type: "equipment", name: "装備「炎帝の魔導書」", icon: "/images/gacha_equipment/超激レア_炎帝の魔導書.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_rich_flame_gauntlet", type: "equipment", name: "装備「爆炎の籠手」", icon: "/images/gacha_equipment/超激レア_爆炎の籠手.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_rich_dark_helm", type: "equipment", name: "装備「闇夜の漆黒兜」", icon: "/images/gacha_equipment/超激レア_闇夜の漆黒兜.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_rich_gram_sword", type: "equipment", name: "装備「魔剣グラム」", icon: "/images/gacha_equipment/超激レア_魔剣グラム.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_rich_excalibur", type: "equipment", name: "装備「聖剣エクスカリバー（極）」", icon: "/images/gacha_equipment/神レア_聖剣エクスカリバー.webp", rarity: "神レア", weight: 100 }
+  eqGachaItem("eq_rich_longinus", 55000),
+  eqGachaItem("eq_rich_dragon_scale", 10000),
+  eqGachaItem("eq_rich_overlord_axe", 10000),
+  eqGachaItem("eq_rich_dark_blades", 10000),
+  eqGachaItem("eq_rich_aegis_shield", 3333),
+  eqGachaItem("eq_rich_sage_staff", 3333),
+  eqGachaItem("eq_rich_wind_bow", 3334),
+  eqGachaItem("eq_rich_angel_robe", 980),
+  eqGachaItem("eq_rich_flame_grimoire", 980),
+  eqGachaItem("eq_rich_flame_gauntlet", 980),
+  eqGachaItem("eq_rich_dark_helm", 980),
+  eqGachaItem("eq_rich_gram_sword", 980),
+  eqGachaItem("eq_rich_excalibur", 100),
 ];
 
 export function pullRichEquipmentGachaItem(): GachaItem {
@@ -341,29 +352,29 @@ export const all3000GachaRates = [
 // =======================================
 export const allRichLadiesEquipmentGachaItems: GachaItem[] = [
   // --- ノーマル (55.0%) ---
-  { id: "eq_ladies_strawberry_cap", type: "equipment", name: "装備「いちごのショートケーキキャップ」", icon: "/images/gacha_equipment_ladies_webp/いちごのショートケーキキャップ.webp", rarity: "ノーマル", weight: 27500 },
-  { id: "eq_ladies_bunny_bag", type: "equipment", name: "装備「うさ耳の夢かわリュック」", icon: "/images/gacha_equipment_ladies_webp/うさ耳の夢かわリュック.webp", rarity: "ノーマル", weight: 27500 },
+  eqGachaItem("eq_ladies_strawberry_cap", 27500),
+  eqGachaItem("eq_ladies_bunny_bag", 27500),
 
   // --- レア (30.0%) ---
-  { id: "eq_ladies_sunflower_flute", type: "equipment", name: "装備「ひまわりのビースト笛」", icon: "/images/gacha_equipment_ladies_webp/ひまわりのビースト笛.webp", rarity: "レア", weight: 10000 },
-  { id: "eq_ladies_candy_sword", type: "equipment", name: "装備「キャンディポップの大剣」", icon: "/images/gacha_equipment_ladies_webp/キャンディポップの大剣.webp", rarity: "レア", weight: 10000 },
-  { id: "eq_ladies_cat_gloves", type: "equipment", name: "装備「モフモフ猫パンチグローブ」", icon: "/images/gacha_equipment_ladies_webp/モフモフ猫パンチグローブ.webp", rarity: "レア", weight: 10000 },
+  eqGachaItem("eq_ladies_sunflower_flute", 10000),
+  eqGachaItem("eq_ladies_candy_sword", 10000),
+  eqGachaItem("eq_ladies_cat_gloves", 10000),
 
   // --- 激レア (10.0%) ---
-  { id: "eq_ladies_bear_grimoire", type: "equipment", name: "装備「クマさんの抱き枕魔導書」", icon: "/images/gacha_equipment_ladies_webp/クマさんの抱き枕魔導書.webp", rarity: "激レア", weight: 3333 },
-  { id: "eq_ladies_pastel_gauntlet", type: "equipment", name: "装備「スイーツデコのパステルガントレット」", icon: "/images/gacha_equipment_ladies_webp/スイーツデコのパステルガントレット.webp", rarity: "激レア", weight: 3333 },
-  { id: "eq_ladies_heart_shield", type: "equipment", name: "装備「ハートのフリルシールド」", icon: "/images/gacha_equipment_ladies_webp/ハートのフリルシールド.webp", rarity: "激レア", weight: 3334 },
+  eqGachaItem("eq_ladies_bear_grimoire", 3333),
+  eqGachaItem("eq_ladies_pastel_gauntlet", 3333),
+  eqGachaItem("eq_ladies_heart_shield", 3334),
 
   // --- 超激レア (4.9%) ---
-  { id: "eq_ladies_rose_rapier", type: "equipment", name: "装備「バラの舞踏レイピア」", icon: "/images/gacha_equipment_ladies_webp/バラの舞踏レイピア.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_ladies_mermaid_earring", type: "equipment", name: "装備「マーメイドの真珠イヤリング」", icon: "/images/gacha_equipment_ladies_webp/マーメイドの真珠イヤリング.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_ladies_ribbon_tact", type: "equipment", name: "装備「リボンと花のタクト」", icon: "/images/gacha_equipment_ladies_webp/リボンと花のタクト.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_ladies_fallen_lace", type: "equipment", name: "装備「堕天使のレース」", icon: "/images/gacha_equipment_ladies_webp/堕天使のレース.webp", rarity: "超激レア", weight: 980 },
-  { id: "eq_ladies_moon_necklace", type: "equipment", name: "装備「月と星のネックレス」", icon: "/images/gacha_equipment_ladies_webp/月と星のネックレス.webp", rarity: "超激レア", weight: 980 },
+  eqGachaItem("eq_ladies_rose_rapier", 980),
+  eqGachaItem("eq_ladies_mermaid_earring", 980),
+  eqGachaItem("eq_ladies_ribbon_tact", 980),
+  eqGachaItem("eq_ladies_fallen_lace", 980),
+  eqGachaItem("eq_ladies_moon_necklace", 980),
 
   // --- 神レア (0.1%) ---
-  { id: "eq_ladies_angel_tiara", type: "equipment", name: "装備「天使の羽根のティアラ」", icon: "/images/gacha_equipment_ladies_webp/天使の羽根のティアラ.webp", rarity: "神レア", weight: 50 },
-  { id: "eq_ladies_stardust_staff", type: "equipment", name: "装備「星屑のキラキラスタッフ」", icon: "/images/gacha_equipment_ladies_webp/星屑のキラキラスタッフ.webp", rarity: "神レア", weight: 50 },
+  eqGachaItem("eq_ladies_angel_tiara", 50),
+  eqGachaItem("eq_ladies_stardust_staff", 50),
 ];
 
 export function pullRichLadiesEquipmentGachaItem(): GachaItem {

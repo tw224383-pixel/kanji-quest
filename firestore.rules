@@ -22,6 +22,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // 保護者・先生向け共有コード：コード文字列 → uid のマッピング。
+    // 本人（uid本人）だけが自分のuid宛てに新規作成できる。一度発行したコードは上書き・削除不可（衝突時はクライアント側で別コードを再生成）。
+    // 保護者は匿名認証でサインインしてから読み取る想定（request.auth はログイン不要でも匿名認証で満たせる）。
+    match /shareCodes/{code} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid is string
+        && request.resource.data.uid == request.auth.uid
+        && !exists(/databases/$(database)/documents/shareCodes/$(code));
+      allow update, delete: if false;
+    }
+
     // グローバル統計（レイドボス等）：誰でも読み取り可能、ログイン済みユーザーなら書き込み可能。
     // 全プレイヤー共有のドキュメントなので、level/hp の型・範囲を検証し、
     // 荒らし目的での異常値書き込み（例: hp を負の巨大値にする等）を防ぐ。
@@ -55,7 +68,8 @@ service cloud.firestore {
         'avatars', 'equippedAvatar', 'equipments', 'equippedEquipment',
         'theme', 'totalDamage', 'equippedEffect', 'weeklyXp', 'lastWeekString',
         'monthlyDamage', 'lastMonthString', 'scaryMode', 'claimedAchievements',
-        'lastLoginDate', 'loginStreak', 'categorySolved'
+        'lastLoginDate', 'loginStreak', 'categorySolved',
+        'mistakeStages', 'mistakeNextReview', 'shareCode'
       ])
 
       && (!('name' in newData) || (newData.name is string && newData.name.size() <= 30))
@@ -77,6 +91,9 @@ service cloud.firestore {
       && (!('mistakeIds' in newData) || (newData.mistakeIds is list && newData.mistakeIds.size() <= 2000))
       && (!('masteredIds' in newData) || (newData.masteredIds is list && newData.masteredIds.size() <= 5000))
       && (!('claimedAchievements' in newData) || (newData.claimedAchievements is list && newData.claimedAchievements.size() <= 300))
+      && (!('mistakeStages' in newData) || (newData.mistakeStages is map && newData.mistakeStages.size() <= 2000))
+      && (!('mistakeNextReview' in newData) || (newData.mistakeNextReview is map && newData.mistakeNextReview.size() <= 2000))
+      && (!('shareCode' in newData) || (newData.shareCode is string && newData.shareCode.size() <= 12))
 
       && (!('loginStreak' in newData) || (
         newData.loginStreak is int && newData.loginStreak >= 1 && newData.loginStreak <= 5000

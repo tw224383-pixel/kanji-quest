@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../lib/firebase";
-import { onAuthStateChanged, User, signOut } from "firebase/auth";
-import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { onAuthStateChanged, User, signOut, signInAnonymously } from "firebase/auth";
+import { doc, setDoc, onSnapshot, runTransaction } from "firebase/firestore";
 import { storage } from "../lib/storage";
 
 export type UserData = {
@@ -34,6 +34,11 @@ export type UserData = {
   lastLoginDate?: string;
   loginStreak?: number;
   categorySolved?: { [key: string]: number };
+  // 分散学習（間隔反復）: 苦手問題ごとの復習段階と次回復習日
+  mistakeStages?: { [key: string]: number };
+  mistakeNextReview?: { [key: string]: string };
+  // 保護者・先生向け閲覧用の共有コード（本人が発行、ログイン不要で閲覧可能にする）
+  shareCode?: string;
 };
 
 const DEFAULT_USER_DATA: UserData = {
@@ -58,13 +63,42 @@ const DEFAULT_USER_DATA: UserData = {
   claimedAchievements: [],
   lastLoginDate: "",
   loginStreak: 1,
-  categorySolved: {}
+  categorySolved: {},
+  mistakeStages: {},
+  mistakeNextReview: {},
+  shareCode: ""
 };
 
 export function getCurrentJSTDateString() {
   const d = new Date();
   const jst = new Date(d.getTime() + (9 * 60 * 60 * 1000));
   return jst.toISOString().slice(0, 10);
+}
+
+// 初期表示を速くするため一時的にキャッシュを表示するが、古すぎるキャッシュは
+// 他端末での更新を反映していない可能性が高いため信用しない（表示せず読み込み中のままにする）。
+const USER_CACHE_KEY = "kq_user_cache";
+const USER_CACHE_MAX_AGE_MS = 5 * 60 * 1000; // 5分
+
+function writeUserCache(data: UserData) {
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify({ data, cachedAt: Date.now() }));
+}
+
+function readFreshUserCache(): UserData | null {
+  const raw = localStorage.getItem(USER_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && "cachedAt" in parsed && "data" in parsed) {
+      if (Date.now() - parsed.cachedAt > USER_CACHE_MAX_AGE_MS) return null;
+      return parsed.data as UserData;
+    }
+    // 旧形式（タイムスタンプなし）のキャッシュは信用せず破棄する
+    return null;
+  } catch (e) {
+    console.error("Failed to parse cached user data", e);
+    return null;
+  }
 }
 
 export function getYesterdayJSTDateString() {
@@ -81,6 +115,7 @@ export type UserContextType = {
   addXpAndPt: (xp: number, pt: number) => Promise<void>;
   buyEffect: (effectId: string, cost: number) => Promise<boolean>;
   updateUserData: (updates: Partial<UserData>) => Promise<void>;
+  updateUserDataAtomic: (updater: (current: UserData) => Partial<UserData> | null) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
@@ -93,15 +128,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Try to load cached user data immediately to prevent loading screen flashing
-    const cachedData = localStorage.getItem("kq_user_cache");
-    if (cachedData) {
-      try {
-        setUserData(JSON.parse(cachedData));
-        setLoading(false); // Disable loading state early if we have cache
-      } catch (e) {
-        console.error("Failed to parse cached user data", e);
-      }
+    // Try to load cached user data immediately to prevent loading screen flashing.
+    // 直近(5分以内)のキャッシュのみ信用する。古いキャッシュは他端末での更新を
+    // 見逃す恐れがあるため使わず、Firestoreからの最新データを待つ。
+    const freshCache = readFreshUserCache();
+    if (freshCache) {
+      setUserData(freshCache);
+      setLoading(false); // Disable loading state early if we have a fresh cache
     }
 
     // Check if guest
@@ -110,7 +143,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const guestData = storage.getGuestData() as UserData;
       setUserData(guestData);
       setLoading(false);
-      
+
+      // ゲストは本人のデータをすべてlocalStorageで管理するためFirebase Authは不要だが、
+      // ランキング等「他ユーザーの一覧」を読むFirestoreクエリは request.auth != null を要求するため、
+      // 匿名認証でサインインしておく（ゲストのゲームデータ自体には影響しない）。
+      // これが無いと「今週のヒーロー」等のランキングが permission-denied で読み込めなくなる。
+      if (!auth.currentUser) {
+        signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed", err));
+      }
+
       const handleGuestUpdate = () => {
         setUserData(storage.getGuestData() as UserData);
       };
@@ -152,10 +193,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               lastMonthString: data.lastMonthString || "",
               claimedAchievements: data.claimedAchievements || [],
               lastLoginDate: data.lastLoginDate || "",
-              loginStreak: data.loginStreak || 1
+              loginStreak: data.loginStreak || 1,
+              // categorySolved はこれまでこのマッピングから漏れており、保存はされてもページ再読み込みのたびに
+              // 見た目上リセットされてしまっていた（成長カルテのカテゴリ別集計が消えて見えるバグ）。
+              categorySolved: data.categorySolved || {},
+              mistakeStages: data.mistakeStages || {},
+              mistakeNextReview: data.mistakeNextReview || {},
+              shareCode: data.shareCode || ""
             };
             setUserData(newData);
-            localStorage.setItem("kq_user_cache", JSON.stringify(newData));
+            writeUserCache(newData);
           } else {
             // New user: check if guest data exists to migrate
             const guestData = storage.getGuestData() as UserData;
@@ -172,7 +219,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
             setDoc(docRef, initialData, { merge: true }).catch(console.error);
             setUserData(initialData);
-            localStorage.setItem("kq_user_cache", JSON.stringify(initialData));
+            writeUserCache(initialData);
             storage.clearGuest();
           }
           setLoading(false);
@@ -180,7 +227,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return () => unsubDoc();
       } else {
         setUserData(null);
-        localStorage.removeItem("kq_user_cache");
+        localStorage.removeItem(USER_CACHE_KEY);
         setLoading(false);
       }
     });
@@ -194,13 +241,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const yesterdayStr = getYesterdayJSTDateString();
       
       if (userData.lastLoginDate !== todayStr) {
-        let newStreak = 1;
-        if (userData.lastLoginDate === yesterdayStr) {
-          newStreak = (userData.loginStreak || 0) + 1;
-        }
-        updateUserData({
-          lastLoginDate: todayStr,
-          loginStreak: newStreak,
+        updateUserDataAtomic(current => {
+          // 別タブで既に今日分の更新が反映済みなら何もしない（複数タブでの二重加算防止）
+          if (current.lastLoginDate === todayStr) return null;
+          const newStreak = current.lastLoginDate === yesterdayStr ? (current.loginStreak || 0) + 1 : 1;
+          return {
+            lastLoginDate: todayStr,
+            loginStreak: newStreak,
+          };
         });
       }
     }
@@ -216,27 +264,67 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } else if (user) {
       // Optimistic UI update
       setUserData(newData);
-      localStorage.setItem("kq_user_cache", JSON.stringify(newData));
+      writeUserCache(newData);
       // Sync to firebase
       await setDoc(doc(db, "users", user.uid), updates, { merge: true });
     }
   };
 
+  // updateUserData は呼び出し側が保持しているローカルの userData を起点に新しい値を計算するため、
+  // 複数タブ・複数端末で同時に書き込むと片方の更新が失われることがある（レース条件）。
+  // 加算・減算やリスト追加など「直前の値」に依存する更新は、この関数で Firestore の
+  // トランザクション内から最新のサーバー側データを読み直して計算することで、取りこぼしを防ぐ。
+  // updater が null を返すと書き込みを中止する（残高不足時など）。
+  const updateUserDataAtomic = async (
+    updater: (current: UserData) => Partial<UserData> | null
+  ): Promise<boolean> => {
+    if (isGuest) {
+      if (!userData) return false;
+      const updates = updater(userData);
+      if (!updates) return false;
+      storage.updateGuestData(updates);
+      setUserData({ ...userData, ...updates });
+      return true;
+    }
+
+    if (!user) return false;
+    const ref = doc(db, "users", user.uid);
+    try {
+      const newData = await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(ref);
+        const current = snap.exists() ? ({ ...DEFAULT_USER_DATA, ...(snap.data() as Partial<UserData>) }) : userData;
+        if (!current) throw new Error("no-user-data");
+        const updates = updater(current);
+        if (!updates) throw new Error("aborted");
+        transaction.set(ref, updates, { merge: true });
+        return { ...current, ...updates };
+      });
+      setUserData(newData);
+      writeUserCache(newData);
+      return true;
+    } catch (e) {
+      if ((e as Error).message !== "aborted") {
+        console.error("updateUserDataAtomic failed", e);
+      }
+      return false;
+    }
+  };
+
   const addXpAndPt = async (addedXp: number, addedPt: number) => {
-    if (!userData) return;
-    await updateUserData({
-      xp: userData.xp + addedXp,
-      pt: userData.pt + addedPt
-    });
+    await updateUserDataAtomic(current => ({
+      xp: current.xp + addedXp,
+      pt: current.pt + addedPt
+    }));
   };
 
   const buyEffect = async (effectId: string, cost: number) => {
-    if (!userData || userData.pt < cost || userData.effects.includes(effectId)) return false;
-    await updateUserData({
-      pt: userData.pt - cost,
-      effects: [...userData.effects, effectId]
+    return updateUserDataAtomic(current => {
+      if (current.pt < cost || current.effects.includes(effectId)) return null;
+      return {
+        pt: current.pt - cost,
+        effects: [...current.effects, effectId]
+      };
     });
-    return true;
   };
 
   const logout = async () => {
@@ -260,6 +348,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addXpAndPt,
       buyEffect,
       updateUserData,
+      updateUserDataAtomic,
       logout
     }}>
       {children}

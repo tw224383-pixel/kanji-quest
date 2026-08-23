@@ -115,8 +115,14 @@ export function getCurrentJSTWeekString() {
   return `${date.getUTCFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
 }
 
-export async function dealDamageToRaidBoss(damage: number, grade: number): Promise<boolean> {
-  if (damage <= 0) return false;
+export type RaidDamageResult = { success: boolean; defeatedLevels: number[] };
+
+// このダメージで倒された（トドメを刺した）ボスのレベルを defeatedLevels として返す。
+// 呼び出し側はこれを使って「LvN討伐隊」称号をトドメを刺したプレイヤーに付与できる。
+// 以前はこの称号を付与するコードが存在せず、称号所持を条件にしていた raid_1〜raid_10
+// 実績（achievementLogic.ts）が永久に解除不可能になっていた。
+export async function dealDamageToRaidBoss(damage: number, grade: number): Promise<RaidDamageResult> {
+  if (damage <= 0) return { success: false, defeatedLevels: [] };
   const currentMonth = getCurrentJSTMonth(); // YYYY-MM
 
   if (storage.isGuest()) {
@@ -130,32 +136,37 @@ export async function dealDamageToRaidBoss(damage: number, grade: number): Promi
         hp = getRaidBossMaxHp(1);
       }
 
+      const defeatedLevels: number[] = [];
       hp -= damage;
       while (hp <= 0 && level < MAX_RAID_LEVEL) {
+        defeatedLevels.push(level);
         level++;
         hp += getRaidBossMaxHp(level);
       }
       if (hp <= 0 && level >= MAX_RAID_LEVEL) {
+        defeatedLevels.push(level);
         hp = 0;
       }
 
       localStorage.setItem("kq_raid_level_" + grade, level.toString());
       localStorage.setItem("kq_raid_hp_" + grade, hp.toString());
       localStorage.setItem("kq_raid_month_" + grade, currentMonth);
-      return true;
+      return { success: true, defeatedLevels };
     } catch (e) {
       console.error("Guest raid boss update error:", e);
-      return false;
+      return { success: false, defeatedLevels: [] };
     }
   } else {
     const maxRetries = 2;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const ref = doc(db, "globalStats", "raidBoss_" + grade);
+        let defeatedLevels: number[] = [];
         await runTransaction(db, async (transaction) => {
+          defeatedLevels = [];
           const docSnap = await transaction.get(ref);
           let data = docSnap.exists() ? docSnap.data() : { level: 1, hp: getRaidBossMaxHp(1), month: currentMonth };
-          
+
           let level = data.level || 1;
           let hp = data.hp !== undefined ? data.hp : getRaidBossMaxHp(1);
           const month = data.month || currentMonth;
@@ -167,26 +178,28 @@ export async function dealDamageToRaidBoss(damage: number, grade: number): Promi
 
           hp -= damage;
           while (hp <= 0 && level < MAX_RAID_LEVEL) {
+            defeatedLevels.push(level);
             level++;
             hp += getRaidBossMaxHp(level);
           }
           if (hp <= 0 && level >= MAX_RAID_LEVEL) {
+            defeatedLevels.push(level);
             hp = 0;
           }
 
           transaction.set(ref, { level, hp, month: currentMonth }, { merge: true });
         });
-        return true;
+        return { success: true, defeatedLevels };
       } catch (e) {
         if (attempt === maxRetries) {
           console.error(`Failed to damage raid boss after ${maxRetries + 1} attempts:`, e);
-          return false;
+          return { success: false, defeatedLevels: [] };
         }
         // Small delay before retry
         await new Promise(res => setTimeout(res, 200 * (attempt + 1)));
       }
     }
-    return false;
+    return { success: false, defeatedLevels: [] };
   }
 }
 

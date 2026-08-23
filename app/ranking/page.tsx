@@ -29,7 +29,7 @@ type RankingUser = {
 };
 
 export default function RankingPage() {
-  const { userData, isGuest } = useUser();
+  const { userData, isGuest, loading: authLoading } = useUser();
   const router = useRouter();
   const [tab, setTab] = useState<"hero" | "damage">("hero");
   const [gradeFilter, setGradeFilter] = useState<number>(userData?.grade || 1);
@@ -103,8 +103,9 @@ export default function RankingPage() {
       setLoading(false);
     };
 
-    if (tab === "hero") fetchHero();
-  }, [gradeFilter, tab, userData]);
+    // Firebase Authの初期化が完了する前にクエリを投げると permission-denied になるため待つ
+    if (tab === "hero" && !authLoading) fetchHero();
+  }, [gradeFilter, tab, userData, authLoading]);
 
   // 全学年ダメージ TOP5 フェッチ
   useEffect(() => {
@@ -157,8 +158,8 @@ export default function RankingPage() {
       setLoading(false);
     };
 
-    if (tab === "damage") fetchDamage();
-  }, [tab, userData]);
+    if (tab === "damage" && !authLoading) fetchDamage();
+  }, [tab, userData, authLoading]);
 
   const renderUserCard = (user: RankingUser, index: number, score: number, scoreLabel: string) => {
     const { level } = calculateLevel(user.xp || 0);

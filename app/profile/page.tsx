@@ -21,6 +21,7 @@ import { signOut } from "firebase/auth";
 import { storage } from "../../lib/storage";
 
 import { AdventurerGrowthReport } from "../../components/profile/AdventurerGrowthReport";
+import { ShareCodeCard } from "../../components/profile/ShareCodeCard";
 
 const AvatarPreviewModal = dynamic(() => import("../../components/ui/AvatarPreviewModal").then(mod => mod.AvatarPreviewModal), { ssr: false });
 const EquipmentPreviewModal = dynamic(() => import("../../components/ui/EquipmentPreviewModal").then(mod => mod.EquipmentPreviewModal), { ssr: false });
@@ -221,7 +222,12 @@ export default function ProfilePage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === "stats" && <AdventurerGrowthReport />}
+              {activeTab === "stats" && (
+                <div className="space-y-6">
+                  <AdventurerGrowthReport />
+                  <ShareCodeCard />
+                </div>
+              )}
 
               {activeTab === "titles" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

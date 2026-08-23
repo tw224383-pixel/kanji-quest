@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ThemeBackground } from "../../components/ui/ThemeBackground";
 import { useThemeContext } from "../../contexts/ThemeContext";
 import { useUser } from "../../hooks/useUser";
+import type { UserData } from "../../contexts/UserContext";
 import { Button } from "../../components/ui/Button";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 import { RankPlate } from "../../components/ui/RankPlate";
@@ -17,6 +18,12 @@ import { getAllEquipment } from "../../lib/equipmentData";
 import { avatarEncyclopediaList } from "../../lib/avatarEncyclopediaData";
 import { calculateLevel } from "../../lib/gameLogic";
 import { soundManager } from "../../lib/soundManager";
+import { GachaTab } from "../../components/shop/GachaTab";
+import { EquipmentsTab } from "../../components/shop/EquipmentsTab";
+import { ThemesTab } from "../../components/shop/ThemesTab";
+import { EffectsTab } from "../../components/shop/EffectsTab";
+import { TitlesTab } from "../../components/shop/TitlesTab";
+import { AvatarsTab } from "../../components/shop/AvatarsTab";
 
 const RegularGachaAnimation = dynamic(() => import("../../components/game/RegularGachaAnimation").then(mod => mod.RegularGachaAnimation), { ssr: false });
 const RichGachaAnimation = dynamic(() => import("../../components/game/RichGachaAnimation").then(mod => mod.RichGachaAnimation), { ssr: false });
@@ -34,7 +41,7 @@ const equipments = getAllEquipment();
 type Tab = "themes" | "effects" | "titles" | "avatars" | "equipments" | "gacha";
 
 export default function ShopPage() {
-  const { userData, updateUserData, loading } = useUser();
+  const { userData, updateUserData, updateUserDataAtomic, loading } = useUser();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("gacha");
 
@@ -74,30 +81,32 @@ export default function ShopPage() {
   }
 
   const handleBuy = async (category: string, id: string, price: number) => {
-    if (category === "equipment") {
-      if ((userData.sp || 0) < price) return;
-      const newSp = (userData.sp || 0) - price;
-      const userEquips = userData.equipments || [];
-      if (!userEquips.includes(id)) {
-        await updateUserData({ sp: newSp, equipments: [...userEquips, id] });
+    await updateUserDataAtomic(current => {
+      if (category === "equipment") {
+        if ((current.sp || 0) < price) return null;
+        const userEquips = current.equipments || [];
+        if (userEquips.includes(id)) return null;
+        return { sp: (current.sp || 0) - price, equipments: [...userEquips, id] };
       }
-      return;
-    }
 
-    if (userData.pt < price) return;
-    const newPt = userData.pt - price;
-    if (category === "theme") {
-      const isOwned = userData.effects.includes(`theme_${id}`);
-      if (!isOwned) {
-        await updateUserData({ pt: newPt, effects: [...userData.effects, `theme_${id}`] });
+      if (current.pt < price) return null;
+      const newPt = current.pt - price;
+      if (category === "theme") {
+        const key = `theme_${id}`;
+        if (current.effects.includes(key)) return null;
+        return { pt: newPt, effects: [...current.effects, key] };
+      } else if (category === "effect") {
+        if (current.effects.includes(id)) return null;
+        return { pt: newPt, effects: [...current.effects, id] };
+      } else if (category === "title") {
+        if (current.titles.includes(id)) return null;
+        return { pt: newPt, titles: [...current.titles, id] };
+      } else if (category === "avatar") {
+        if (current.avatars.includes(id)) return null;
+        return { pt: newPt, avatars: [...current.avatars, id] };
       }
-    } else if (category === "effect" && !userData.effects.includes(id)) {
-      await updateUserData({ pt: newPt, effects: [...userData.effects, id] });
-    } else if (category === "title" && !userData.titles.includes(id)) {
-      await updateUserData({ pt: newPt, titles: [...userData.titles, id] });
-    } else if (category === "avatar" && !userData.avatars.includes(id)) {
-      await updateUserData({ pt: newPt, avatars: [...userData.avatars, id] });
-    }
+      return null;
+    });
   };
 
   const handleRequestGacha = (type: "regular" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment") => {
@@ -124,51 +133,54 @@ export default function ShopPage() {
   const pullGacha = async (type: "regular" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" = "regular") => {
     setLastPullType(type);
     soundManager.playGacha();
-    if (type === "sp_equipment") {
-      if ((userData.sp || 0) < 1000 || pullingType) return;
+    // 装備系ガチャ（SP消費・装備リストに追加、重複時はSP一部返還）を共通処理する。
+    // 残高チェック・消費・付与を1回のFirestoreトランザクションにまとめることで、
+    // 「消費だけ反映されて景品が付与されない」といった中途半端な状態を防ぐ。
+    const runEquipmentGacha = async (
+      cost: number,
+      pull: () => any,
+      gachaName: string,
+      refundAmount: number,
+      refundLabel: string
+    ) => {
+      if ((userData.sp || 0) < cost || pullingType) return;
       setPullingType(type);
       setGachaResult(null);
       setShowGachaRates(null);
-      await updateUserData({ sp: (userData.sp || 0) - 1000 });
 
-      const resultItem: any = pullSpEquipmentGachaItem();
-      resultItem.gachaName = "⚔️ SP装備ガチャ";
-      const userEquips = userData.equipments || [];
-      if (userEquips.includes(resultItem.id)) {
-        await updateUserData({ sp: (userData.sp || 0) - 1000 + 500 });
-        resultItem.duplicated = true;
-        resultItem.refund = "500 SP";
-      } else {
-        await updateUserData({ equipments: [...userEquips, resultItem.id] });
-      }
+      let resultItem: any = null;
+      const ok = await updateUserDataAtomic(current => {
+        const balance = current.sp || 0;
+        if (balance < cost) { resultItem = null; return null; }
+        resultItem = pull();
+        resultItem.gachaName = gachaName;
+        const userEquips = current.equipments || [];
+        if (userEquips.includes(resultItem.id)) {
+          resultItem.duplicated = true;
+          resultItem.refund = refundLabel;
+          return { sp: balance - cost + refundAmount };
+        }
+        return { sp: balance - cost, equipments: [...userEquips, resultItem.id] };
+      });
 
+      if (!ok || !resultItem) { setPullingType(null); return; }
       const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
       setGachaTargetStage(rarityLevels[resultItem.rarity] || 1);
       setPendingGachaResult(resultItem);
+    };
+
+    if (type === "sp_equipment") {
+      await runEquipmentGacha(1000, pullSpEquipmentGachaItem, "⚔️ SP装備ガチャ", 500, "500 SP");
       return;
     }
 
     if (type === "rich_equipment") {
-      if ((userData.sp || 0) < 3000 || pullingType) return;
-      setPullingType(type);
-      setGachaResult(null);
-      setShowGachaRates(null);
-      await updateUserData({ sp: (userData.sp || 0) - 3000 });
+      await runEquipmentGacha(3000, pullRichEquipmentGachaItem, "🛡️ 装備品リッチガチャ", 1000, "1000 SP");
+      return;
+    }
 
-      const resultItem: any = pullRichEquipmentGachaItem();
-      resultItem.gachaName = "🛡️ 装備品リッチガチャ";
-      const userEquips = userData.equipments || [];
-      if (userEquips.includes(resultItem.id)) {
-        await updateUserData({ sp: (userData.sp || 0) - 3000 + 1000 });
-        resultItem.duplicated = true;
-        resultItem.refund = "1000 SP";
-      } else {
-        await updateUserData({ equipments: [...userEquips, resultItem.id] });
-      }
-
-      const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
-      setGachaTargetStage(rarityLevels[resultItem.rarity] || 1);
-      setPendingGachaResult(resultItem);
+    if (type === "rich_ladies_equipment") {
+      await runEquipmentGacha(3000, pullRichLadiesEquipmentGachaItem, "🎀 ふわふわ装備リッチガチャ♡", 1000, "1000 SP");
       return;
     }
 
@@ -178,42 +190,20 @@ export default function ShopPage() {
       setGachaResult(null);
       setShowGachaRates(null);
 
-      const resultItem: any = pullRichLadiesGachaItem();
-      resultItem.gachaName = "🌸 ふわふわガチャ♡";
-      let duplicated = false;
-      if (userData.avatars.includes(resultItem.id)) {
-        duplicated = true;
-        await updateUserData({ pt: userData.pt - 3000 + 1000 });
-        resultItem.duplicated = true;
-        resultItem.refund = "1000 PT";
-      } else {
-        await updateUserData({ pt: userData.pt - 3000, avatars: [...userData.avatars, resultItem.id] });
-      }
+      let resultItem: any = null;
+      const ok = await updateUserDataAtomic(current => {
+        if (current.pt < 3000) { resultItem = null; return null; }
+        resultItem = pullRichLadiesGachaItem();
+        resultItem.gachaName = "🌸 ふわふわガチャ♡";
+        if (current.avatars.includes(resultItem.id)) {
+          resultItem.duplicated = true;
+          resultItem.refund = "1000 PT";
+          return { pt: current.pt - 3000 + 1000 };
+        }
+        return { pt: current.pt - 3000, avatars: [...current.avatars, resultItem.id] };
+      });
 
-      const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
-      setGachaTargetStage(rarityLevels[resultItem.rarity] || 1);
-      setPendingGachaResult(resultItem);
-      return;
-    }
-
-    if (type === "rich_ladies_equipment") {
-      if ((userData.sp || 0) < 3000 || pullingType) return;
-      setPullingType(type);
-      setGachaResult(null);
-      setShowGachaRates(null);
-      await updateUserData({ sp: (userData.sp || 0) - 3000 });
-
-      const resultItem: any = pullRichLadiesEquipmentGachaItem();
-      resultItem.gachaName = "🎀 ふわふわ装備リッチガチャ♡";
-      const userEquips = userData.equipments || [];
-      if (userEquips.includes(resultItem.id)) {
-        await updateUserData({ sp: (userData.sp || 0) - 3000 + 1000 });
-        resultItem.duplicated = true;
-        resultItem.refund = "1000 SP";
-      } else {
-        await updateUserData({ equipments: [...userEquips, resultItem.id] });
-      }
-
+      if (!ok || !resultItem) { setPullingType(null); return; }
       const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
       setGachaTargetStage(rarityLevels[resultItem.rarity] || 1);
       setPendingGachaResult(resultItem);
@@ -225,49 +215,56 @@ export default function ShopPage() {
     setPullingType(type);
     setGachaResult(null);
     setShowGachaRates(null);
-    await updateUserData({ pt: userData.pt - cost });
-    
-    let result: any;
-    if (type === "rich") {
-      result = pullRichGachaItem();
-      result.gachaName = "💎 リッチガチャ1";
-    } else if (type === "rich2") {
-      result = pullRichGacha2Item();
-      result.gachaName = "✨ リッチガチャ2";
-    } else {
-      result = pullGachaItem();
-      result.gachaName = "🎁 通常ガチャ";
-    }
 
-    let duplicated = false;
-    
-    if (result.type === 'effect') {
-      if (userData.effects.includes(result.id)) duplicated = true;
-      else await updateUserData({ effects: [...userData.effects, result.id] });
-    } else if (result.type === 'avatar') {
-      if (userData.avatars.includes(result.id)) duplicated = true;
-      else await updateUserData({ avatars: [...userData.avatars, result.id] });
-    } else if (result.type === 'title') {
-      if (userData.titles.includes(result.id)) duplicated = true;
-      else await updateUserData({ titles: [...userData.titles, result.id] });
-    } else if (result.type === 'theme') {
-      const themeEffectId = `theme_${result.id}`;
-      if (userData.effects.includes(themeEffectId)) duplicated = true;
-      else await updateUserData({ effects: [...userData.effects, themeEffectId] });
-    }
-    
-    if (duplicated || result.type === 'xp') {
-      if (type !== "regular") {
-        await updateUserData({ pt: userData.pt + 1000 });
-        result.duplicated = true;
-        result.refund = "1000 PT";
+    let result: any = null;
+    const ok = await updateUserDataAtomic(current => {
+      if (current.pt < cost) { result = null; return null; }
+
+      if (type === "rich") {
+        result = pullRichGachaItem();
+        result.gachaName = "💎 リッチガチャ1";
+      } else if (type === "rich2") {
+        result = pullRichGacha2Item();
+        result.gachaName = "✨ リッチガチャ2";
       } else {
-        await updateUserData({ xp: userData.xp + 50 });
-        result.duplicated = true;
-        result.refund = "50 XP";
+        result = pullGachaItem();
+        result.gachaName = "🎁 通常ガチャ";
       }
-    }
-    
+
+      const updates: Partial<UserData> = { pt: current.pt - cost };
+      let duplicated = false;
+
+      if (result.type === 'effect') {
+        if (current.effects.includes(result.id)) duplicated = true;
+        else updates.effects = [...current.effects, result.id];
+      } else if (result.type === 'avatar') {
+        if (current.avatars.includes(result.id)) duplicated = true;
+        else updates.avatars = [...current.avatars, result.id];
+      } else if (result.type === 'title') {
+        if (current.titles.includes(result.id)) duplicated = true;
+        else updates.titles = [...current.titles, result.id];
+      } else if (result.type === 'theme') {
+        const themeEffectId = `theme_${result.id}`;
+        if (current.effects.includes(themeEffectId)) duplicated = true;
+        else updates.effects = [...current.effects, themeEffectId];
+      }
+
+      if (duplicated || result.type === 'xp') {
+        if (type !== "regular") {
+          updates.pt = current.pt - cost + 1000;
+          result.duplicated = true;
+          result.refund = "1000 PT";
+        } else {
+          updates.xp = current.xp + 50;
+          result.duplicated = true;
+          result.refund = "50 XP";
+        }
+      }
+
+      return updates;
+    });
+
+    if (!ok || !result) { setPullingType(null); return; }
     const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
     setGachaTargetStage(rarityLevels[result.rarity] || 1);
     setPendingGachaResult(result);
@@ -491,689 +488,40 @@ export default function ShopPage() {
             >
               {/* ===== GACHA TAB ===== */}
               {activeTab === "gacha" && (
-                <div className="game-panel p-8 text-center max-w-2xl mx-auto relative overflow-hidden">
-                  <div className="text-6xl mb-6">🎁</div>
-                  <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
-                  <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT、リッチガチャは3000PT、豪華な装備ガチャは1000SPでまわせる！</p>
-                  
-                  <div className="flex flex-col gap-6 justify-center mb-6 items-stretch max-w-md mx-auto">
-                    {/* --- PT Gachas --- */}
-                    <div className="text-left font-black text-amber-300 text-sm flex items-center gap-1.5 border-b border-amber-500/40 pb-1">
-                      <span>⭐</span> <span>ポイントガチャ (PT)</span>
-                    </div>
-
-                    <div className="flex-1 game-panel-light p-4 bg-slate-800/80 border-2 border-amber-900/50 flex flex-col justify-between">
-                      <div>
-                        <div className="text-amber-200 font-black mb-2">通常ガチャ (100 PT)</div>
-                        <button
-                          onClick={() => setShowGachaRates(showGachaRates === "regular" ? null : "regular")}
-                          className="mb-4 px-6 py-2 bg-amber-100/50 hover:bg-amber-100 text-amber-800 font-black text-base rounded-full shadow-sm border-2 border-amber-300 transition-colors inline-flex items-center justify-center gap-2"
-                        >
-                          <span className="text-xl">🔍</span> 中身を見る
-                        </button>
-                      </div>
-                      <button
-                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap bg-amber-400 hover:bg-amber-300 text-amber-900 font-black rounded-xl shadow-[0_4px_0_0_#b45309] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || userData.pt < 100 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => handleRequestGacha("regular")}
-                        disabled={pullingType !== null || userData.pt < 100}
-                      >
-                        {pullingType ? "..." : userData.pt < 100 ? "PT不足" : "100 PT でまわす！"}
-                      </button>
-                    </div>
-                    
-                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-white/90 to-blue-50/90 border-[3px] border-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] flex flex-col justify-between relative overflow-hidden">
-                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
-                      <div className="relative z-10 text-center">
-                        <div className="text-amber-500 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
-                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">💎</span> リッチガチャ１ <span className="text-sm">(3000 PT)</span>
-                        </div>
-                        <button
-                          onClick={() => setShowGachaRates(showGachaRates === "rich" ? null : "rich")}
-                          className="mb-6 px-6 py-2 bg-[#fdf8e1] hover:bg-[#faedb9] text-[#5c3a21] font-black text-sm rounded-full shadow-md border-2 border-[#e6c770] transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
-                        >
-                          <span className="text-lg">🔍</span> 中身を見る
-                        </button>
-                      </div>
-                      <button
-                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => handleRequestGacha("rich")}
-                        disabled={pullingType !== null || userData.pt < 3000}
-                      >
-                        {pullingType ? "..." : userData.pt < 3000 ? "PT不足" : "3000 PT でまわす"}
-                      </button>
-                    </div>
-
-                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-purple-50/90 to-purple-200/90 border-[3px] border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.3)] flex flex-col justify-between relative overflow-hidden">
-                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
-                      <div className="relative z-10 text-center">
-                        <div className="text-purple-600 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
-                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">✨</span> リッチガチャ２ <span className="text-sm">(3000 PT)</span>
-                        </div>
-                        <button
-                          onClick={() => setShowGachaRates(showGachaRates === "rich2" ? null : "rich2")}
-                          className="mb-6 px-6 py-2 bg-[#fdf8e1] hover:bg-[#faedb9] text-[#5c3a21] font-black text-sm rounded-full shadow-md border-2 border-[#e6c770] transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
-                        >
-                          <span className="text-lg">🔍</span> 中身を見る
-                        </button>
-                      </div>
-                      <button
-                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => handleRequestGacha("rich2")}
-                        disabled={pullingType !== null || userData.pt < 3000}
-                      >
-                        {pullingType ? "..." : userData.pt < 3000 ? "PT不足" : "3000 PT でまわす"}
-                      </button>
-                    </div>
-
-                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-pink-50/90 to-rose-200/90 border-[3px] border-pink-400 shadow-[0_0_20px_rgba(244,63,94,0.3)] flex flex-col justify-between relative overflow-hidden">
-                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
-                      <div className="relative z-10 text-center">
-                        <div className="text-pink-600 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
-                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">🌸</span> ふわふわガチャ♡ <span className="text-sm">(3000 PT)</span>
-                        </div>
-                        <button
-                          onClick={() => setShowGachaRates(showGachaRates === "rich_ladies" ? null : "rich_ladies")}
-                          className="mb-6 px-6 py-2 bg-[#fff0f5] hover:bg-[#ffe4e1] text-[#8b008b] font-black text-sm rounded-full shadow-md border-2 border-pink-300 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
-                        >
-                          <span className="text-lg">🔍</span> 中身を見る
-                        </button>
-                      </div>
-                      <button
-                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-fluffy-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => handleRequestGacha("rich_ladies")}
-                        disabled={pullingType !== null || userData.pt < 3000}
-                      >
-                        {pullingType ? "..." : userData.pt < 3000 ? "PT不足" : "3000 PT でまわす"}
-                      </button>
-                    </div>
-
-                    {/* --- SP Gachas --- */}
-                    <div className="text-left font-black text-emerald-300 text-sm flex items-center gap-1.5 border-b border-emerald-500/40 pb-1 mt-4">
-                      <span>🧪</span> <span>スキルポイント装備ガチャ (SP)</span>
-                    </div>
-
-                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-fuchsia-50/90 to-pink-200/90 border-[3px] border-fuchsia-400 shadow-[0_0_20px_rgba(232,121,249,0.4)] flex flex-col justify-between relative overflow-hidden">
-                      <div className="absolute inset-0 pointer-events-none" style={{background: 'radial-gradient(circle at 30% 70%, rgba(251,207,232,0.4) 0%, transparent 60%), radial-gradient(circle at 70% 30%, rgba(216,180,254,0.3) 0%, transparent 60%)'}}></div>
-                      <div className="relative z-10 text-center">
-                        <div className="text-fuchsia-700 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
-                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">🎀</span> ふわふわ装備ガチャ♡ <span className="text-sm">(3000 SP)</span>
-                        </div>
-                        <div className="text-xs text-fuchsia-600 font-bold mb-2">💫 NEW！全15種のかわいい装備が登場</div>
-                        <button
-                          onClick={() => setShowGachaRates(showGachaRates === "rich_ladies_equipment" ? null : "rich_ladies_equipment")}
-                          className="mb-6 px-6 py-2 bg-[#fff0f9] hover:bg-[#fce7f3] text-[#86198f] font-black text-sm rounded-full shadow-md border-2 border-fuchsia-300 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
-                        >
-                          <span className="text-lg">🔍</span> 中身を見る
-                        </button>
-                      </div>
-                      <button
-                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap font-black rounded-xl transition-all ${
-                          pullingType ? 'animate-pulse bg-fuchsia-300 text-white opacity-50 cursor-not-allowed' :
-                          (userData.sp || 0) < 3000 ? 'bg-fuchsia-200 text-fuchsia-400 opacity-50 cursor-not-allowed' :
-                          'bg-gradient-to-r from-fuchsia-500 to-pink-500 hover:from-fuchsia-400 hover:to-pink-400 text-white shadow-[0_4px_0_0_#a21caf] active:shadow-none active:translate-y-1'
-                        }`}
-                        onClick={() => handleRequestGacha("rich_ladies_equipment")}
-                        disabled={pullingType !== null || (userData.sp || 0) < 3000}
-                      >
-                        {pullingType ? "..." : (userData.sp || 0) < 3000 ? "SP不足" : "3000 SP でまわす"}
-                      </button>
-                    </div>
-
-                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-amber-100/90 to-amber-300/90 border-[3px] border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)] flex flex-col justify-between relative overflow-hidden">
-                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
-                      <div className="relative z-10 text-center">
-                        <div className="text-amber-900 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
-                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">🛡️</span> 装備品リッチガチャ <span className="text-sm">(3000 SP)</span>
-                        </div>
-                        <button
-                          onClick={() => setShowGachaRates(showGachaRates === "rich_equipment" ? null : "rich_equipment")}
-                          className="mb-6 px-6 py-2 bg-[#fdf8e1] hover:bg-[#faedb9] text-[#5c3a21] font-black text-sm rounded-full shadow-md border-2 border-[#e6c770] transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
-                        >
-                          <span className="text-lg">🔍</span> 中身を見る
-                        </button>
-                      </div>
-                      <button
-                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || (userData.sp || 0) < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => handleRequestGacha("rich_equipment")}
-                        disabled={pullingType !== null || (userData.sp || 0) < 3000}
-                      >
-                        {pullingType ? "..." : (userData.sp || 0) < 3000 ? "SP不足" : "3000 SP でまわす"}
-                      </button>
-                    </div>
-
-                    <div className="flex-1 p-5 rounded-[2rem] bg-gradient-to-b from-emerald-50/90 to-emerald-200/90 border-[3px] border-emerald-400 shadow-[0_0_20px_rgba(168,85,247,0.3)] flex flex-col justify-between relative overflow-hidden">
-                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0icmdiYSgyNTIsIDIxMSwgNzcsIDAuMykiLz48L3N2Zz4=')] opacity-50 pointer-events-none"></div>
-                      <div className="relative z-10 text-center">
-                        <div className="text-emerald-700 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
-                          <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">⚔️</span> SP装備ガチャ <span className="text-sm">(1000 SP)</span>
-                        </div>
-                        <button
-                          onClick={() => setShowGachaRates(showGachaRates === "sp_equipment" ? null : "sp_equipment")}
-                          className="mb-6 px-6 py-2 bg-[#e6f7ed] hover:bg-[#c9f0d8] text-[#14532d] font-black text-sm rounded-full shadow-md border-2 border-emerald-300 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
-                        >
-                          <span className="text-lg">🔍</span> 中身を見る
-                        </button>
-                      </div>
-                      <button
-                        className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl shadow-[0_4px_0_0_#047857] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || (userData.sp || 0) < 1000 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => handleRequestGacha("sp_equipment")}
-                        disabled={pullingType !== null || (userData.sp || 0) < 1000}
-                      >
-                        {pullingType ? "..." : (userData.sp || 0) < 1000 ? "SP不足" : "1000 SP でまわす"}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-3">
-                    <button
-                      onClick={() => setShowGachaRates(showGachaRates === "all_3000" ? null : "all_3000")}
-                      className="px-5 py-2.5 bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white font-black text-sm rounded-full shadow-md border border-amber-200 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
-                    >
-                      <span className="text-lg">🌟</span> 3000PTガチャ全中身をまとめて見る
-                    </button>
-                    <button
-                      onClick={() => setShowGachaRates(showGachaRates === "all_sp" ? null : "all_sp")}
-                      className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-500 to-fuchsia-600 hover:from-emerald-500 hover:to-fuchsia-500 text-white font-black text-sm rounded-full shadow-md border border-emerald-200 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
-                    >
-                      <span className="text-lg">🛡️</span> 3000SP装備ガチャ全中身をまとめて見る
-                    </button>
-                  </div>
-
-                  <AnimatePresence>
-                    {showGachaRates && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="mt-6 text-left game-panel-light p-6 overflow-hidden"
-                      >
-                        <h3 className="font-black text-blue-900 mb-4 border-b-2 border-blue-200 pb-2">
-                          {showGachaRates === "all_3000" ? "🌟 3000PTガチャ 全排出内容（レアリティ順）" :
-                           showGachaRates === "all_sp" ? "🛡️ 3000SP装備ガチャ 全排出内容（レアリティ順）" :
-                           showGachaRates === "rich_ladies_equipment" ? "🎀 ふわふわ装備リッチガチャ♡ 提供割合 (3000 SP)" :
-                           showGachaRates === "rich_equipment" ? "🛡️ 装備品リッチガチャ 提供割合 (3000 SP)" :
-                           showGachaRates === "sp_equipment" ? "⚔️ SP装備ガチャ 提供割合 (1000 SP)" :
-                           "提供割合"}
-                        </h3>
-                        <div className="space-y-4">
-                          {(showGachaRates === "all_3000" ? all3000GachaRates :
-                            showGachaRates === "all_sp" ? all3000SpCombinedEquipmentRates :
-                            showGachaRates === "sp_equipment" ? spEquipmentGachaRates :
-                            showGachaRates === "rich_equipment" ? richEquipmentGachaRates :
-                            showGachaRates === "rich_ladies" ? richLadiesGachaRates :
-                            showGachaRates === "rich_ladies_equipment" ? richLadiesEquipmentGachaRates :
-                            showGachaRates === "rich" ? richGachaRates :
-                            showGachaRates === "rich2" ? richGacha2Rates :
-                            gachaRates).map((tier, idx) => (
-                            <div key={idx} className={`p-4 rounded-lg border ${tier.bg} shadow-inner`}>
-                              <div className="flex justify-between items-center mb-3 border-b border-black/10 pb-2">
-                                <span className={`font-black text-xl ${tier.color} drop-shadow-sm`}>{tier.rarity}</span>
-                                <span className="font-mono font-black text-lg bg-white/60 px-3 py-1 rounded-full text-slate-700">{tier.rate}</span>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {tier.items.map(item => {
-                                  let typeLabel = "不明";
-                                  let typeColor = "bg-gray-100 text-gray-600";
-                                  if (item.type === "title") { typeLabel = "称号"; typeColor = "bg-blue-100 text-blue-700"; }
-                                  else if (item.type === "avatar") { typeLabel = "アバター"; typeColor = "bg-green-100 text-green-700"; }
-                                  else if (item.type === "effect") { typeLabel = "エフェクト"; typeColor = "bg-[#d8b4fe] text-[#581c87]"; }
-                                  else if (item.type === "theme") { typeLabel = "テーマ"; typeColor = "bg-pink-100 text-pink-700"; }
-                                  else if (item.type === "equipment") { typeLabel = "装備"; typeColor = "bg-amber-100 text-amber-800"; }
-                                  
-                                  const isInteractive = item.type === 'avatar' || item.type === 'equipment';
-
-                                  return (
-                                    <button 
-                                      key={item.id} 
-                                      onClick={() => {
-                                        if (item.type === 'avatar') {
-                                          setPreviewingAvatar({ url: item.icon, id: item.id, name: item.name });
-                                        } else if (item.type === 'equipment') {
-                                          setPreviewingEquipmentModal(item.id);
-                                        }
-                                      }}
-                                      className={`bg-white px-2.5 py-1.5 rounded-lg shadow-sm text-sm font-bold flex items-center gap-2 text-slate-700 border border-slate-200 transition-all ${isInteractive ? 'hover:scale-105 hover:border-amber-400 hover:shadow-md cursor-pointer' : ''}`}
-                                    >
-                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-sm ${typeColor}`}>{typeLabel}</span>
-                                      {item.gachaName && (
-                                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-pink-100 text-pink-700 border border-pink-200">
-                                          {item.gachaName}
-                                        </span>
-                                      )}
-                                      <span className="text-base flex items-center justify-center min-w-[20px]">
-                                        {item.icon.startsWith('/') ? (() => {
-                                          const imgProps = getAvatarImageProps(item.icon);
-                                          return (
-                                            <div className="w-5 h-5 rounded-full overflow-hidden inline-block relative align-middle">
-                                              <img src={item.icon} alt="icon" className={`w-full h-full object-cover ${imgProps.className}`} style={imgProps.style} />
-                                            </div>
-                                          );
-                                        })() : (
-                                          item.icon
-                                        )}
-                                      </span>
-                                      <span>{item.name.replace(/称号「|アバター「|エフェクト「|テーマ「|装備「|」/g, '')}</span>
-                                      {isInteractive && <span className="text-xs text-amber-500 font-bold">🔍</span>}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <GachaTab
+                  userData={userData}
+                  pullingType={pullingType}
+                  showGachaRates={showGachaRates}
+                  setShowGachaRates={setShowGachaRates}
+                  handleRequestGacha={handleRequestGacha}
+                  setPreviewingAvatar={setPreviewingAvatar}
+                  setPreviewingEquipmentModal={setPreviewingEquipmentModal}
+                />
               )}
 
               {/* ===== EQUIPMENTS TAB ===== */}
               {activeTab === "equipments" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const list = equipments.filter(item => selectedRarity === "all" || (item.rarity || "ノーマル") === selectedRarity);
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」のそうびはありません</div>
-                        </div>
-                      );
-                    }
-                    return list.map(item => {
-                      const isOwned = (userData.equipments || []).includes(item.id);
-                      const canAfford = (userData.sp || 0) >= (item.price || 0);
-
-                      return (
-                        <div key={item.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isOwned ? 'border-emerald-500 bg-emerald-50/90' : ''}`}>
-                          <div className="flex items-center gap-4">
-                            <div className="text-5xl w-16 h-16 flex items-center justify-center bg-slate-900/80 rounded-2xl border-2 border-emerald-300 shadow-md overflow-hidden">
-                              {item.icon.startsWith('/') ? (
-                                <img 
-                                  src={getAvatarThumbUrl(item.icon)} 
-                                  alt="eq" 
-                                  loading="lazy"
-                                  decoding="async"
-                                  className="w-full h-full object-cover rounded-xl" 
-                                />
-                              ) : item.icon}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-black text-lg text-slate-800">{item.name}</span>
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                  item.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                  item.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                  item.rarity === '激レア' ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-700'
-                                }`}>{item.rarity}</span>
-                                {item.gachaName && (
-                                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                    {item.gachaName}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-xs text-slate-600 font-bold mt-1">{item.description}</div>
-                              {!isOwned && !item.isGachaOnly && (
-                                <div className="text-emerald-600 font-black text-sm mt-1">{item.price} SP</div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-slate-200">
-                            {isOwned ? (
-                              <div className="text-sm font-bold text-emerald-600 bg-emerald-100 px-4 py-1.5 rounded-full border border-emerald-300">
-                                ✓ 所持中
-                              </div>
-                            ) : item.isGachaOnly ? (
-                              <div className="text-xs font-black text-purple-700 bg-purple-100 px-3 py-1.5 rounded-full border border-purple-300">
-                                🎲 ガチャ限定
-                              </div>
-                            ) : (
-                              <Button
-                                variant="fun"
-                                size="sm"
-                                className="bg-emerald-500 hover:bg-emerald-600 border-emerald-700 text-white text-sm"
-                                disabled={!canAfford}
-                                onClick={() => handleBuy("equipment", item.id, item.price || 0)}
-                              >
-                                {canAfford ? `${item.price} SP でこうにゅう` : "SP 不足"}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <EquipmentsTab userData={userData} selectedRarity={selectedRarity} handleBuy={handleBuy} />
               )}
 
               {/* ===== THEMES TAB ===== */}
               {activeTab === "themes" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const list = themes.filter(theme => selectedRarity === "all" || (theme.rarity || "ノーマル") === selectedRarity);
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」のテーマはありません</div>
-                        </div>
-                      );
-                    }
-                    return list.map(theme => {
-                      const isOwned = theme.price === 0 || userData.effects.includes(`theme_${theme.id}`);
-                      const isEquipped = userData.theme === theme.id || (!userData.theme && theme.id === 'default');
-                      const canAfford = userData.pt >= (theme.price || 0);
-                      const isPreviewing = previewTheme === theme.id;
-                      return (
-                        <div key={theme.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-4 flex-1">
-                              <div className="text-4xl w-12 h-12 flex items-center justify-center bg-slate-900/80 rounded-xl border border-slate-700 shadow-md flex-shrink-0">{theme.icon}</div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <div className="font-bold text-lg text-slate-800">{theme.name}</div>
-                                  {theme.rarity && (
-                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                      theme.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                      theme.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                      theme.rarity === '激レア' ? 'bg-amber-500 text-white' :
-                                      theme.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
-                                    }`}>{theme.rarity}</span>
-                                  )}
-                                  {theme.gachaName && (
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                      {theme.gachaName}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-slate-600 font-bold mt-1">{theme.description || "冒険画面を彩るテーマ。"}</div>
-                                {!isOwned && <div className="text-amber-600 font-black text-sm mt-1">{theme.price} PT</div>}
-                              </div>
-                            </div>
-                            {isEquipped ? (
-                              <div className="text-primary font-black px-4 flex-shrink-0">そうび中</div>
-                            ) : isOwned ? (
-                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 flex-shrink-0">所持済み</div>
-                            ) : theme.isGachaOnly ? (
-                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 flex-shrink-0">ガチャ限定 🎁</div>
-                            ) : (
-                              <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("theme", theme.id, theme.price || 0)} className="flex-shrink-0">かう</Button>
-                            )}
-                          </div>
-                          <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                            <button
-                              onClick={() => setPreviewTheme(isPreviewing ? null : theme.id)}
-                              className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
-                            >
-                              👀 しちゃく{isPreviewing ? '中' : ''}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <ThemesTab userData={userData} selectedRarity={selectedRarity} previewTheme={previewTheme} setPreviewTheme={setPreviewTheme} handleBuy={handleBuy} />
               )}
 
               {/* ===== EFFECTS TAB ===== */}
               {activeTab === "effects" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const list = effects.filter(effect => selectedRarity === "all" || (effect.rarity || "ノーマル") === selectedRarity);
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」のエフェクトはありません</div>
-                        </div>
-                      );
-                    }
-                    return list.map(effect => {
-                      const isOwned = userData.effects.includes(effect.id);
-                      const isEquipped = userData.equippedEffect === effect.id;
-                      const canAfford = userData.pt >= (effect.price || 0);
-                      const isPreviewing = previewEffect === effect.id;
-                      return (
-                        <div key={effect.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="text-4xl">{effect.icon}</div>
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <div className="font-bold text-lg text-slate-800">{effect.name}</div>
-                                  {effect.rarity && (
-                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                      effect.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                      effect.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                      effect.rarity === '激レア' ? 'bg-amber-500 text-white' :
-                                      effect.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
-                                    }`}>{effect.rarity}</span>
-                                  )}
-                                  {effect.gachaName && (
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                      {effect.gachaName}
-                                    </span>
-                                  )}
-                                </div>
-                                {!isOwned && <div className="text-amber-600 font-black">{effect.price} PT</div>}
-                              </div>
-                            </div>
-                            {isEquipped ? (
-                              <div className="text-primary font-black px-4">そうび中</div>
-                            ) : isOwned ? (
-                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">所持済み</div>
-                            ) : effect.isGachaOnly ? (
-                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
-                            ) : (
-                              <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("effect", effect.id, effect.price || 0)}>
-                                {canAfford ? "かう" : "PT不足"}
-                              </Button>
-                            )}
-                          </div>
-                          <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                            <button
-                              onClick={() => setPreviewEffect(isPreviewing ? null : effect.id)}
-                              className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
-                            >
-                              👀 しちゃく{isPreviewing ? '中' : ''}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <EffectsTab userData={userData} selectedRarity={selectedRarity} previewEffect={previewEffect} setPreviewEffect={setPreviewEffect} handleBuy={handleBuy} />
               )}
 
               {/* ===== TITLES TAB ===== */}
               {activeTab === "titles" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const allTitles = [...titles];
-                    userData.titles.forEach(t => {
-                      if (!allTitles.find(x => x.id === t)) {
-                        allTitles.push({ id: t, name: t, price: 0, isGachaOnly: false });
-                      }
-                    });
-                    const list = allTitles.filter(title => selectedRarity === "all" || (title.rarity || "ノーマル") === selectedRarity);
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」のしょうごうはありません</div>
-                        </div>
-                      );
-                    }
-                    return list.map(title => {
-                      const isOwned = userData.titles.includes(title.id);
-                      const isEquipped = userData.equippedTitle === title.id;
-                      const canAfford = userData.pt >= (title.price || 0);
-                      const isPreviewing = previewTitle === title.id;
-                      return (
-                        <div key={title.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <div className="font-black text-xl text-indigo-900">【{title.id}】</div>
-                                {title.rarity && (
-                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                    title.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                    title.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                    title.rarity === '激レア' ? 'bg-amber-500 text-white' :
-                                    title.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
-                                  }`}>{title.rarity}</span>
-                                )}
-                                {title.gachaName && (
-                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
-                                    title.gachaName.includes("実績") 
-                                      ? 'bg-amber-100 text-amber-900 border-amber-300' 
-                                      : 'bg-pink-100 text-pink-800 border border-pink-300'
-                                  }`}>
-                                    {title.gachaName}
-                                  </span>
-                                )}
-                              </div>
-                              {title.description && (
-                                <div className="text-xs font-bold text-slate-500 mt-1">{title.description}</div>
-                              )}
-                              {!isOwned && title.price !== null && (
-                                <div className="text-amber-600 font-black mt-1">{title.price} PT</div>
-                              )}
-                            </div>
-                            {isEquipped ? (
-                              <div className="text-primary font-black px-4">そうび中</div>
-                            ) : isOwned ? (
-                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">所持済み</div>
-                            ) : title.gachaName && title.gachaName.includes("実績") ? (
-                              <button 
-                                onClick={() => router.push("/achievements")}
-                                className="text-xs font-black text-amber-800 bg-amber-200/80 hover:bg-amber-300 px-3 py-1.5 rounded-xl border border-amber-400 shadow-sm transition-all hover:scale-105"
-                              >
-                                実績へ ➔
-                              </button>
-                            ) : title.isGachaOnly ? (
-                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ガチャ限定 🎁</div>
-                            ) : (
-                              <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("title", title.id, title.price || 0)}>
-                                {canAfford ? "かう" : "PT不足"}
-                              </Button>
-                            )}
-                          </div>
-                          <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                            <button
-                              onClick={() => setPreviewTitle(isPreviewing ? null : title.id)}
-                              className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
-                            >
-                              👀 しちゃく{isPreviewing ? '中' : ''}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <TitlesTab userData={userData} selectedRarity={selectedRarity} previewTitle={previewTitle} setPreviewTitle={setPreviewTitle} handleBuy={handleBuy} />
               )}
 
               {/* ===== AVATARS TAB ===== */}
               {activeTab === "avatars" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const list = avatars.filter(avatar => {
-                      if (selectedRarity === "all") return true;
-                      const info = getAvatarInfo(avatar.id);
-                      const r = info?.rarity || avatar.rarity || "ノーマル";
-                      return r === selectedRarity;
-                    });
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」のアバターはありません</div>
-                        </div>
-                      );
-                    }
-                    return list.map(avatar => {
-                      const isOwned = userData.avatars.includes(avatar.id);
-                      const isEquipped = userData.equippedAvatar === avatar.id;
-                      const canAfford = userData.pt >= (avatar.price || 0);
-                      const isPreviewing = previewAvatar === avatar.id;
-                      const info = getAvatarInfo(avatar.id);
-
-                      return (
-                        <div key={avatar.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-4 flex-1">
-                              <button 
-                                onClick={() => setPreviewingAvatar({ url: avatar.icon, id: avatar.id, name: avatar.name })}
-                                className="flex justify-center w-14 h-14 flex-shrink-0 hover:scale-110 transition-transform cursor-pointer focus:outline-none"
-                              >
-                                {avatar.icon && avatar.icon.startsWith('/') ? (() => {
-                                  const imgProps = getAvatarImageProps(avatar.icon);
-                                  return (
-                                    <div className="w-14 h-14 rounded-full overflow-hidden relative border-2 border-white shadow-md mx-auto">
-                                      <img 
-                                        src={getAvatarThumbUrl(avatar.icon)} 
-                                        alt={avatar.name} 
-                                        loading="lazy"
-                                        decoding="async"
-                                        className={`w-full h-full object-cover ${imgProps.className}`} 
-                                        style={imgProps.style} 
-                                      />
-                                    </div>
-                                  );
-                                })() : (
-                                  <div className="text-4xl w-14 h-14 flex items-center justify-center bg-slate-900/80 rounded-xl border border-slate-700 shadow-md">{avatar.icon}</div>
-                                )}
-                              </button>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-bold text-lg text-slate-800">{avatar.name}</span>
-                                  {info?.rarity && (
-                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                      info.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                      info.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                      info.rarity === '激レア' ? 'bg-amber-500 text-white' :
-                                      info.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
-                                    }`}>{info.rarity}</span>
-                                  )}
-                                  {(info?.gachaName || avatar.gachaName) && (
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                      {info?.gachaName || avatar.gachaName}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-slate-600 font-bold mt-1">{info?.description || avatar.description || "冒険を彩る魅力的なアバター。"}</div>
-                                {!isOwned && !avatar.isGachaOnly && (
-                                  <div className="text-amber-600 font-black text-sm mt-1">{avatar.price} PT</div>
-                                )}
-                              </div>
-                            </div>
-                            {isEquipped ? (
-                              <div className="text-primary font-black px-4 flex-shrink-0">そうび中</div>
-                            ) : isOwned ? (
-                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 flex-shrink-0">所持済み</div>
-                            ) : avatar.isGachaOnly ? (
-                              <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 flex-shrink-0">ガチャ限定 🎁</div>
-                            ) : (
-                              <Button variant={canAfford ? "primary" : "ghost"} disabled={!canAfford} onClick={() => handleBuy("avatar", avatar.id, avatar.price || 0)} className="flex-shrink-0">
-                                {canAfford ? "かう" : "PT不足"}
-                              </Button>
-                            )}
-                          </div>
-                          <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                            <button
-                              onClick={() => setPreviewAvatar(isPreviewing ? null : avatar.id)}
-                              className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
-                            >
-                              👀 しちゃく{isPreviewing ? '中' : ''}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <AvatarsTab userData={userData} selectedRarity={selectedRarity} previewAvatar={previewAvatar} setPreviewAvatar={setPreviewAvatar} handleBuy={handleBuy} setPreviewingAvatar={setPreviewingAvatar} />
               )}
             </motion.div>
           </AnimatePresence>

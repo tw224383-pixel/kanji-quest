@@ -34,7 +34,7 @@ export const storage = {
       "kq_theme", "kq_eq_effect", "kq_total_damage", "kq_weekly_xp",
       "kq_last_week", "kq_monthly_damage", "kq_last_month",
       "kq_claimed_achievements", "kq_last_login_date", "kq_login_streak",
-      "kq_user_cache"
+      "kq_user_cache", "kq_category_solved", "kq_mistake_stages", "kq_mistake_next_review"
     ];
     keysToRemove.forEach(k => localStorage.removeItem(k));
   },
@@ -65,6 +65,9 @@ export const storage = {
       claimedAchievements: JSON.parse(localStorage.getItem("kq_claimed_achievements") || "[]"),
       lastLoginDate: localStorage.getItem("kq_last_login_date") || "",
       loginStreak: parseInt(localStorage.getItem("kq_login_streak") || "1", 10),
+      categorySolved: JSON.parse(localStorage.getItem("kq_category_solved") || "{}"),
+      mistakeStages: JSON.parse(localStorage.getItem("kq_mistake_stages") || "{}"),
+      mistakeNextReview: JSON.parse(localStorage.getItem("kq_mistake_next_review") || "{}"),
     };
   },
   updateGuestData: (updates: any) => {
@@ -91,6 +94,9 @@ export const storage = {
     if (updates.claimedAchievements !== undefined) localStorage.setItem("kq_claimed_achievements", JSON.stringify(updates.claimedAchievements));
     if (updates.lastLoginDate !== undefined) localStorage.setItem("kq_last_login_date", updates.lastLoginDate);
     if (updates.loginStreak !== undefined) localStorage.setItem("kq_login_streak", updates.loginStreak.toString());
+    if (updates.categorySolved !== undefined) localStorage.setItem("kq_category_solved", JSON.stringify(updates.categorySolved));
+    if (updates.mistakeStages !== undefined) localStorage.setItem("kq_mistake_stages", JSON.stringify(updates.mistakeStages));
+    if (updates.mistakeNextReview !== undefined) localStorage.setItem("kq_mistake_next_review", JSON.stringify(updates.mistakeNextReview));
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("kq_guest_update"));

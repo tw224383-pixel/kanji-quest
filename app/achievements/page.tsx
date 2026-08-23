@@ -20,7 +20,7 @@ type TabType = AchievementTabType;
 type FilterType = "all" | "claimable" | "claimed" | "locked";
 
 export default function AchievementsPage() {
-  const { userData, updateUserData, loading } = useUser();
+  const { userData, updateUserDataAtomic, loading } = useUser();
   const router = useRouter();
   const [gradeBossLevel, setGradeBossLevel] = useState(1);
   const [rewardModal, setRewardModal] = useState<{ pt: number; sp: number; title: string; unlockedTitle?: string } | null>(null);
@@ -75,45 +75,75 @@ export default function AchievementsPage() {
 
   const handleClaim = async (ach: AchievementItem) => {
     if (!ach.unlocked || claimed.includes(ach.id)) return;
-    const newClaimed = [...claimed, ach.id];
-    const newTitles = new Set(userData.titles || []);
-    if (ach.rewardTitle && !newTitles.has(ach.rewardTitle)) {
-      newTitles.add(ach.rewardTitle);
-    }
 
-    await updateUserData({
-      pt: userData.pt + ach.rewardPt,
-      sp: (userData.sp || 0) + ach.rewardSp,
-      titles: Array.from(newTitles),
-      claimedAchievements: newClaimed
+    type ClaimReward = { pt: number; sp: number; unlockedTitle?: string };
+    let reward: ClaimReward | null = null;
+    // 受け取り済みリスト・報酬とも、Firestoreトランザクション内で最新のサーバー側データを
+    // 起点に再計算する（複数タブでの同時受け取りによる報酬の二重付与・消失を防ぐ）。
+    const ok = await updateUserDataAtomic(current => {
+      const currentClaimed = current.claimedAchievements || [];
+      if (currentClaimed.includes(ach.id)) { reward = null; return null; }
+      const currentAchievements = getAchievements(current, gradeBossLevel);
+      const freshAch = currentAchievements.find(a => a.id === ach.id);
+      if (!freshAch || !freshAch.unlocked) { reward = null; return null; }
+
+      const newTitles = new Set(current.titles || []);
+      if (freshAch.rewardTitle) newTitles.add(freshAch.rewardTitle);
+      reward = { pt: freshAch.rewardPt, sp: freshAch.rewardSp, unlockedTitle: freshAch.rewardTitle };
+
+      return {
+        pt: current.pt + freshAch.rewardPt,
+        sp: (current.sp || 0) + freshAch.rewardSp,
+        titles: Array.from(newTitles),
+        claimedAchievements: [...currentClaimed, ach.id],
+      };
     });
-    setRewardModal({ pt: ach.rewardPt, sp: ach.rewardSp, title: ach.name, unlockedTitle: ach.rewardTitle });
+
+    if (ok) {
+      const finalReward = reward as unknown as ClaimReward;
+      setRewardModal({ pt: finalReward.pt, sp: finalReward.sp, title: ach.name, unlockedTitle: finalReward.unlockedTitle });
+    }
   };
 
   const handleClaimAll = async () => {
     if (claimableList.length === 0) return;
-    let totalAddedPt = 0;
-    let totalAddedSp = 0;
-    const newClaimed = [...claimed];
-    const newTitles = new Set(userData.titles || []);
 
-    claimableList.forEach(ach => {
-      totalAddedPt += ach.rewardPt;
-      totalAddedSp += ach.rewardSp;
-      newClaimed.push(ach.id);
-      if (ach.rewardTitle && !newTitles.has(ach.rewardTitle)) {
-        newTitles.add(ach.rewardTitle);
-      }
+    type ClaimAllReward = { pt: number; sp: number };
+    let claimedCount = 0;
+    let reward: ClaimAllReward | null = null;
+    const ok = await updateUserDataAtomic(current => {
+      const currentClaimed = current.claimedAchievements || [];
+      const currentAchievements = getAchievements(current, gradeBossLevel);
+      const nowClaimable = currentAchievements.filter(a => a.unlocked && !currentClaimed.includes(a.id));
+      if (nowClaimable.length === 0) { reward = null; return null; }
+
+      let totalAddedPt = 0;
+      let totalAddedSp = 0;
+      const newClaimed = [...currentClaimed];
+      const newTitles = new Set(current.titles || []);
+
+      nowClaimable.forEach(ach => {
+        totalAddedPt += ach.rewardPt;
+        totalAddedSp += ach.rewardSp;
+        newClaimed.push(ach.id);
+        if (ach.rewardTitle) newTitles.add(ach.rewardTitle);
+      });
+
+      claimedCount = nowClaimable.length;
+      reward = { pt: totalAddedPt, sp: totalAddedSp };
+
+      return {
+        pt: current.pt + totalAddedPt,
+        sp: (current.sp || 0) + totalAddedSp,
+        titles: Array.from(newTitles),
+        claimedAchievements: newClaimed
+      };
     });
 
-    await updateUserData({
-      pt: userData.pt + totalAddedPt,
-      sp: (userData.sp || 0) + totalAddedSp,
-      titles: Array.from(newTitles),
-      claimedAchievements: newClaimed
-    });
-
-    setRewardModal({ pt: totalAddedPt, sp: totalAddedSp, title: `${claimableList.length}個の実績` });
+    if (ok) {
+      const finalReward = reward as unknown as ClaimAllReward;
+      setRewardModal({ pt: finalReward.pt, sp: finalReward.sp, title: `${claimedCount}個の実績` });
+    }
   };
 
   return (
