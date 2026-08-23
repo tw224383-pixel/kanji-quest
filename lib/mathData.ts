@@ -298,13 +298,20 @@ function generateSkillQuestion(skillId: string): MathQuestion {
     case 'g1_logic': {
       a = Math.floor(Math.random() * 5) + 3;
       b = Math.floor(Math.random() * 4) + 1;
+      if (a < b) { const t = a; a = b; b = t; } // ひき算で答えがマイナスにならないようにする
       const patterns = [
         { q: `あめが ${a}こ あります。${b}こ もらいました。ぜんぶで なんこ？`, a: a + b, u: "こ" },
         { q: `りんごが ${a}こ あります。${b}こ たべました。のこりは なんこ？`, a: a - b, u: "こ" },
         { q: `とりが ${a}わ います。${b}わ とんできました。あわせて なんわ？`, a: a + b, u: "わ" },
         { q: `あかいくるまが ${a}だい、あおいくるまが ${b}だい あります。あかは なんだい おおい？`, a: a - b, u: "だい" },
         { q: `こどもが まえから ${a}ばんめ に ならんでいます。うしろに ${b}にん います。ぜんぶで なんにん？`, a: a + b, u: "にん" },
-        { q: `10に なるには、${a} に あと いくつ たせば いい？`, a: 10 - a, u: "" }
+        { q: `10に なるには、${a} に あと いくつ たせば いい？`, a: 10 - a, u: "" },
+        { q: `ふうせんが ${a}こ あります。${b}こ われました。のこりは なんこ？`, a: a - b, u: "こ" },
+        { q: `つりで さかなを ${a}ひき つりました。おとうとは ${b}ひき つりました。あわせて なんびき？`, a: a + b, u: "ひき" },
+        { q: `えんぴつを ${a}ほん もっています。おかあさんから ${b}ほん もらいました。ぜんぶで なんぼん？`, a: a + b, u: "ほん" },
+        { q: `きょうしつに こどもが ${a}にん います。${b}にん かえりました。のこりは なんにん？`, a: a - b, u: "にん" },
+        { q: `どうぶつえんで さるを ${a}ひき、ぱんだを ${b}ひき みました。あわせて なんびき？`, a: a + b, u: "ひき" },
+        { q: `はこに みかんが ${a}こ はいっています。${b}こ たべました。のこりは なんこ？`, a: a - b, u: "こ" }
       ];
       const p = patterns[Math.floor(Math.random() * patterns.length)];
       word = p.q;
@@ -315,14 +322,22 @@ function generateSkillQuestion(skillId: string): MathQuestion {
     case 'g2_logic': {
       a = Math.floor(Math.random() * 6) + 3;
       b = Math.floor(Math.random() * 5) + 2;
+      if (a < b) { const t = a; a = b; b = t; } // ひき算で答えがマイナスにならないようにする
+      const totalKids = (a + 2) * 5;
+      const girlsCount = b + 3;
       const patterns = [
         { q: `1さらに ケーキが ${a}こ あります。${b}さら では ぜんぶで 何こ？`, a: a * b, u: "こ" },
         { q: `子どもが ${b}人 います。1人に ${a}本ずつ えんぴつを くばると、何本いる？`, a: a * b, u: "本" },
         { q: `${a * 10}円の ノートと ${b * 10}円の けしゴムを かいました。代金は 何円？`, a: (a + b) * 10, u: "円" },
         { q: `100円玉を 1まい 出して、${a * 10}円の アメを かいました。おつりは 何円？`, a: 100 - (a * 10), u: "円" },
         { q: `50円玉が ${b}まい あります。ぜんぶで 何円？`, a: 50 * b, u: "円" },
-        { q: `ぜんぶで 35人 います。男子が 18人のとき、女子は 何人？`, a: 17, u: "人" },
-        { q: `午前 9時 から 30分 たつと、何時何分？`, a: "9時30分", c: ["9時30分", "9時20分", "10時", "9時40分"] }
+        { q: `ぜんぶで ${totalKids}人 います。女子が ${girlsCount}人のとき、男子は 何人？`, a: totalKids - girlsCount, u: "人" },
+        { q: `午前 9時 から 30分 たつと、何時何分？`, a: "9時30分", c: ["9時30分", "9時20分", "10時", "9時40分"] },
+        { q: `おりがみを ${a}まい もっています。${b}まい もらいました。あわせて 何まい？`, a: a + b, u: "まい" },
+        { q: `1はこに たまごが ${a}こ はいっています。${b}はこでは たまごは 何こ？`, a: a * b, u: "こ" },
+        { q: `色紙が ${a}まい あります。${b}まい つかいました。のこりは 何まい？`, a: a - b, u: "まい" },
+        { q: `午前 9時40分 から 30分 たつと、何時何分？`, a: "10時10分", c: ["10時10分", "9時70分", "10時", "9時10分"] },
+        { q: `午後 3時 から 40分 まえは 何時何分でしたか？`, a: "2時20分", c: ["2時20分", "3時40分", "2時40分", "3時20分"] }
       ];
       const p = patterns[Math.floor(Math.random() * patterns.length)];
       word = p.q;
@@ -341,13 +356,22 @@ function generateSkillQuestion(skillId: string): MathQuestion {
       a = b * answer;
       const price = (Math.floor(Math.random() * 4) + 1) * 50;
       const count = Math.floor(Math.random() * 3) + 2;
+      const divisor2 = Math.floor(Math.random() * 3) + 3; // 3-5
+      const remainder2 = Math.floor(Math.random() * (divisor2 - 1)) + 1;
+      const quotient2 = Math.floor(Math.random() * 5) + 3;
+      const dividend2 = divisor2 * quotient2 + remainder2;
       const patterns = [
         { q: `${a}この クッキーを ${b}人で 同じ数ずつ 分けると、1人 何こ？`, a: answer, u: "こ" },
         { q: `${a}枚の シールを 1人に ${b}枚ずつ 配ると、何人に 配れる？`, a: answer, u: "人" },
-        { q: `1本 ${price}円の ペンを ${count}本 買って 500円玉を 出しました。おつりは 何円？`, a: 500 - (price * count), u: "円" },
-        { q: `23この アメを 4人で 同じ数ずつ 分けると、あまりは 何こ？`, a: 3, u: "こ" },
+        { q: `1本 ${price}円の ペンを ${count}本 買って 1000円さつを 出しました。おつりは 何円？`, a: 1000 - (price * count), u: "円" },
+        { q: `${dividend2}こ の アメを ${divisor2}人で 同じ数ずつ 分けると、あまりは 何こ？`, a: remainder2, u: "こ" },
         { q: `長いす 1脚に ${b}人ずつ すわると、${answer}脚で 何人すわれる？`, a: a, u: "人" },
-        { q: `午後 1時30分 から 45分 たつと、何時何分？`, a: "午後2時15分", c: ["午後2時15分", "午後2時", "午後2時30分", "午後1時75分"] }
+        { q: `午後 1時30分 から 45分 たつと、何時何分？`, a: "午後2時15分", c: ["午後2時15分", "午後2時", "午後2時30分", "午後1時75分"] },
+        { q: `1箱に ${b}こ入りの チョコが ${answer}箱 あります。ぜんぶで 何こ？`, a: a, u: "こ" },
+        { q: `1本 ${price}円の ノートを 3本 かうと、代金は 何円？`, a: price * 3, u: "円" },
+        { q: `午前 10時15分 から 50分 たつと、何時何分？`, a: "午前11時5分", c: ["午前11時5分", "午前10時65分", "午前11時", "午前10時5分"] },
+        { q: `長さ ${b}m の リボンを ${answer}本 作るには、何m の リボンが ひつよう？`, a: a, u: "m" },
+        { q: `画用紙が ${a}まい あります。${b}人で 同じ数ずつ 分けると、1人 何まい？`, a: answer, u: "まい" }
       ];
       const p = patterns[Math.floor(Math.random() * patterns.length)];
       word = p.q;
@@ -363,13 +387,38 @@ function generateSkillQuestion(skillId: string): MathQuestion {
     case 'g4_logic': {
       a = (Math.floor(Math.random() * 5) + 2) * 20;
       b = Math.floor(Math.random() * 4) + 2;
+      const groupSize = [3, 4, 5][Math.floor(Math.random() * 3)];
+      const groupCount = Math.floor(Math.random() * 4) + 5; // 5-8
+      const totalStudents = groupSize * groupCount;
+      const girlsCount2 = Math.floor(totalStudents / 3);
+      const boysCount2 = totalStudents - girlsCount2;
+      const otherMoney = (Math.floor(Math.random() * 3) + 2) * 100; // 200-400
+      const ratio = [2, 3, 4][Math.floor(Math.random() * 3)];
+      const myMoney = otherMoney * ratio;
+      const pagesPerDay = b * 5;
+      const days = [4, 5, 6, 7][Math.floor(Math.random() * 4)];
+      const totalPages = pagesPerDay * days;
+      const moneySum = (Math.floor(Math.random() * 4) + 3) * 100; // 300-600
+      const moneyDiff = (Math.floor(Math.random() * 3) + 1) * 100; // 100-300
+      const lcmX = Math.floor(Math.random() * 6) + 2;
+      const lcmY = Math.floor(Math.random() * 6) + 2;
+      const lcmVal = (lcmX * lcmY) / gcd(lcmX, lcmY);
+      const seqStart = Math.floor(Math.random() * 4) + 1;
+      const seqStep = Math.floor(Math.random() * 3) + 2;
+      const seqN = Math.floor(Math.random() * 3) + 4; // 4-6番目
+      const px = Math.floor(Math.random() * 5) + 2;
+      const py = Math.floor(Math.random() * 5) + 2;
+      const pz = Math.floor(Math.random() * 4) + 2;
       const patterns = [
         { q: `1本 ${a}円の ジュースを ${b}本 買って 1000円 出したときの おつりは 何円？`, a: 1000 - (a * b), u: "円" },
-        { q: `男子が 18人、女子が 14人 います。4人ずつの 班を作ると 何班できる？`, a: 8, u: "班" },
-        { q: `兄は 600円、弟は 200円 持っています。兄のお金は 弟の 何倍？`, a: 3, u: "倍" },
-        { q: `1日に ${b * 5}ページずつ 読むと、${b * 5 * 6}ページの本は 何日で 読み終わる？`, a: 6, u: "日" },
-        { q: `2人の持っているお金の合計が 500円で、差が 100円です。多い方は 何円？`, a: 300, u: "円" },
-        { q: `6 と 8 の 最小公倍数（さいしょうこうばいすう）は いくつ？`, a: 24, u: "" }
+        { q: `${boysCount2 > girlsCount2 ? '男子' : '女子'}が ${Math.max(boysCount2, girlsCount2)}人、${boysCount2 > girlsCount2 ? '女子' : '男子'}が ${Math.min(boysCount2, girlsCount2)}人 います。${groupSize}人ずつの 班を作ると 何班できる？`, a: groupCount, u: "班" },
+        { q: `兄は ${myMoney}円、弟は ${otherMoney}円 持っています。兄のお金は 弟の 何倍？`, a: ratio, u: "倍" },
+        { q: `1日に ${pagesPerDay}ページずつ 読むと、${totalPages}ページの本は 何日で 読み終わる？`, a: days, u: "日" },
+        { q: `2人の持っているお金の合計が ${moneySum}円で、差が ${moneyDiff}円です。多い方は 何円？`, a: (moneySum + moneyDiff) / 2, u: "円" },
+        { q: `${lcmX} と ${lcmY} の 最小公倍数（さいしょうこうばいすう）は いくつ？`, a: lcmVal, u: "" },
+        { q: `${seqStart}から はじまり ${seqStep}ずつ 増える 数が ならんでいます。${seqN}番目の 数は 何？`, a: seqStart + seqStep * (seqN - 1), u: "" },
+        { q: `(${px} + ${py}) × ${pz} は いくつ？`, a: (px + py) * pz, u: "" },
+        { q: `本が ${totalStudents * 4}さつ あります。1つの たなに ${groupSize * 4}さつずつ ならべると、たなは 何つ ひつよう？`, a: (totalStudents * 4) / (groupSize * 4), u: "つ" }
       ];
       const p = patterns[Math.floor(Math.random() * patterns.length)];
       word = p.q;
@@ -381,12 +430,31 @@ function generateSkillQuestion(skillId: string): MathQuestion {
       const price = (Math.floor(Math.random() * 5) + 2) * 1000;
       const discount = [10, 20, 30, 40][Math.floor(Math.random() * 4)];
       const discountedPrice = price * (1 - discount / 100);
+      const avg = (Math.floor(Math.random() * 10) + 6) * 5; // 30-75
+      const total1 = (Math.floor(Math.random() * 5) + 2) * 100; // 200-600
+      const percent1 = [10, 20, 30, 40][Math.floor(Math.random() * 4)];
+      const classSize = [20, 25, 30, 35, 40][Math.floor(Math.random() * 5)];
+      const percent2 = [20, 40, 60, 80][Math.floor(Math.random() * 4)];
+      const area = [10, 20, 25, 50][Math.floor(Math.random() * 4)];
+      const density = [100, 200, 300, 400, 500][Math.floor(Math.random() * 5)];
+      const pop = area * density;
+      const capacity = [20, 25, 50][Math.floor(Math.random() * 3)];
+      const busPercent = [40, 60, 80][Math.floor(Math.random() * 3)];
+      const riders = (capacity * busPercent) / 100;
+      const price2 = (Math.floor(Math.random() * 5) + 2) * 100;
+      const discount2 = [10, 20, 30, 40, 50][Math.floor(Math.random() * 5)];
+      const perItemCount = [3, 4, 5, 6][Math.floor(Math.random() * 4)];
+      const perItemPrice = [20, 30, 40, 50][Math.floor(Math.random() * 4)];
+      const perItemTotal = perItemCount * perItemPrice;
       const patterns = [
         { q: `定価 ${price}円の 服が ${discount}%引き（${discount / 10}割引き）で 売られています。売り値は 何円？`, a: discountedPrice, u: "円" },
-        { q: `テストの点数が 80点、85点、75点 でした。3回の 平均点は 何点？`, a: 80, u: "点" },
-        { q: `全体で 200人 います。そのうち 30% が メガネをかけています。何人？`, a: 60, u: "人" },
-        { q: `40人のクラスで、男子が 60% です。男子は 何人？`, a: 24, u: "人" },
-        { q: `面積 20km² の町に 6000人 住んでいます。1km² あたりの人口（人口密度）は 何人？`, a: 300, u: "人" }
+        { q: `テストの点数が ${avg - 5}点、${avg}点、${avg + 5}点 でした。3回の 平均点は 何点？`, a: avg, u: "点" },
+        { q: `全体で ${total1}人 います。そのうち ${percent1}% が メガネをかけています。何人？`, a: (total1 * percent1) / 100, u: "人" },
+        { q: `${classSize}人のクラスで、男子が ${percent2}% です。男子は 何人？`, a: (classSize * percent2) / 100, u: "人" },
+        { q: `面積 ${area}km² の町に ${pop}人 住んでいます。1km² あたりの人口（人口密度）は 何人？`, a: density, u: "人" },
+        { q: `定員 ${capacity}人の バスに ${riders}人 乗っています。乗車率は 何%ですか？`, a: busPercent, u: "%" },
+        { q: `定価 ${price2}円の 本が ${discount2}%引きで 売られています。何円 安くなりましたか？`, a: (price2 * discount2) / 100, u: "円" },
+        { q: `りんごが ${perItemCount}こで ${perItemTotal}円でした。1こあたり 何円？`, a: perItemPrice, u: "円" }
       ];
       const p = patterns[Math.floor(Math.random() * patterns.length)];
       word = p.q;
@@ -397,12 +465,29 @@ function generateSkillQuestion(skillId: string): MathQuestion {
     case 'g6_logic': {
       const speed = [40, 50, 60, 80][Math.floor(Math.random() * 4)];
       const hours = Math.floor(Math.random() * 3) + 2;
+      const ratioPairs: [number, number][] = [[3, 2], [2, 3], [3, 4], [4, 5], [5, 3]];
+      const ratioPair = ratioPairs[Math.floor(Math.random() * ratioPairs.length)];
+      const ratioK = Math.floor(Math.random() * 4) + 3; // 3-6
+      const ratioTotal = (ratioPair[0] + ratioPair[1]) * ratioK;
+      const ratioAnswer = ratioPair[0] * ratioK;
+      const rectHeight = Math.floor(Math.random() * 4) + 3; // 3-6
+      const rectWidth = Math.floor(Math.random() * 4) + 6; // 6-9
+      const rectArea = rectHeight * rectWidth;
+      const combN = [4, 5, 6][Math.floor(Math.random() * 3)];
+      const combAnswer = (combN * (combN - 1)) / 2;
+      const speedB = [40, 50, 60][Math.floor(Math.random() * 3)];
+      const timeX = Math.floor(Math.random() * 3) + 2;
+      const distanceX = speedB * timeX;
+      const speedPerMin = [60, 70, 80, 100][Math.floor(Math.random() * 4)];
+      const minutesX = Math.floor(Math.random() * 4) + 3;
       const patterns = [
         { q: `時速 ${speed}km で走る 車が ${hours}時間 進むと、進んだ道のりは 何km？`, a: speed * hours, u: "km" },
         { q: `${speed * hours}km の道のりを ${hours}時間 で走ったときの 時速は 何km？`, a: speed, u: "km" },
-        { q: `姉と妹で チョコを 3 : 2 の比で 分けます。全体が 25このとき、姉は 何こ？`, a: 15, u: "こ" },
-        { q: `面積が 36cm² の長方形で、たてが 4cm のとき、横の長さは 何cm？`, a: 9, u: "cm" },
-        { q: `4人（A, B, C, D）の中から、リレーの選手 2人を選ぶ組み合わせは 何通り？`, a: 6, u: "通り" }
+        { q: `姉と妹で チョコを ${ratioPair[0]} : ${ratioPair[1]} の比で 分けます。全体が ${ratioTotal}このとき、姉は 何こ？`, a: ratioAnswer, u: "こ" },
+        { q: `面積が ${rectArea}cm² の長方形で、たてが ${rectHeight}cm のとき、横の長さは 何cm？`, a: rectWidth, u: "cm" },
+        { q: `${combN}人（A, B, C, D...）の中から、リレーの選手 2人を選ぶ組み合わせは 何通り？`, a: combAnswer, u: "通り" },
+        { q: `${distanceX}km の道のりを 時速 ${speedB}km で走ると、何時間 かかる？`, a: timeX, u: "時間" },
+        { q: `分速 ${speedPerMin}m で歩く人が ${minutesX}分間に 進む道のりは 何m？`, a: speedPerMin * minutesX, u: "m" }
       ];
       const p = patterns[Math.floor(Math.random() * patterns.length)];
       word = p.q;
@@ -419,7 +504,10 @@ function generateSkillQuestion(skillId: string): MathQuestion {
         { q: "1m（めーとる）は なんcm（せんちめーとる）ですか？", a: "100cm", c: ["100cm", "10cm", "1000cm", "50cm"] },
         { q: "とけいの ながいはりが 12、みじかいはりが 4 をさしています。いまなにじ？", a: "4じ", c: ["4じ", "12じ", "4じはん", "3じ"] },
         { q: "ながしかくの かどは なんこ ありますか？", a: "4こ", c: ["4こ", "3こ", "5こ", "6こ"] },
-        { q: "さいころ（はこのかたち）の めんは ぜんぶで なんこ ある？", a: "6こ", c: ["6こ", "4こ", "8こ", "12こ"] }
+        { q: "さいころ（はこのかたち）の めんは ぜんぶで なんこ ある？", a: "6こ", c: ["6こ", "4こ", "8こ", "12こ"] },
+        { q: "とけいの ながいはりが 6、みじかいはりが 8と9のあいだを さしています。いまなにじ？", a: "8じはん", c: ["8じはん", "8じ", "9じ", "6じ"] },
+        { q: "さんかく（三角形）の かどは なんこ ありますか？", a: "3こ", c: ["3こ", "4こ", "2こ", "5こ"] },
+        { q: "1mの ものさしと 50cmの じょうぎ、ながいのは どちら？", a: "1mの ものさし", c: ["1mの ものさし", "50cmの じょうぎ", "おなじ", "わからない"] }
       ];
       const sel = pool[Math.floor(Math.random() * pool.length)];
       word = sel.q;
@@ -434,7 +522,10 @@ function generateSkillQuestion(skillId: string): MathQuestion {
         { q: "1m（メートル）は 何mm（ミリメートル）ですか？", a: "1000mm", c: ["1000mm", "100mm", "10mm", "10000mm"] },
         { q: "直角（ちょっかく）は 何度（なんど）ですか？", a: "90度", c: ["90度", "180度", "60度", "45度"] },
         { q: "正方形（せいほうけい）の 4つの辺の長さは どうなっていますか？", a: "すべて等しい", c: ["すべて等しい", "向かい合う辺だけ等しい", "すべてちがう", "2つだけ等しい"] },
-        { q: "はこの形（直方体）の ちょう点（かど）は 何こ ある？", a: "8こ", c: ["8こ", "6こ", "12こ", "4こ"] }
+        { q: "はこの形（直方体）の ちょう点（かど）は 何こ ある？", a: "8こ", c: ["8こ", "6こ", "12こ", "4こ"] },
+        { q: "30dL（デシリットル）は 何Lですか？", a: "3L", c: ["3L", "30L", "300L", "0.3L"] },
+        { q: "長方形（ちょうほうけい）の むかいあう 2つの辺の長さは どうなっていますか？", a: "等しい", c: ["等しい", "ちがう", "たしざんになる", "半分になる"] },
+        { q: "三角じょうぎには どんな かどが ある？", a: "直角", c: ["直角", "円", "曲線", "五角形"] }
       ];
       const sel = pool[Math.floor(Math.random() * pool.length)];
       word = sel.q;
@@ -443,6 +534,7 @@ function generateSkillQuestion(skillId: string): MathQuestion {
       break;
     }
     case 'g3_geom': {
+      const diameter3 = [6, 8, 10, 12, 14][Math.floor(Math.random() * 5)];
       const pool = [
         { q: "1km（キロメートル）は 何m ですか？", a: "1000m", c: ["1000m", "100m", "10000m", "500m"] },
         { q: "1kg（キログラム）は 何g ですか？", a: "1000g", c: ["1000g", "100g", "10000g", "10g"] },
@@ -450,7 +542,10 @@ function generateSkillQuestion(skillId: string): MathQuestion {
         { q: "三角形の 3つの角の大きさを合わせると 何度？", a: "180度", c: ["180度", "360度", "90度", "270度"] },
         { q: "2つの辺の長さが等しい三角形を何という？", a: "二等辺三角形", c: ["二等辺三角形", "正三角形", "直角三角形", "直角二等辺三角形"] },
         { q: "3つの辺の長さがすべて等しい三角形を何という？", a: "正三角形", c: ["正三角形", "二等辺三角形", "鋭角三角形", "不等辺三角形"] },
-        { q: "円の直径は、半径の 何倍ですか？", a: "2倍", c: ["2倍", "3倍", "4倍", "半分"] }
+        { q: "円の直径は、半径の 何倍ですか？", a: "2倍", c: ["2倍", "3倍", "4倍", "半分"] },
+        { q: `直径 ${diameter3}cm の 円の半径は 何cmですか？`, a: `${diameter3 / 2}cm`, c: [`${diameter3 / 2}cm`, `${diameter3}cm`, `${diameter3 * 2}cm`, `${diameter3 / 2 + 2}cm`] },
+        { q: "正三角形の 3つの角の大きさは、それぞれ 何度ですか？", a: "60度", c: ["60度", "90度", "45度", "180度"] },
+        { q: "コンパスを つかうと、なにを かくことが できますか？", a: "円", c: ["円", "直線", "四角形", "三角形"] }
       ];
       const sel = pool[Math.floor(Math.random() * pool.length)];
       word = sel.q;
@@ -461,14 +556,17 @@ function generateSkillQuestion(skillId: string): MathQuestion {
     case 'g4_geom': {
       const w = Math.floor(Math.random() * 5) + 4;
       const h = Math.floor(Math.random() * 4) + 3;
+      const angleA = [30, 40, 50, 60, 70][Math.floor(Math.random() * 5)];
       const pool = [
-        { q: `たて ${h}cm、横 ${w}cm の長方形の面積は何cm²？`, a: `${h * w}cm²`, c: [`${h * w}cm²`, `${(h + w) * 2}cm²`, `${h * w + 4}cm²`, `${h * w - 3}cm²`] },
-        { q: `1辺が ${w}cm の正方形の面積は何cm²？`, a: `${w * w}cm²`, c: [`${w * w}cm²`, `${w * 4}cm²`, `${w * w + 5}cm²`, `${w * w - 4}cm²`] },
+        { q: `たて ${h}cm、横 ${w}cm の長方形の面積は何cm²？`, a: `${h * w}cm²`, c: [`${h * w}cm²`, `${h * w + (h + w)}cm²`, `${h * w + 4}cm²`, `${h * w - 3}cm²`] },
+        { q: `1辺が ${w}cm の正方形の面積は何cm²？`, a: `${w * w}cm²`, c: [`${w * w}cm²`, `${w * 2}cm²`, `${w * w + 5}cm²`, `${w * w - 4}cm²`] },
         { q: "四角形の 4つの角の大きさを合わせると 何度？", a: "360度", c: ["360度", "180度", "270度", "540度"] },
         { q: "1a（アール）は 何m² ですか？", a: "100m²", c: ["100m²", "10m²", "1000m²", "10000m²"] },
         { q: "1ha（ヘクタール）は 何m² ですか？", a: "10000m²", c: ["10000m²", "1000m²", "100m²", "100000m²"] },
         { q: "向かい合う2組の辺がどちらも平行な四角形を何という？", a: "平行四辺形", c: ["平行四辺形", "台形", "ひし形", "長方形"] },
-        { q: "4つの辺の長さがすべて等しい四角形を何という？", a: "ひし形", c: ["ひし形", "台形", "長方形", "平行四辺形"] }
+        { q: "4つの辺の長さがすべて等しい四角形を何という？", a: "ひし形", c: ["ひし形", "台形", "長方形", "平行四辺形"] },
+        { q: `一直線の角度は 180度です。片方が ${angleA}度のとき、もう片方は 何度？`, a: `${180 - angleA}度`, c: [`${180 - angleA}度`, `${angleA}度`, `${360 - angleA}度`, `${90 - angleA >= 0 ? 90 - angleA : angleA}度`] },
+        { q: "平行四辺形の 向かい合う角の大きさは どうなっていますか？", a: "等しい", c: ["等しい", "たすと180度", "たすと360度", "ちがう"] }
       ];
       const sel = pool[Math.floor(Math.random() * pool.length)];
       word = sel.q;
@@ -479,14 +577,18 @@ function generateSkillQuestion(skillId: string): MathQuestion {
     case 'g5_geom': {
       const base = (Math.floor(Math.random() * 4) + 3) * 2;
       const height = Math.floor(Math.random() * 5) + 3;
+      const cubeSide = Math.floor(Math.random() * 4) + 3; // 3-6
+      const cubeVolume = cubeSide ** 3;
       const pool = [
-        { q: `底辺 ${base}cm、高さ ${height}cm の三角形の面積は何cm²？`, a: `${(base * height) / 2}cm²`, c: [`${(base * height) / 2}cm²`, `${base * height}cm²`, `${(base * height) / 2 + 5}cm²`, `${base + height}cm²`] },
-        { q: `底辺 ${base}cm、高さ ${height}cm の平行四辺形の面積は何cm²？`, a: `${base * height}cm²`, c: [`${base * height}cm²`, `${(base * height) / 2}cm²`, `${base * height + 10}cm²`, `${(base + height) * 2}cm²`] },
+        { q: `底辺 ${base}cm、高さ ${height}cm の三角形の面積は何cm²？`, a: `${(base * height) / 2}cm²`, c: [`${(base * height) / 2}cm²`, `${base * height}cm²`, `${(base * height) / 2 + 5}cm²`, `${(base * height) / 2 + base}cm²`] },
+        { q: `底辺 ${base}cm、高さ ${height}cm の平行四辺形の面積は何cm²？`, a: `${base * height}cm²`, c: [`${base * height}cm²`, `${(base * height) / 2}cm²`, `${base * height + 10}cm²`, `${base * height + height}cm²`] },
         { q: "たて 4cm、横 5cm、高さ 3cm の直方体の体積は何cm³？", a: "60cm³", c: ["60cm³", "40cm³", "12cm³", "48cm³"] },
         { q: "1m³（立方メートル）は 何L（リットル）ですか？", a: "1000L", c: ["1000L", "100L", "10000L", "10L"] },
         { q: "五角形の内角の和は 何度ですか？", a: "540度", c: ["540度", "360度", "720度", "180度"] },
         { q: "六角形の内角の和は 何度ですか？", a: "720度", c: ["720度", "540度", "360度", "900度"] },
-        { q: "円周の長さを求める公式はどれですか？", a: "直径 × 円周率", c: ["直径 × 円周率", "半径 × 円周率", "半径 × 半径 × 円周率", "直径 × 直径 × 円周率"] }
+        { q: "円周の長さを求める公式はどれですか？", a: "直径 × 円周率", c: ["直径 × 円周率", "半径 × 円周率", "半径 × 半径 × 円周率", "直径 × 直径 × 円周率"] },
+        { q: `1辺が ${cubeSide}cm の 立方体の体積は 何cm³？`, a: `${cubeVolume}cm³`, c: [`${cubeVolume}cm³`, `${cubeSide * 2}cm³`, `${cubeSide * cubeSide}cm³`, `${cubeVolume + cubeSide}cm³`] },
+        { q: "三角柱の 面（めん）は ぜんぶで 何こ ありますか？", a: "5こ", c: ["5こ", "6こ", "4こ", "8こ"] }
       ];
       const sel = pool[Math.floor(Math.random() * pool.length)];
       word = sel.q;
@@ -495,16 +597,21 @@ function generateSkillQuestion(skillId: string): MathQuestion {
       break;
     }
     case 'g6_geom': {
-      const r = [2, 3, 5, 10][Math.floor(Math.random() * 4)];
+      const r = [3, 4, 5, 10][Math.floor(Math.random() * 4)]; // r=2だと面積(4π)と円周(4π)が偶然一致するため除外
       const area = Math.round(r * r * 3.14 * 10) / 10;
       const circ = Math.round(2 * r * 3.14 * 10) / 10;
+      const cylBase = [10, 15, 20, 25][Math.floor(Math.random() * 4)];
+      const cylHeight = Math.floor(Math.random() * 5) + 4; // 4-8
+      const cylVolume = cylBase * cylHeight;
       const pool = [
         { q: `半径 ${r}cm の円の面積は何cm²？ (円周率は3.14)`, a: `${area}cm²`, c: [`${area}cm²`, `${circ}cm²`, `${area + 5}cm²`, `${area - 4}cm²`] },
         { q: `半径 ${r}cm の円の円周の長さは何cm？ (円周率は3.14)`, a: `${circ}cm`, c: [`${circ}cm`, `${area}cm`, `${circ + 2}cm`, `${circ - 1}cm`] },
         { q: "底面積 20cm²、高さ 6cm の円柱の体積は何cm³？", a: "120cm³", c: ["120cm³", "60cm³", "240cm³", "80cm³"] },
         { q: "線対称な図形で、対応する点を結ぶ直線と対称の軸はどう交わりますか？", a: "垂直に交わる", c: ["垂直に交わる", "平行になる", "交わらない", "斜めに交わる"] },
         { q: "点対称な図形で、対応する点を結ぶ直線は必ずどこを通る？", a: "対称の中心", c: ["対称の中心", "図形の頂点", "対称の軸", "外側"] },
-        { q: "拡大図や縮図で、対応する角の大きさはどうなりますか？", a: "すべて等しい", c: ["すべて等しい", "拡大した分大きくなる", "半分になる", "直角になる"] }
+        { q: "拡大図や縮図で、対応する角の大きさはどうなりますか？", a: "すべて等しい", c: ["すべて等しい", "拡大した分大きくなる", "半分になる", "直角になる"] },
+        { q: `底面積 ${cylBase}cm²、高さ ${cylHeight}cm の 角柱の体積は 何cm³？`, a: `${cylVolume}cm³`, c: [`${cylVolume}cm³`, `${cylBase + cylHeight}cm³`, `${cylVolume / 2}cm³`, `${cylVolume + cylBase}cm³`] },
+        { q: "2倍に拡大した図形で、もとの図形と対応する辺の長さの比は？", a: "1：2", c: ["1：2", "2：2", "1：1", "1：4"] }
       ];
       const sel = pool[Math.floor(Math.random() * pool.length)];
       word = sel.q;
