@@ -44,18 +44,17 @@ export default function AchievementsPage() {
     fetchGradeStats();
   }, [userData]);
 
-  if (loading || !userData) return <LoadingScreen />;
-
-  const loginStreak = userData.loginStreak || 1;
-  const claimed = userData.claimedAchievements || [];
-  const { averageLevel } = calculateAdventurerStats(userData);
-
-  const allAchievements: AchievementItem[] = getAchievements(userData, gradeBossLevel);
+  // userData がまだ無い（ロード中）場合も安全なデフォルト値で計算する。
+  // これらの計算やuseMemoを早期return（loadingガード）の後に置くと、
+  // 「ロード中は呼ばれず、ロード完了後だけ呼ばれるフック」ができてしまい、
+  // レンダーごとにフック呼び出し回数が変わってReactがクラッシュする
+  // （Rendered fewer hooks than expected エラー）。必ず早期returnより前に置く。
+  const claimed = userData?.claimedAchievements || [];
+  const allAchievements: AchievementItem[] = userData ? getAchievements(userData, gradeBossLevel) : [];
   const claimableList = allAchievements.filter(a => a.unlocked && !claimed.includes(a.id));
   const totalUnlocked = allAchievements.filter(a => a.unlocked).length;
 
   const tabs = ACHIEVEMENT_TABS;
-
   const activeTabConfig = tabs.find(t => t.id === activeTab) || tabs[0];
 
   // Filter items based on activeTab and statusFilter
@@ -72,6 +71,11 @@ export default function AchievementsPage() {
 
     return items;
   }, [allAchievements, activeTabConfig, statusFilter, claimed]);
+
+  if (loading || !userData) return <LoadingScreen />;
+
+  const loginStreak = userData.loginStreak || 1;
+  const { averageLevel } = calculateAdventurerStats(userData);
 
   const handleClaim = async (ach: AchievementItem) => {
     if (!ach.unlocked || claimed.includes(ach.id)) return;
