@@ -22,7 +22,8 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Inter', 'Noto Sans JP', sans-serif;
+  /* フォントは app/layout.tsx で読み込む M PLUS Rounded 1c を body の className 経由で適用している。
+     ここでの font-family 指定は常にそちらに上書きされ効果がなかったため削除した。 */
 }
 
 /* Glassmorphism utility (Legacy) */
