@@ -75,7 +75,8 @@ service cloud.firestore {
         'theme', 'totalDamage', 'equippedEffect', 'weeklyXp', 'lastWeekString',
         'monthlyDamage', 'lastMonthString', 'scaryMode', 'claimedAchievements',
         'lastLoginDate', 'loginStreak', 'categorySolved',
-        'mistakeStages', 'mistakeNextReview', 'shareCode'
+        'mistakeStages', 'mistakeNextReview', 'shareCode',
+        'bestWeeklyHeroRank', 'bestDamageRank'
       ])
 
       && (!('name' in newData) || (newData.name is string && newData.name.size() <= 30))
@@ -100,6 +101,17 @@ service cloud.firestore {
       && (!('mistakeStages' in newData) || (newData.mistakeStages is map && newData.mistakeStages.size() <= 2000))
       && (!('mistakeNextReview' in newData) || (newData.mistakeNextReview is map && newData.mistakeNextReview.size() <= 2000))
       && (!('shareCode' in newData) || (newData.shareCode is string && newData.shareCode.size() <= 12))
+
+      // ランキング実績用の自己最高順位。「更新されるのは記録が縮まる時だけ」にすることで
+      // 巻き戻し（悪い順位で上書きして後から良い順位に戻す等の不正操作）の余地を減らす。
+      && (!('bestWeeklyHeroRank' in newData) || (
+        newData.bestWeeklyHeroRank is int && newData.bestWeeklyHeroRank >= 1 && newData.bestWeeklyHeroRank <= 999
+        && (oldData == null || numOr0(oldData, 'bestWeeklyHeroRank') == 0 || newData.bestWeeklyHeroRank <= numOr0(oldData, 'bestWeeklyHeroRank'))
+      ))
+      && (!('bestDamageRank' in newData) || (
+        newData.bestDamageRank is int && newData.bestDamageRank >= 1 && newData.bestDamageRank <= 999
+        && (oldData == null || numOr0(oldData, 'bestDamageRank') == 0 || newData.bestDamageRank <= numOr0(oldData, 'bestDamageRank'))
+      ))
 
       && (!('loginStreak' in newData) || (
         newData.loginStreak is int && newData.loginStreak >= 1 && newData.loginStreak <= 5000

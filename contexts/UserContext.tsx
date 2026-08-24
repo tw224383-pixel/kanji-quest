@@ -39,6 +39,10 @@ export type UserData = {
   mistakeNextReview?: { [key: string]: string };
   // 保護者・先生向け閲覧用の共有コード（本人が発行、ログイン不要で閲覧可能にする）
   shareCode?: string;
+  // ランキング関連の実績用：これまでに達成した最高順位（1が1位）。ランキング画面を
+  // 訪れたタイミングで更新される（ランキングは都度計算のためリアルタイム判定はできない）。
+  bestWeeklyHeroRank?: number;
+  bestDamageRank?: number;
 };
 
 const DEFAULT_USER_DATA: UserData = {
@@ -199,7 +203,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               categorySolved: data.categorySolved || {},
               mistakeStages: data.mistakeStages || {},
               mistakeNextReview: data.mistakeNextReview || {},
-              shareCode: data.shareCode || ""
+              shareCode: data.shareCode || "",
+              bestWeeklyHeroRank: data.bestWeeklyHeroRank || undefined,
+              bestDamageRank: data.bestDamageRank || undefined
             };
             setUserData(newData);
             writeUserCache(newData);

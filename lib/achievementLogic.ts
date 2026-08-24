@@ -10,10 +10,10 @@ export interface AchievementItem {
   rewardSp: number;
   rewardTitle?: string;
   unlocked: boolean;
-  category: "growth" | "login" | "xp" | "pt" | "raid" | "title" | "avatar" | "grade";
+  category: "growth" | "login" | "xp" | "pt" | "raid" | "title" | "avatar" | "grade" | "ranking";
 }
 
-export type AchievementTabType = "growth" | "raid" | "level" | "pt" | "collection" | "all";
+export type AchievementTabType = "growth" | "raid" | "level" | "pt" | "collection" | "ranking" | "all";
 
 export interface AchievementTabConfig {
   id: AchievementTabType;
@@ -28,7 +28,8 @@ export const ACHIEVEMENT_TABS: AchievementTabConfig[] = [
   { id: "level", label: "レベル・ログイン", icon: "🔰", matchCats: ["xp", "login"] },
   { id: "pt", label: "PT・SPポイント", icon: "🪙", matchCats: ["pt"] },
   { id: "collection", label: "コレクション", icon: "👑", matchCats: ["title", "avatar"] },
-  { id: "all", label: "すべて", icon: "🌟", matchCats: ["growth", "raid", "grade", "xp", "login", "pt", "title", "avatar"] },
+  { id: "ranking", label: "ランキング", icon: "🥇", matchCats: ["ranking"] },
+  { id: "all", label: "すべて", icon: "🌟", matchCats: ["growth", "raid", "grade", "xp", "login", "pt", "title", "avatar", "ranking"] },
 ];
 
 /**
@@ -179,6 +180,22 @@ export function getAchievements(userData: UserData, gradeBossLevel: number = 1):
     // ==========================================
     { id: "g_first_kill", name: "はじめての勝利", desc: "学年全体でレイドボスを1体たおした！", icon: "🎉", rewardPt: 500, rewardSp: 200, unlocked: bossesKilled >= 1, category: "grade" },
     { id: "g_ten_kills", name: "ボスキラー軍団", desc: "学年全体でレイドボスを10体たおした！", icon: "🔥", rewardPt: 2000, rewardSp: 1000, unlocked: bossesKilled >= 10, category: "grade" },
+
+    // ==========================================
+    // 🥇 ランキング（ランキング画面で観測した自己ベスト順位）
+    // ==========================================
+    { id: "rank_hero_10", name: "学年の実力者", desc: "週間ヒーローランキングで学年TOP10入り！", icon: "🥉", rewardPt: 300, rewardSp: 150, unlocked: !!userData.bestWeeklyHeroRank && userData.bestWeeklyHeroRank <= 10, category: "ranking" },
+    { id: "rank_hero_5", name: "学年の有力者", desc: "週間ヒーローランキングで学年TOP5入り！", icon: "🎖️", rewardPt: 800, rewardSp: 350, unlocked: !!userData.bestWeeklyHeroRank && userData.bestWeeklyHeroRank <= 5, category: "ranking" },
+    { id: "rank_hero_3", name: "学年の表彰台", desc: "週間ヒーローランキングで学年TOP3入り！", icon: "🏅", rewardPt: 1500, rewardSp: 600, rewardTitle: "学年の実力者", unlocked: !!userData.bestWeeklyHeroRank && userData.bestWeeklyHeroRank <= 3, category: "ranking" },
+    { id: "rank_hero_2", name: "学年の準王者", desc: "週間ヒーローランキングで学年2位を獲得！", icon: "🥈", rewardPt: 3000, rewardSp: 1200, rewardTitle: "学年の準王者", unlocked: !!userData.bestWeeklyHeroRank && userData.bestWeeklyHeroRank <= 2, category: "ranking" },
+    { id: "rank_hero_1", name: "週間チャンピオン", desc: "週間ヒーローランキングで学年1位を獲得！", icon: "🥇", rewardPt: 6000, rewardSp: 2500, rewardTitle: "週間チャンピオン", unlocked: userData.bestWeeklyHeroRank === 1, category: "ranking" },
+
+    { id: "rank_dmg_5", name: "全国区の勇者", desc: "全学年ダメージランキング（全校でたった5枠）にランクイン！", icon: "💥", rewardPt: 8000, rewardSp: 3000, rewardTitle: "全国区の勇者", unlocked: !!userData.bestDamageRank && userData.bestDamageRank <= 5, category: "ranking" },
+    { id: "rank_dmg_3", name: "全学年の覇者", desc: "全学年ダメージランキングで表彰台（TOP3）入り！", icon: "🔥", rewardPt: 15000, rewardSp: 6000, rewardTitle: "全学年の覇者", unlocked: !!userData.bestDamageRank && userData.bestDamageRank <= 3, category: "ranking" },
+    { id: "rank_dmg_2", name: "全学年の準王者", desc: "全学年ダメージランキングで2位を獲得！", icon: "⚡", rewardPt: 25000, rewardSp: 9000, rewardTitle: "全学年の準王者", unlocked: !!userData.bestDamageRank && userData.bestDamageRank <= 2, category: "ranking" },
+    { id: "rank_dmg_1", name: "不動の絶対王者", desc: "全学年ダメージランキングで堂々の1位を獲得！", icon: "👑", rewardPt: 40000, rewardSp: 15000, rewardTitle: "絶対王者", unlocked: userData.bestDamageRank === 1, category: "ranking" },
+
+    { id: "rank_double_crown", name: "二冠の伝説", desc: "週間ヒーロー1位と全学年ダメージTOP5、その両方を成し遂げた！", icon: "🌈", rewardPt: 50000, rewardSp: 20000, rewardTitle: "二冠の伝説", unlocked: userData.bestWeeklyHeroRank === 1 && !!userData.bestDamageRank && userData.bestDamageRank <= 5, category: "ranking" },
   ];
 }
 

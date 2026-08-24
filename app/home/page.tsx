@@ -215,16 +215,16 @@ export default function Home() {
                >
                  🔢 算数
                </Button>
-               <Button 
-                 variant={subject === "science" ? "primary" : "outline"} 
-                 className="text-base md:text-lg py-3 whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 border-emerald-500"
+               <Button
+                 variant={subject === "science" ? "primary" : "outline"}
+                 className="text-xs sm:text-base md:text-lg py-3 px-2 leading-tight bg-emerald-600 hover:bg-emerald-700 border-emerald-500"
                  onClick={() => setSubject("science")}
                >
                  🔬 理科・生活 (SP)
                </Button>
-               <Button 
-                 variant={subject === "social" ? "primary" : "outline"} 
-                 className="text-base md:text-lg py-3 whitespace-nowrap bg-orange-600 hover:bg-orange-700 border-orange-500"
+               <Button
+                 variant={subject === "social" ? "primary" : "outline"}
+                 className="text-xs sm:text-base md:text-lg py-3 px-2 leading-tight bg-orange-600 hover:bg-orange-700 border-orange-500"
                  onClick={() => setSubject("social")}
                >
                  🗺️ 社会・生活 (SP)

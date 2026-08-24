@@ -29,7 +29,7 @@ type RankingUser = {
 };
 
 export default function RankingPage() {
-  const { userData, isGuest, loading: authLoading } = useUser();
+  const { userData, user, isGuest, updateUserDataAtomic, loading: authLoading } = useUser();
   const router = useRouter();
   const [tab, setTab] = useState<"hero" | "damage">("hero");
   const [gradeFilter, setGradeFilter] = useState<number>(userData?.grade || 1);
@@ -41,6 +41,17 @@ export default function RankingPage() {
 
   const currentWeekString = getCurrentJSTWeekString();
   const currentMonth = getCurrentJSTMonth();
+
+  // ランキング実績用：現在表示中のランキングに自分が何位で載っているかを検出し、
+  // これまでの自己ベストより良ければ記録する（ランキングは都度計算のため、
+  // このページを訪れたタイミングでしか順位を観測できない）。
+  const recordBestRank = (field: "bestWeeklyHeroRank" | "bestDamageRank", rank: number) => {
+    updateUserDataAtomic(current => {
+      const existing = current[field];
+      if (existing !== undefined && existing <= rank) return null;
+      return { [field]: rank };
+    });
+  };
 
   useEffect(() => {
     if (userData?.grade) {
@@ -97,6 +108,12 @@ export default function RankingPage() {
           .slice(0, 10);
 
         setHeroRanking(sorted);
+
+        if (gradeFilter === userData?.grade) {
+          const selfId = isGuest ? "guest" : user?.uid;
+          const selfIndex = selfId ? sorted.findIndex(u => u.id === selfId) : -1;
+          if (selfIndex !== -1) recordBestRank("bestWeeklyHeroRank", selfIndex + 1);
+        }
       } catch (err) {
         console.error("Failed to fetch hero ranking", err);
       }
@@ -105,6 +122,7 @@ export default function RankingPage() {
 
     // Firebase Authの初期化が完了する前にクエリを投げると permission-denied になるため待つ
     if (tab === "hero" && !authLoading) fetchHero();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gradeFilter, tab, userData, authLoading]);
 
   // 全学年ダメージ TOP5 フェッチ
@@ -152,6 +170,10 @@ export default function RankingPage() {
           .slice(0, 5);
 
         setDamageRanking(sorted);
+
+        const selfId = isGuest ? "guest" : user?.uid;
+        const selfIndex = selfId ? sorted.findIndex(u => u.id === selfId) : -1;
+        if (selfIndex !== -1) recordBestRank("bestDamageRank", selfIndex + 1);
       } catch (err) {
         console.error("Failed to fetch damage ranking", err);
       }
@@ -159,6 +181,7 @@ export default function RankingPage() {
     };
 
     if (tab === "damage" && !authLoading) fetchDamage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, userData, authLoading]);
 
   const renderUserCard = (user: RankingUser, index: number, score: number, scoreLabel: string) => {

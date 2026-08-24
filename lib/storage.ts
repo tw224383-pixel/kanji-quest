@@ -34,7 +34,8 @@ export const storage = {
       "kq_theme", "kq_eq_effect", "kq_total_damage", "kq_weekly_xp",
       "kq_last_week", "kq_monthly_damage", "kq_last_month",
       "kq_claimed_achievements", "kq_last_login_date", "kq_login_streak",
-      "kq_user_cache", "kq_category_solved", "kq_mistake_stages", "kq_mistake_next_review"
+      "kq_user_cache", "kq_category_solved", "kq_mistake_stages", "kq_mistake_next_review",
+      "kq_best_weekly_hero_rank", "kq_best_damage_rank"
     ];
     keysToRemove.forEach(k => localStorage.removeItem(k));
   },
@@ -68,6 +69,8 @@ export const storage = {
       categorySolved: JSON.parse(localStorage.getItem("kq_category_solved") || "{}"),
       mistakeStages: JSON.parse(localStorage.getItem("kq_mistake_stages") || "{}"),
       mistakeNextReview: JSON.parse(localStorage.getItem("kq_mistake_next_review") || "{}"),
+      bestWeeklyHeroRank: localStorage.getItem("kq_best_weekly_hero_rank") ? parseInt(localStorage.getItem("kq_best_weekly_hero_rank")!, 10) : undefined,
+      bestDamageRank: localStorage.getItem("kq_best_damage_rank") ? parseInt(localStorage.getItem("kq_best_damage_rank")!, 10) : undefined,
     };
   },
   updateGuestData: (updates: any) => {
@@ -97,6 +100,8 @@ export const storage = {
     if (updates.categorySolved !== undefined) localStorage.setItem("kq_category_solved", JSON.stringify(updates.categorySolved));
     if (updates.mistakeStages !== undefined) localStorage.setItem("kq_mistake_stages", JSON.stringify(updates.mistakeStages));
     if (updates.mistakeNextReview !== undefined) localStorage.setItem("kq_mistake_next_review", JSON.stringify(updates.mistakeNextReview));
+    if (updates.bestWeeklyHeroRank !== undefined) localStorage.setItem("kq_best_weekly_hero_rank", updates.bestWeeklyHeroRank.toString());
+    if (updates.bestDamageRank !== undefined) localStorage.setItem("kq_best_damage_rank", updates.bestDamageRank.toString());
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("kq_guest_update"));

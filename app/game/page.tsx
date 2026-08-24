@@ -21,6 +21,26 @@ import { soundManager } from "../../lib/soundManager";
 import { useToast } from "../../components/ui/Toast";
 import { GameResultScreen } from "../../components/game/GameResultScreen";
 
+// キーボード入力モードで「単位を入れるべきか分からない」問題への対策。
+// 算数の正解に単位が含まれる場合、その単位を入力欄の横に表示し数字だけ打てば
+// よいことが一目で分かるようにする（長い単位から先に判定し、cm² と cm の
+// 取り違えなどを防ぐ）。
+const MATH_UNITS = [
+  "km/時", "km/h", "km²", "cm²", "m²", "cm³", "m³",
+  "時速", "分速", "秒速", "まい", "通り", "時間", "分間", "秒間",
+  "km", "mm", "kg", "dl", "ml", "cm", "ha",
+  "度", "こ", "個", "本", "人", "枚", "円", "日", "班", "倍", "点", "時", "分", "秒",
+  "a", "m", "g", "t", "l",
+].sort((a, b) => b.length - a.length);
+
+function extractTrailingMathUnit(reading: string): string {
+  const trimmed = reading.trim();
+  for (const unit of MATH_UNITS) {
+    if (trimmed.endsWith(unit) && trimmed.length > unit.length) return unit;
+  }
+  return "";
+}
+
 export default function GamePage() {
   const router = useRouter();
   const { userData, updateUserDataAtomic, loading } = useUser();
@@ -774,11 +794,12 @@ export default function GamePage() {
                 disabled={feedback !== null || isReviewMode}
               />
             ) : (
-              <KeyboardInput 
-                onAnswer={handleAnswer} 
+              <KeyboardInput
+                onAnswer={handleAnswer}
                 disabled={feedback !== null || isReviewMode}
                 placeholder={subjectType === "math" ? "こたえをいれてね" : ('type' in currentQ && currentQ.type === "onyomi" ? "よみをカタカナでいれてね" : "よみをひらがなでいれてね")}
                 isFraction={isMath && /^\d+\/\d+$/.test(currentQ.reading.trim())}
+                unitSuffix={subjectType === "math" ? extractTrailingMathUnit(currentQ.reading) : ""}
               />
             )}
           </div>

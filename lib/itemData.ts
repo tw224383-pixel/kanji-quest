@@ -212,6 +212,16 @@ export const achievementTitles: { id: string; rarity: Rarity; desc: string }[] =
   { id: "Lv5討伐隊", rarity: "レア", desc: "Lv5レイドボス討伐" },
   { id: "Lv7討伐隊", rarity: "激レア", desc: "Lv7レイドボス討伐" },
   { id: "Lv10討伐隊", rarity: "超激レア", desc: "Lv10レイドボス討伐" },
+
+  // ランキング実績
+  { id: "学年の実力者", rarity: "激レア", desc: "週間ヒーローランキングで学年TOP3入り" },
+  { id: "学年の準王者", rarity: "超激レア", desc: "週間ヒーローランキングで学年2位を獲得" },
+  { id: "週間チャンピオン", rarity: "神レア", desc: "週間ヒーローランキングで学年1位を獲得" },
+  { id: "全国区の勇者", rarity: "超激レア", desc: "全学年ダメージランキング（全校5枠）にランクイン" },
+  { id: "全学年の覇者", rarity: "神レア", desc: "全学年ダメージランキングで表彰台（TOP3）入り" },
+  { id: "全学年の準王者", rarity: "神レア", desc: "全学年ダメージランキングで2位を獲得" },
+  { id: "絶対王者", rarity: "神レア", desc: "全学年ダメージランキングで1位を獲得" },
+  { id: "二冠の伝説", rarity: "神レア", desc: "週間ヒーロー1位と全学年ダメージTOP5、両方を達成" },
 ];
 
 export function getAllTitles(): UnifiedItem[] {
