@@ -10,6 +10,7 @@ import { calculateLevel } from "../../lib/gameLogic";
 import { calculateAdventurerStats } from "../../lib/userStatsLogic";
 import { AdventurerRadarChart } from "../../components/profile/AdventurerRadarChart";
 import { Button } from "../../components/ui/Button";
+import { getAllAvatars, getAvatarImageProps, getAvatarThumbUrl } from "../../lib/itemData";
 import type { UserData } from "../../contexts/UserContext";
 
 type LoadState = "idle" | "authing" | "loading" | "notFound" | "authDisabled" | "error" | "ready";
@@ -123,10 +124,30 @@ export default function ParentViewerPage() {
           )}
         </div>
 
-        {state === "ready" && childData && (
+        {state === "ready" && childData && (() => {
+          // equippedAvatar はガチャ産アバターの場合IDや絵文字以外の文字列が入っているため、
+          // そのまま表示するとID文字列がそのまま出てしまう。itemData から実際のアイコン
+          // （画像パス or 絵文字）を解決する（RankPlate.tsx と同じ方式）。
+          const avatarItem = getAllAvatars().find(a => a.id === childData.equippedAvatar || a.icon === childData.equippedAvatar);
+          const avatarIcon = avatarItem?.icon || childData.equippedAvatar || "👦";
+          const isAvatarImage = avatarIcon.startsWith('/') || avatarIcon.endsWith('.jpg') || avatarIcon.endsWith('.png') || avatarIcon.endsWith('.webp');
+          const avatarImgProps = isAvatarImage ? getAvatarImageProps(avatarIcon) : null;
+
+          return (
           <div className="space-y-6">
             <div className="game-panel p-6 flex flex-col sm:flex-row items-center gap-6">
-              <div className="text-6xl">{childData.equippedAvatar || "👦"}</div>
+              {isAvatarImage ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-400 shadow-md flex-shrink-0 bg-slate-900">
+                  <img
+                    src={getAvatarThumbUrl(avatarIcon)}
+                    alt="avatar"
+                    className={`w-full h-full object-cover ${avatarImgProps?.className || ""}`}
+                    style={avatarImgProps?.style}
+                  />
+                </div>
+              ) : (
+                <div className="text-6xl">{avatarIcon}</div>
+              )}
               <div className="flex-1 text-center sm:text-left">
                 <div className="text-xl font-black text-white">{childData.name || "名無し"}</div>
                 <div className="text-sm text-amber-300 font-bold">【{childData.equippedTitle || "見習い"}】・小{childData.grade || 1}年生</div>
@@ -172,7 +193,8 @@ export default function ParentViewerPage() {
               </p>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </main>
   );
