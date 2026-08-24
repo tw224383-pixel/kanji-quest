@@ -522,8 +522,8 @@ export default function GamePage() {
         // レイドボスにダメージを与える。トドメを刺したら「LvN討伐隊」称号を付与する
         // （以前はこの称号を付与する処理が存在せず、raid_1〜raid_10実績が解除不可能だった）。
         if (ok && finalXP > 0) {
-          const { dealDamageToRaidBoss } = await import("../../lib/raidLogic");
-          const { defeatedLevels } = await dealDamageToRaidBoss(finalXP, userData?.grade || 1);
+          const { dealDamageToRaidBossBatched } = await import("../../lib/raidLogic");
+          const { defeatedLevels } = await dealDamageToRaidBossBatched(finalXP, userData?.grade || 1);
           if (defeatedLevels.length > 0) {
             await updateUserDataAtomic(current => {
               const newTitles = new Set(current.titles || []);

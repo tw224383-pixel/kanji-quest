@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { db } from "../../lib/firebase";
 import { useUser } from "../../hooks/useUser";
 import { motion } from "framer-motion";
 import { storage } from "../../lib/storage";
 import Link from "next/link";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth, getSeasonalBossPresentation } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth, getSeasonalBossPresentation, getCachedRaidBossStatus } from "../../lib/raidLogic";
 
 interface RaidBossProps {
   showButtons?: boolean;
@@ -54,25 +52,25 @@ export function RaidBoss({ showButtons = true, showOtherGradesLink = true }: Rai
         clearInterval(interval);
       };
     } else if (user) {
+      // Firestoreの無料枠を圧迫しないよう、常時購読(onSnapshot)ではなく
+      // 短いTTL付きキャッシュ経由の単発取得にしている。月またぎのリセットは
+      // 実際にダメージを与えるトランザクション側で正しく行われるため、ここでは
+      // 表示だけを先回りしてリセット済みとして見せる（書き込みはしない）。
       const grade = userData?.grade || 1;
-      const ref = doc(db, "globalStats", "raidBoss_" + grade);
-      const unsub = onSnapshot(ref, (snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          const dbMonth = data.month || currentMonth;
-          
-          if (dbMonth !== currentMonth) {
-            setDoc(ref, { hp: getRaidBossMaxHp(1), level: 1, month: currentMonth });
-          } else {
-            setLevel(data.level || 1);
-            setHp(data.hp !== undefined ? data.hp : getRaidBossMaxHp(data.level || 1));
-            setMaxHp(getRaidBossMaxHp(data.level || 1));
-          }
+      let cancelled = false;
+      getCachedRaidBossStatus(grade).then(status => {
+        if (cancelled) return;
+        if (status.month !== currentMonth) {
+          setLevel(1);
+          setHp(getRaidBossMaxHp(1));
+          setMaxHp(getRaidBossMaxHp(1));
         } else {
-          setDoc(ref, { hp: getRaidBossMaxHp(1), level: 1, month: currentMonth }).catch(() => {});
+          setLevel(status.level);
+          setHp(status.hp);
+          setMaxHp(getRaidBossMaxHp(status.level));
         }
-      });
-      return () => unsub();
+      }).catch(() => {});
+      return () => { cancelled = true; };
     }
   }, [isGuest, user, currentMonth, userData?.grade]);
 

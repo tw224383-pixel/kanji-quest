@@ -4,8 +4,7 @@ import { useUser } from "../../hooks/useUser";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/Button";
 import { useEffect, useState, useMemo } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { getCachedRaidBossStatus } from "../../lib/raidLogic";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateAdventurerStats } from "../../lib/userStatsLogic";
@@ -21,7 +20,7 @@ type TabType = AchievementTabType;
 type FilterType = "all" | "claimable" | "claimed" | "locked";
 
 export default function AchievementsPage() {
-  const { userData, updateUserDataAtomic, loading } = useUser();
+  const { userData, isGuest, updateUserDataAtomic, loading } = useUser();
   const router = useRouter();
   const { showToast } = useToast();
   const [gradeBossLevel, setGradeBossLevel] = useState(1);
@@ -34,17 +33,18 @@ export default function AchievementsPage() {
     const fetchGradeStats = async () => {
       if (!userData) return;
       try {
-        const ref = doc(db, "globalStats", "raidBoss_" + userData.grade);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          setGradeBossLevel(snap.data().level || 1);
+        if (isGuest) {
+          setGradeBossLevel(parseInt(localStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10));
+        } else {
+          const status = await getCachedRaidBossStatus(userData.grade);
+          setGradeBossLevel(status.level);
         }
       } catch (err) {
         console.error(err);
       }
     };
     fetchGradeStats();
-  }, [userData]);
+  }, [userData, isGuest]);
 
   // userData がまだ無い（ロード中）場合も安全なデフォルト値で計算する。
   // これらの計算やuseMemoを早期return（loadingガード）の後に置くと、

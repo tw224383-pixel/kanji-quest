@@ -21,8 +21,7 @@ import { ThemeBackground } from "../../components/ui/ThemeBackground";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { hasUnclaimedAchievements } from "../../lib/achievementLogic";
 import { getCurrentJSTDateString, isDueForReview } from "../../lib/reviewSchedule";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { getCachedRaidBossStatus } from "../../lib/raidLogic";
 import { CategoryGradePicker } from "../../components/home/CategoryGradePicker";
 import { UpdateNews } from "../../components/home/UpdateNews";
 
@@ -110,11 +109,8 @@ export default function Home() {
           const localLv = parseInt(localStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10);
           setGradeBossLevel(localLv);
         } else {
-          const ref = doc(db, "globalStats", "raidBoss_" + userData.grade);
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            setGradeBossLevel(snap.data().level || 1);
-          }
+          const status = await getCachedRaidBossStatus(userData.grade);
+          setGradeBossLevel(status.level);
         }
       } catch (err) {
         console.error(err);

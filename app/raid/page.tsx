@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth, getSeasonalBossPresentation } from "../../lib/raidLogic";
-import { collection, query, orderBy, limit, getDocs, doc, onSnapshot, where } from "firebase/firestore";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth, getSeasonalBossPresentation, getCachedRaidBossStatus } from "../../lib/raidLogic";
+import { collection, query, limit, getDocs, where } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 
@@ -25,10 +25,11 @@ export default function RaidPage() {
   const [topRanking, setTopRanking] = useState<{name: string, damage: number, isUser: boolean}[]>([]);
 
   useEffect(() => {
-    // Listen to all raid bosses for other grades
-    const unsubs: (() => void)[] = [];
+    // 他学年のボス状況：常時購読(onSnapshot)ではなく、短いTTLキャッシュ付きの単発取得に
+    // することでFirestoreの無料枠(読み取り5万回/日)を圧迫しないようにしている。
+    let cancelled = false;
     const currentMonth = getCurrentJSTMonth();
-    
+
     // Initialize default array
     setOtherGrades(Array.from({length: 6}, (_, i) => ({
       grade: i + 1,
@@ -39,38 +40,31 @@ export default function RaidPage() {
 
     for (let i = 1; i <= 6; i++) {
       if (i === userData?.grade) continue;
-      
-      const ref = doc(db, "globalStats", "raidBoss_" + i);
-      const unsub = onSnapshot(ref, (snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          const dbMonth = data.month || currentMonth;
-          if (dbMonth === currentMonth) {
-            setOtherGrades(prev => {
-              const next = [...prev];
-              const idx = next.findIndex(x => x.grade === i);
-              if (idx !== -1) {
-                const level = data.level || 1;
-                const hp = data.hp !== undefined ? data.hp : getRaidBossMaxHp(level);
-                next[idx] = { grade: i, hp, level, maxHp: getRaidBossMaxHp(level) };
-              }
-              return next.sort((a, b) => a.grade - b.grade);
-            });
+      getCachedRaidBossStatus(i).then(status => {
+        if (cancelled) return;
+        if (status.month !== currentMonth) return;
+        setOtherGrades(prev => {
+          const next = [...prev];
+          const idx = next.findIndex(x => x.grade === i);
+          if (idx !== -1) {
+            next[idx] = { grade: i, hp: status.hp, level: status.level, maxHp: getRaidBossMaxHp(status.level) };
           }
-        }
-      });
-      unsubs.push(unsub);
+          return next.sort((a, b) => a.grade - b.grade);
+        });
+      }).catch(() => {});
     }
-    return () => unsubs.forEach(fn => fn());
+    return () => { cancelled = true; };
   }, [userData?.grade]);
 
-  // Fetch Top 3 Damage Ranking from Firestore
+  // 全学年ダメージ TOP5（表示は5件だけなので取得も5件に絞る。以前はwhere句のみで
+  // 上限が無く、その月にプレイした全ユーザーを毎回読み取ってしまっていた）
   useEffect(() => {
     const fetchTopRanking = async () => {
       try {
         const q = query(
-          collection(db, "users"), 
-          where("lastMonthString", "==", getCurrentJSTMonth())
+          collection(db, "users"),
+          where("lastMonthString", "==", getCurrentJSTMonth()),
+          limit(30)
         );
         const snap = await getDocs(q);
         const ranking = snap.docs.map(docSnap => {

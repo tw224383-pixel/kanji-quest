@@ -217,3 +217,67 @@ export async function dealDamageToRaidBoss(damage: number, grade: number): Promi
   }
 }
 
+// 600人規模での運用でFirestore無料枠(書き込み2万回/日)を超えないよう、レイドボスへの
+// ダメージ反映は毎ラウンドではなく数ラウンドに1回だけ実際に書き込む。共有ボスのHP表示が
+// 数ラウンド遅れることはあるが、XP/PT本体（updateUserDataAtomic側）は毎回即時保存されるため
+// プレイヤー自身の報酬には一切影響しない。
+const RAID_SYNC_INTERVAL = 4;
+
+function pendingDamageKey(grade: number) { return `kq_raid_pending_dmg_${grade}`; }
+function pendingCountKey(grade: number) { return `kq_raid_pending_count_${grade}`; }
+
+export async function dealDamageToRaidBossBatched(damage: number, grade: number): Promise<RaidDamageResult> {
+  if (damage <= 0) return { success: false, defeatedLevels: [] };
+  if (typeof window === "undefined") return dealDamageToRaidBoss(damage, grade);
+
+  const pending = parseInt(localStorage.getItem(pendingDamageKey(grade)) || "0", 10) + damage;
+  const count = parseInt(localStorage.getItem(pendingCountKey(grade)) || "0", 10) + 1;
+
+  if (count < RAID_SYNC_INTERVAL) {
+    localStorage.setItem(pendingDamageKey(grade), pending.toString());
+    localStorage.setItem(pendingCountKey(grade), count.toString());
+    return { success: true, defeatedLevels: [] };
+  }
+
+  localStorage.setItem(pendingDamageKey(grade), "0");
+  localStorage.setItem(pendingCountKey(grade), "0");
+  return dealDamageToRaidBoss(pending, grade);
+}
+
+// タブを閉じる・隠す際に、まだ書き込んでいない蓄積ダメージが消えてしまわないよう
+// ベストエフォートで反映しておく（保証はできないが、何もしないよりはるかに良い）。
+if (typeof window !== "undefined") {
+  const flushAllPending = () => {
+    for (let g = 1; g <= 6; g++) {
+      const pending = parseInt(localStorage.getItem(pendingDamageKey(g)) || "0", 10);
+      if (pending > 0 && !storage.isGuest()) {
+        localStorage.setItem(pendingDamageKey(g), "0");
+        localStorage.setItem(pendingCountKey(g), "0");
+        dealDamageToRaidBoss(pending, g).catch(() => {});
+      }
+    }
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushAllPending();
+  });
+}
+
+// ホーム/レイド/じっせき画面など複数箇所で同じ「学年のボス状況」を短時間に何度も
+// 参照するため、短いTTLでメモリキャッシュしてFirestore読み取りを減らす。
+const raidStatusCache = new Map<number, { data: { level: number; hp: number; month: string }; fetchedAt: number }>();
+const RAID_STATUS_CACHE_TTL_MS = 60 * 1000;
+
+export async function getCachedRaidBossStatus(grade: number): Promise<{ level: number; hp: number; month: string }> {
+  const cached = raidStatusCache.get(grade);
+  if (cached && Date.now() - cached.fetchedAt < RAID_STATUS_CACHE_TTL_MS) {
+    return cached.data;
+  }
+  const ref = doc(db, "globalStats", "raidBoss_" + grade);
+  const snap = await getDoc(ref);
+  const data = snap.exists()
+    ? { level: snap.data().level || 1, hp: snap.data().hp ?? getRaidBossMaxHp(snap.data().level || 1), month: snap.data().month || getCurrentJSTMonth() }
+    : { level: 1, hp: getRaidBossMaxHp(1), month: getCurrentJSTMonth() };
+  raidStatusCache.set(grade, { data, fetchedAt: Date.now() });
+  return data;
+}
+

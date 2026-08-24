@@ -67,7 +67,7 @@ export default function RankingPage() {
         const q = query(
           collection(db, "users"),
           where("grade", "==", gradeFilter),
-          limit(50)
+          limit(30)
         );
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => {
@@ -130,7 +130,7 @@ export default function RankingPage() {
     const fetchDamage = async () => {
       setLoading(true);
       try {
-        const q = query(collection(db, "users"), limit(50));
+        const q = query(collection(db, "users"), limit(30));
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => {
           const d = doc.data();

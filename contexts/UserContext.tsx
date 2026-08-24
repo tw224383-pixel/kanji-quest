@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../lib/firebase";
 import { onAuthStateChanged, User, signOut, signInAnonymously } from "firebase/auth";
-import { doc, setDoc, onSnapshot, runTransaction } from "firebase/firestore";
+import { doc, setDoc, getDoc, runTransaction } from "firebase/firestore";
 import { storage } from "../lib/storage";
 
 export type UserData = {
@@ -167,9 +167,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // subscribe to firestore doc
+        // 600人規模の運用でFirestore無料枠(読み取り5万回/日)を超えないよう、常時購読
+        // (onSnapshot)ではなく単発取得(getDoc)にしている。自分自身の書き込みは
+        // updateUserDataAtomic/updateUserData が呼び出し直後にローカル状態を更新するため
+        // 即座に画面へ反映され、常時購読は「自分の書き込みの結果を自分で読み返すだけの
+        // 無駄な読み取り」になっていた。別デバイス・別タブでの変更は、このタブを再び
+        // アクティブにしたタイミング（visibilitychange）で取り直すことで追従する。
         const docRef = doc(db, "users", currentUser.uid);
-        const unsubDoc = onSnapshot(docRef, (docSnap) => {
+        const fetchAndApply = async () => {
+          const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
             const newData: UserData = {
@@ -228,9 +234,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             writeUserCache(initialData);
             storage.clearGuest();
           }
-          setLoading(false);
-        });
-        return () => unsubDoc();
+        };
+
+        try {
+          await fetchAndApply();
+        } catch (e) {
+          console.error("Failed to fetch user data", e);
+        }
+        setLoading(false);
+
+        const onVisible = () => {
+          if (document.visibilityState === "visible") {
+            fetchAndApply().catch(e => console.error("Failed to refresh user data", e));
+          }
+        };
+        document.addEventListener("visibilitychange", onVisible);
+        return () => document.removeEventListener("visibilitychange", onVisible);
       } else {
         setUserData(null);
         localStorage.removeItem(USER_CACHE_KEY);
