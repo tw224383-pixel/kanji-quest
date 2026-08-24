@@ -7,7 +7,7 @@ import { useUser } from "../../hooks/useUser";
 import { motion } from "framer-motion";
 import { storage } from "../../lib/storage";
 import Link from "next/link";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth, getSeasonalBossPresentation } from "../../lib/raidLogic";
 
 interface RaidBossProps {
   showButtons?: boolean;
@@ -82,19 +82,13 @@ export function RaidBoss({ showButtons = true, showOtherGradesLink = true }: Rai
   // 原因だったため削除した。
 
   const percent = maxHp > 0 ? Math.max(0, (hp / maxHp) * 100) : 0;
-  
+
   // Christmas / Halloween overrides
-  const monthNum = new Date().getMonth() + 1;
-  let bossIcon = getRaidBossIcon(level);
-  let bossName = getRaidBossName(level);
+  const seasonal = getSeasonalBossPresentation(getRaidBossIcon(level), getRaidBossName(level));
+  const bossIcon = seasonal.icon;
+  const bossName = seasonal.name;
   const isScary = userData?.scaryMode || false;
   const bossImagePath = getRaidBossImagePath(level, isScary);
-
-  if (monthNum === 10) {
-    bossIcon = "🎃"; bossName = "ハロウィン " + bossName;
-  } else if (monthNum === 12) {
-    bossIcon = "⛄"; bossName = "スノーマン " + bossName;
-  }
 
   const bossProfile = getRaidBossProfile(level, isScary);
 

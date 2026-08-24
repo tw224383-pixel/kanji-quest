@@ -103,6 +103,20 @@ export function getCurrentJSTMonth() {
   return jst.toISOString().slice(0, 7);
 }
 
+// ハロウィン(10月)・クリスマス(12月)の見た目上書き。以前は raid/page.tsx・RaidBoss.tsx・
+// game/page.tsx の3箇所に個別実装され、しかも端末のローカル時刻を見ていたため、
+// 端末とサーバーで判定がズレうる状態だった。JST基準でここに一本化する。
+export function getSeasonalBossPresentation(baseIcon: string, baseName: string): { icon: string; name: string } {
+  const jstMonthNum = parseInt(getCurrentJSTMonth().slice(5, 7), 10);
+  if (jstMonthNum === 10) {
+    return { icon: "🎃", name: "ハロウィン " + baseName };
+  }
+  if (jstMonthNum === 12) {
+    return { icon: "⛄", name: "スノーマン " + baseName };
+  }
+  return { icon: baseIcon, name: baseName };
+}
+
 export function getCurrentJSTWeekString() {
   const d = new Date();
   const jst = new Date(d.getTime() + (9 * 60 * 60 * 1000));

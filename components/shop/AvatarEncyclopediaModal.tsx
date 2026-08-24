@@ -41,19 +41,21 @@ export function AvatarEncyclopediaModal({
   const [isFullscreenImage, setIsFullscreenImage] = useState(false);
 
   // Check ownership
+  // 以前は id/名前の部分文字列一致もフォールバックにしていたが、gachaItemId が
+  // 常に一意なプレフィックス付きID（例: "avatar_ladies_〇〇"）で確実に一致するため、
+  // 短い表示名（例:「神竜」）が無関係な別アイテムのIDに含まれて誤って「所持」判定
+  // されるリスクの方が大きく、フォールバックは削除した。
   const isEntryOwned = (entry: AvatarEncyclopediaEntry) => {
     if (entry.type === "equipment") {
       return (
         ownedEquipmentIds.includes(entry.gachaItemId) ||
-        ownedEquipmentIds.includes(entry.id) ||
-        ownedEquipmentIds.some(id => id.includes(entry.name) || entry.name.includes(id))
+        ownedEquipmentIds.includes(entry.id)
       );
     }
     return (
-      ownedAvatarIds.includes(entry.gachaItemId) || 
+      ownedAvatarIds.includes(entry.gachaItemId) ||
       ownedAvatarIds.includes(entry.icon) ||
-      ownedAvatarIds.includes(entry.id) ||
-      ownedAvatarIds.some(id => id.includes(entry.name) || entry.name.includes(id))
+      ownedAvatarIds.includes(entry.id)
     );
   };
 
@@ -63,18 +65,14 @@ export function AvatarEncyclopediaModal({
       if (!equippedEquipmentId) return false;
       return (
         equippedEquipmentId === entry.gachaItemId ||
-        equippedEquipmentId === entry.id ||
-        equippedEquipmentId.includes(entry.name) ||
-        entry.name.includes(equippedEquipmentId)
+        equippedEquipmentId === entry.id
       );
     }
     if (!equippedAvatarId) return false;
     return (
       equippedAvatarId === entry.gachaItemId ||
       equippedAvatarId === entry.icon ||
-      equippedAvatarId === entry.id ||
-      equippedAvatarId.includes(entry.name) ||
-      entry.name.includes(equippedAvatarId)
+      equippedAvatarId === entry.id
     );
   };
 

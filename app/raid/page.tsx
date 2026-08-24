@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth, getSeasonalBossPresentation } from "../../lib/raidLogic";
 import { collection, query, orderBy, limit, getDocs, doc, onSnapshot, where } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
@@ -89,7 +89,6 @@ export default function RaidPage() {
     fetchTopRanking();
   }, []);
 
-  const currentMonth = new Date().getMonth() + 1;
   const isScary = userData?.scaryMode || false;
 
   if (!userData) return <LoadingScreen />;
@@ -140,16 +139,11 @@ export default function RaidPage() {
         
         <div className="space-y-6">
           {otherGrades.map((d, index) => {
-            let currentBossIcon = getRaidBossIcon(d.level);
-            let currentBossName = getRaidBossName(d.level);
-            if (currentMonth === 10) {
-              currentBossIcon = "🎃";
-              currentBossName = "ハロウィン " + currentBossName;
-            } else if (currentMonth === 12) {
-              currentBossIcon = "⛄";
-              currentBossName = "スノーマン " + currentBossName;
-            }
-            
+            const seasonal = getSeasonalBossPresentation(getRaidBossIcon(d.level), getRaidBossName(d.level));
+            const currentBossIcon = seasonal.icon;
+            const currentBossName = seasonal.name;
+
+
             const hpPercent = d.maxHp > 0 ? Math.max(0, (d.hp / d.maxHp) * 100) : 0;
             const bossImagePath = getRaidBossImagePath(d.level, isScary);
 

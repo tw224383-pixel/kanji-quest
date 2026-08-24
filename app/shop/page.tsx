@@ -400,10 +400,10 @@ export default function ShopPage() {
                   🌟 収集: {avatarEncyclopediaList.filter(e => {
                     if (e.type === "equipment") {
                       const userEquips = userData.equipments || [];
-                      return userEquips.includes(e.gachaItemId) || userEquips.includes(e.id) || userEquips.some(id => id.includes(e.name) || e.name.includes(id));
+                      return userEquips.includes(e.gachaItemId) || userEquips.includes(e.id);
                     }
                     const userAvatars = userData.avatars || [];
-                    return userAvatars.includes(e.gachaItemId) || userAvatars.includes(e.icon) || userAvatars.includes(e.id) || userAvatars.some(a => a.includes(e.name) || e.name.includes(a));
+                    return userAvatars.includes(e.gachaItemId) || userAvatars.includes(e.icon) || userAvatars.includes(e.id);
                   }).length} / {avatarEncyclopediaList.length} 種類
                 </span>
                 <span className="text-sm">➔</span>

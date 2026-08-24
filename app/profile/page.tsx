@@ -6,14 +6,12 @@ import { useThemeContext } from "../../contexts/ThemeContext";
 import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
-import { AvatarRarityEffect } from "../../components/ui/AvatarRarityEffect";
 import { RankPlate } from "../../components/ui/RankPlate";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars, getAvatarInfo, getAvatarImageProps, getAvatarThumbUrl } from "../../lib/itemData";
-import { getAllEquipment } from "../../lib/equipmentData";
+import { getAllThemes } from "../../lib/itemData";
 import { calculateLevel } from "../../lib/gameLogic";
 import { calculateAdventurerStats } from "../../lib/userStatsLogic";
 import { auth } from "../../lib/firebase";
@@ -23,15 +21,16 @@ import { storage } from "../../lib/storage";
 import { AdventurerGrowthReport } from "../../components/profile/AdventurerGrowthReport";
 import { ShareCodeCard } from "../../components/profile/ShareCodeCard";
 import { useToast } from "../../components/ui/Toast";
+import { TitlesTab } from "../../components/profile/TitlesTab";
+import { AvatarsTab } from "../../components/profile/AvatarsTab";
+import { EquipmentsTab } from "../../components/profile/EquipmentsTab";
+import { ThemesTab } from "../../components/profile/ThemesTab";
+import { EffectsTab } from "../../components/profile/EffectsTab";
 
 const AvatarPreviewModal = dynamic(() => import("../../components/ui/AvatarPreviewModal").then(mod => mod.AvatarPreviewModal), { ssr: false });
 const EquipmentPreviewModal = dynamic(() => import("../../components/ui/EquipmentPreviewModal").then(mod => mod.EquipmentPreviewModal), { ssr: false });
 
 const allThemes = getAllThemes();
-const allEffects = getAllEffects();
-const allTitles = getAllTitles();
-const allAvatars = getAllAvatars();
-const allEquipments = getAllEquipment();
 
 type Tab = "stats" | "avatars" | "equipments" | "titles" | "themes" | "effects";
 
@@ -234,371 +233,23 @@ export default function ProfilePage() {
               )}
 
               {activeTab === "titles" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const list = allTitles
-                      .filter(t => userData.titles.includes(t.id) || t.id === "見習い")
-                      .filter(t => selectedRarity === "all" || (t.rarity || "ノーマル") === selectedRarity);
-
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」の所持しょうごうはありません</div>
-                        </div>
-                      );
-                    }
-
-                    return list.map(title => {
-                      const isEquipped = userData.equippedTitle === title.id;
-                      const isPreviewing = previewTitle === title.id;
-                      return (
-                        <div key={title.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
-                          <div className="flex justify-between items-start">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <div className="font-black text-xl text-indigo-900">【{title.name}】</div>
-                                {title.rarity && (
-                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                    title.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                    title.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                    title.rarity === '激レア' ? 'bg-amber-500 text-white' :
-                                    title.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
-                                  }`}>{title.rarity}</span>
-                                )}
-                                {title.gachaName && (
-                                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                    {title.gachaName}
-                                  </span>
-                                )}
-                              </div>
-                            {isEquipped ? (
-                              <div className="text-primary font-black px-4">そうび中</div>
-                            ) : (
-                              <Button variant="secondary" onClick={() => handleEquip("title", title.id)}>そうび</Button>
-                            )}
-                          </div>
-                          <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                            <button
-                              onClick={() => setPreviewTitle(isPreviewing ? null : title.id)}
-                              className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
-                            >
-                              👀 しちゃく{isPreviewing ? '中' : ''}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <TitlesTab userData={userData} selectedRarity={selectedRarity} previewTitle={previewTitle} setPreviewTitle={setPreviewTitle} handleEquip={handleEquip} />
               )}
 
               {activeTab === "avatars" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const list = allAvatars
-                      .filter(a => userData.avatars.includes(a.id) || ["👦", "👧"].includes(a.id))
-                      .filter(a => {
-                        if (selectedRarity === "all") return true;
-                        const info = getAvatarInfo(a.id);
-                        return (info?.rarity || a.rarity || "ノーマル") === selectedRarity;
-                      });
-
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」の所持アバターはありません</div>
-                        </div>
-                      );
-                    }
-
-                    return list.map(avatar => {
-                      const isEquipped = userData.equippedAvatar === avatar.id;
-                      const isPreviewing = previewAvatar === avatar.id;
-                      const info = getAvatarInfo(avatar.id);
-
-                      return (
-                        <div key={avatar.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => setPreviewingAvatarModal({url: avatar.icon, id: avatar.id, name: avatar.name})}>
-                              <AvatarRarityEffect rarity={info?.rarity || "ノーマル"} size="sm">
-                                {avatar.icon?.startsWith('/') ? (() => {
-                                  const imgProps = getAvatarImageProps(avatar.icon);
-                                  return (
-                                    <img 
-                                      src={getAvatarThumbUrl(avatar.icon)} 
-                                      alt={avatar.name} 
-                                      loading="lazy"
-                                      decoding="async"
-                                      className={`w-full h-full object-cover ${imgProps.className}`} 
-                                      style={imgProps.style} 
-                                    />
-                                  );
-                                })() : (
-                                  <div className="w-full h-full flex items-center justify-center bg-slate-900">
-                                    <span className="text-3xl drop-shadow-md">{avatar.icon}</span>
-                                  </div>
-                                )}
-                              </AvatarRarityEffect>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-bold text-lg text-slate-800 hover:text-indigo-600 transition-colors">{avatar.name}</span>
-                                  {info?.rarity && (
-                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                      info.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                      info.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                      info.rarity === '激レア' ? 'bg-amber-500 text-white' :
-                                      info.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
-                                    }`}>{info.rarity}</span>
-                                  )}
-                                  {(info?.gachaName || avatar.gachaName) && (
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                      {info?.gachaName || avatar.gachaName}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-slate-600 font-bold mt-1">{info?.description || avatar.description || "冒険を彩る魅力的なアバター。"}</div>
-                              </div>
-                            </div>
-                            {isEquipped ? (
-                              <div className="text-primary font-black px-4 flex-shrink-0">そうび中</div>
-                            ) : (
-                              <Button variant="secondary" onClick={() => handleEquip("avatar", avatar.id)} className="flex-shrink-0">そうび</Button>
-                            )}
-                          </div>
-                          <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                            <button
-                              onClick={() => setPreviewAvatar(isPreviewing ? null : avatar.id)}
-                              className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
-                            >
-                              👀 しちゃく{isPreviewing ? '中' : ''}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <AvatarsTab userData={userData} selectedRarity={selectedRarity} previewAvatar={previewAvatar} setPreviewAvatar={setPreviewAvatar} handleEquip={handleEquip} setPreviewingAvatarModal={setPreviewingAvatarModal} />
               )}
 
               {activeTab === "equipments" && (
-                <div className="space-y-4">
-                  {userData.equippedEquipment && (
-                    <div className="flex justify-end mb-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEquip("equipment", "")} className="text-red-500 border-red-300">
-                        ❌ そうびをはずす
-                      </Button>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(() => {
-                      const list = allEquipments.filter(eq => selectedRarity === "all" || (eq.rarity || "ノーマル") === selectedRarity);
-
-                      if (list.length === 0) {
-                        return (
-                          <div className="game-panel-light p-8 text-center col-span-full">
-                            <div className="text-4xl mb-2">🔍</div>
-                            <div className="font-black text-slate-700 text-lg">「{selectedRarity}」のそうびはありません</div>
-                          </div>
-                        );
-                      }
-
-                      return list.map(eq => {
-                        const isOwned = (userData.equipments || []).includes(eq.id);
-                        const isEquipped = userData.equippedEquipment === eq.id;
-                        const isPreviewing = previewEquipment === eq.id;
-
-                        return (
-                          <div key={eq.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isEquipped ? 'border-emerald-500 bg-emerald-50/90' : !isOwned ? 'opacity-85' : ''}`}>
-                            <div className="flex items-center gap-4">
-                              <div 
-                                className="text-5xl w-16 h-16 flex items-center justify-center bg-slate-900/80 rounded-2xl border-2 border-amber-300 shadow-md flex-shrink-0 cursor-pointer hover:scale-110 transition-transform overflow-hidden"
-                                onClick={() => setPreviewingEquipmentModal(eq.id)}
-                              >
-                                {eq.icon.startsWith('/') ? (
-                                  <img 
-                                    src={getAvatarThumbUrl(eq.icon)} 
-                                    alt="eq" 
-                                    loading="lazy"
-                                    decoding="async"
-                                    className="w-full h-full object-cover rounded-xl" 
-                                  />
-                                ) : eq.icon}
-                              </div>
-                              <div className="flex-1 cursor-pointer" onClick={() => setPreviewingEquipmentModal(eq.id)}>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-bold text-lg text-slate-800 hover:text-indigo-600 transition-colors">{eq.name}</span>
-                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                    eq.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                    eq.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                    eq.rarity === '激レア' ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-700'
-                                  }`}>{eq.rarity}</span>
-                                  {eq.gachaName && (
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                      {eq.gachaName}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-slate-600 font-bold mt-1">{eq.description}</div>
-                                {!isOwned && (
-                                  <div className="text-[11px] font-bold text-indigo-600 mt-1">🔒 未所持 (ショップ/ガチャでGET)</div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center border-t border-slate-200/50 pt-2">
-                              <button
-                                onClick={() => setPreviewEquipment(isPreviewing ? null : eq.id)}
-                                className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-emerald-500 text-white border-emerald-700' : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 hover:scale-105'}`}
-                              >
-                                👀 しちゃく{isPreviewing ? '中' : ''}
-                              </button>
-
-                              {isEquipped ? (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-emerald-600 font-black text-sm">✓ そうび中</span>
-                                  <Button size="sm" variant="outline" className="text-xs text-red-500 border-red-300 py-1 px-2" onClick={() => handleEquip("equipment", "")}>はずす</Button>
-                                </div>
-                              ) : isOwned ? (
-                                <Button variant="fun" size="sm" className="bg-emerald-500 hover:bg-emerald-600 border-emerald-700 text-white font-bold" onClick={() => handleEquip("equipment", eq.id)}>
-                                  ✅ そうびする
-                                </Button>
-                              ) : (
-                                <div className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">未所持</div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                </div>
+                <EquipmentsTab userData={userData} selectedRarity={selectedRarity} previewEquipment={previewEquipment} setPreviewEquipment={setPreviewEquipment} handleEquip={handleEquip} setPreviewingEquipmentModal={setPreviewingEquipmentModal} />
               )}
 
               {activeTab === "themes" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const list = allThemes
-                      .filter(t => t.id === 'default' || userData.effects.includes(`theme_${t.id}`))
-                      .filter(t => selectedRarity === "all" || (t.rarity || "ノーマル") === selectedRarity);
-
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」の所持テーマはありません</div>
-                        </div>
-                      );
-                    }
-
-                    return list.map(theme => {
-                      const isEquipped = (userData.theme || 'default') === theme.id;
-                      const isPreviewing = previewTheme === theme.id;
-                      return (
-                        <div key={theme.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-4 flex-1">
-                              <div className="text-4xl w-12 h-12 flex items-center justify-center bg-slate-900/80 rounded-xl border border-slate-700 shadow-md flex-shrink-0">{theme.icon}</div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <div className="font-bold text-lg text-slate-800">{theme.name}</div>
-                                  {theme.rarity && (
-                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                      theme.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                      theme.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                      theme.rarity === '激レア' ? 'bg-amber-500 text-white' :
-                                      theme.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
-                                    }`}>{theme.rarity}</span>
-                                  )}
-                                  {theme.gachaName && (
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                      {theme.gachaName}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-slate-600 font-bold mt-1">{theme.description || "冒険画面を彩るテーマ。"}</div>
-                              </div>
-                            </div>
-                            {isEquipped ? (
-                              <div className="text-primary font-black px-4 flex-shrink-0">そうび中</div>
-                            ) : (
-                              <Button variant="secondary" onClick={() => handleEquip("theme", theme.id)} className="flex-shrink-0">そうび</Button>
-                            )}
-                          </div>
-                          <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                            <button
-                              onClick={() => setPreviewTheme(isPreviewing ? null : theme.id)}
-                              className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
-                            >
-                              👀 しちゃく{isPreviewing ? '中' : ''}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <ThemesTab userData={userData} selectedRarity={selectedRarity} previewTheme={previewTheme} setPreviewTheme={setPreviewTheme} handleEquip={handleEquip} />
               )}
 
               {activeTab === "effects" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const list = allEffects
-                      .filter(e => userData.effects.includes(e.id))
-                      .filter(e => selectedRarity === "all" || (e.rarity || "ノーマル") === selectedRarity);
-
-                    if (list.length === 0) {
-                      return (
-                        <div className="game-panel-light p-8 text-center col-span-full">
-                          <div className="text-4xl mb-2">🔍</div>
-                          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」の所持エフェクトはありません</div>
-                        </div>
-                      );
-                    }
-
-                    return list.map(effect => {
-                      const isEquipped = userData.equippedEffect === effect.id;
-                      const isPreviewing = previewEffect === effect.id;
-                      return (
-                        <div key={effect.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="text-4xl">{effect.icon}</div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <div className="font-bold text-lg text-slate-800">{effect.name}</div>
-                                {effect.rarity && (
-                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                    effect.rarity === '神レア' ? 'bg-purple-500 text-white' :
-                                    effect.rarity === '超激レア' ? 'bg-red-500 text-white' :
-                                    effect.rarity === '激レア' ? 'bg-amber-500 text-white' :
-                                    effect.rarity === 'レア' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700'
-                                  }`}>{effect.rarity}</span>
-                                )}
-                                {effect.gachaName && (
-                                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-300">
-                                    {effect.gachaName}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            {isEquipped ? (
-                              <div className="text-primary font-black px-4">そうび中</div>
-                            ) : (
-                              <Button variant="secondary" onClick={() => handleEquip("effect", effect.id)}>そうび</Button>
-                            )}
-                          </div>
-                          <div className="flex justify-end border-t border-slate-200/50 pt-2">
-                            <button
-                              onClick={() => setPreviewEffect(isPreviewing ? null : effect.id)}
-                              className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
-                            >
-                              👀 しちゃく{isPreviewing ? '中' : ''}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
+                <EffectsTab userData={userData} selectedRarity={selectedRarity} previewEffect={previewEffect} setPreviewEffect={setPreviewEffect} handleEquip={handleEquip} />
               )}
             </motion.div>
           </AnimatePresence>

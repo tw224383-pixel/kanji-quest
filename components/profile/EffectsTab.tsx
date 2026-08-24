@@ -1,0 +1,69 @@
+"use client";
+
+import { Button } from "../ui/Button";
+import { RarityBadge, GachaNameBadge } from "../ui/RarityBadge";
+import { getAllEffects } from "../../lib/itemData";
+import type { UserData } from "../../contexts/UserContext";
+
+const allEffects = getAllEffects();
+
+interface EffectsTabProps {
+  userData: UserData;
+  selectedRarity: string;
+  previewEffect: string | null;
+  setPreviewEffect: (id: string | null) => void;
+  handleEquip: (category: "effect", id: string) => void;
+}
+
+export function EffectsTab({ userData, selectedRarity, previewEffect, setPreviewEffect, handleEquip }: EffectsTabProps) {
+  const list = allEffects
+    .filter(e => userData.effects.includes(e.id))
+    .filter(e => selectedRarity === "all" || (e.rarity || "ノーマル") === selectedRarity);
+
+  if (list.length === 0) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="game-panel-light p-8 text-center col-span-full">
+          <div className="text-4xl mb-2">🔍</div>
+          <div className="font-black text-slate-700 text-lg">「{selectedRarity}」の所持エフェクトはありません</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {list.map(effect => {
+        const isEquipped = userData.equippedEffect === effect.id;
+        const isPreviewing = previewEffect === effect.id;
+        return (
+          <div key={effect.id} className={`game-panel-light p-4 flex flex-col gap-3 ${isEquipped ? 'border-primary bg-blue-50/90' : ''}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="text-4xl">{effect.icon}</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="font-bold text-lg text-slate-800">{effect.name}</div>
+                  <RarityBadge rarity={effect.rarity} />
+                  <GachaNameBadge gachaName={effect.gachaName} />
+                </div>
+              </div>
+              {isEquipped ? (
+                <div className="text-primary font-black px-4">そうび中</div>
+              ) : (
+                <Button variant="secondary" onClick={() => handleEquip("effect", effect.id)}>そうび</Button>
+              )}
+            </div>
+            <div className="flex justify-end border-t border-slate-200/50 pt-2">
+              <button
+                onClick={() => setPreviewEffect(isPreviewing ? null : effect.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-black shadow-sm border transition-all flex items-center gap-2 ${isPreviewing ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:scale-105'}`}
+              >
+                👀 しちゃく{isPreviewing ? '中' : ''}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

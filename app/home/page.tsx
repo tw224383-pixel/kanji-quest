@@ -9,7 +9,7 @@ import { RaidBoss } from "../../components/game/RaidBoss";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { storage } from "../../lib/storage";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 const AvatarPreviewModal = dynamic(() => import("../../components/ui/AvatarPreviewModal").then(mod => mod.AvatarPreviewModal), { ssr: false });
@@ -23,6 +23,8 @@ import { hasUnclaimedAchievements } from "../../lib/achievementLogic";
 import { getCurrentJSTDateString, isDueForReview } from "../../lib/reviewSchedule";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { CategoryGradePicker } from "../../components/home/CategoryGradePicker";
+import { UpdateNews } from "../../components/home/UpdateNews";
 
 export default function Home() {
   const { userData, updateUserData, loading, isGuest } = useUser();
@@ -38,10 +40,15 @@ export default function Home() {
   const [previewingEquipmentModal, setPreviewingEquipmentModal] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [gradeBossLevel, setGradeBossLevel] = useState<number>(1);
+  // targetGrades の自動初期化は最初の1回だけ行う。userData 参照は裏の書き込み
+  // （ログインストリーク更新など）のたびに変わるため、「初期値[1]のまま」を
+  // 判定条件にすると、ユーザーが意図的に「1年のみ」を選んだ場合も毎回上書きされてしまう。
+  const gradesInitialized = useRef(false);
 
   useEffect(() => {
     if (userData) {
-      if (targetGrades.length === 1 && targetGrades[0] === 1) {
+      if (!gradesInitialized.current) {
+        gradesInitialized.current = true;
         setTargetGrades([userData.grade]);
       }
       if (targetMathSkills.length === 0) {
@@ -251,169 +258,36 @@ export default function Home() {
              )}
 
              {subject === "science" && (
-                <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {[1, 2, 3, 4, 5, 6].map(g => {
-                    const gradeCategories = getScienceCategories().filter(c => c.grade === g);
-                    if (gradeCategories.length === 0) return null;
-                    const allSelected = gradeCategories.every(c => targetScienceCategories.includes(c.id));
-                    
-                    return (
-                      <div key={g} className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 shadow-inner">
-                        <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
-                          <h3 className="text-xl font-black text-emerald-300 drop-shadow-md whitespace-nowrap">
-                            {g <= 2 ? `${g}年生（生活科・自然）` : `${g}年生`}
-                          </h3>
-                          <Button size="sm" variant={allSelected ? "fun" : "outline"} className={`whitespace-nowrap ${allSelected ? "bg-amber-500 text-white text-xs border-amber-700" : "text-xs border-slate-500"}`} onClick={() => {
-                            if (allSelected) {
-                              if (targetScienceCategories.length > gradeCategories.length) {
-                                setTargetScienceCategories(prev => prev.filter(id => !gradeCategories.find(c => c.id === id)));
-                              }
-                            } else {
-                              const newCats = new Set([...targetScienceCategories, ...gradeCategories.map(c => c.id)]);
-                              setTargetScienceCategories(Array.from(newCats));
-                            }
-                          }}>
-                            {allSelected ? "すべて外す" : "すべて選ぶ"}
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {gradeCategories.map(cat => {
-                            const isSelected = targetScienceCategories.includes(cat.id);
-                            return (
-                              <button
-                                key={cat.id}
-                                onClick={() => {
-                                  if (isSelected && targetScienceCategories.length > 1) {
-                                    setTargetScienceCategories(targetScienceCategories.filter(id => id !== cat.id));
-                                  } else if (!isSelected) {
-                                    setTargetScienceCategories([...targetScienceCategories, cat.id]);
-                                  }
-                                }}
-                                className={`px-3 py-2 rounded-lg font-bold text-sm transition-all border-b-[3px] shadow-sm whitespace-nowrap ${
-                                  isSelected
-                                    ? "bg-emerald-600 text-white border-emerald-800 translate-y-1 border-b-0"
-                                    : "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600"
-                                }`}
-                              >
-                                {isSelected && <span className="mr-1">✔️</span>}{cat.name}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <CategoryGradePicker
+                  categories={getScienceCategories()}
+                  selected={targetScienceCategories}
+                  setSelected={setTargetScienceCategories}
+                  gradeLabel={g => g <= 2 ? `${g}年生（生活科・自然）` : `${g}年生`}
+                  headingColorClass="text-emerald-300"
+                  chipSelectedClass="bg-emerald-600 text-white border-emerald-800"
+                />
              )}
 
              {subject === "social" && (
-                <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {[1, 2, 3, 4, 5, 6].map(g => {
-                    const gradeCategories = getSocialCategories().filter(c => c.grade === g);
-                    if (gradeCategories.length === 0) return null;
-                    const allSelected = gradeCategories.every(c => targetSocialCategories.includes(c.id));
-                    
-                    return (
-                      <div key={g} className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 shadow-inner">
-                        <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
-                          <h3 className="text-xl font-black text-orange-300 drop-shadow-md whitespace-nowrap">
-                            {g <= 2 ? `${g}年生（生活科・まち）` : `${g}年生`}
-                          </h3>
-                          <Button size="sm" variant={allSelected ? "fun" : "outline"} className={`whitespace-nowrap ${allSelected ? "bg-amber-500 text-white text-xs border-amber-700" : "text-xs border-slate-500"}`} onClick={() => {
-                            if (allSelected) {
-                              if (targetSocialCategories.length > gradeCategories.length) {
-                                setTargetSocialCategories(prev => prev.filter(id => !gradeCategories.find(c => c.id === id)));
-                              }
-                            } else {
-                              const newCats = new Set([...targetSocialCategories, ...gradeCategories.map(c => c.id)]);
-                              setTargetSocialCategories(Array.from(newCats));
-                            }
-                          }}>
-                            {allSelected ? "すべて外す" : "すべて選ぶ"}
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {gradeCategories.map(cat => {
-                            const isSelected = targetSocialCategories.includes(cat.id);
-                            return (
-                              <button
-                                key={cat.id}
-                                onClick={() => {
-                                  if (isSelected && targetSocialCategories.length > 1) {
-                                    setTargetSocialCategories(targetSocialCategories.filter(id => id !== cat.id));
-                                  } else if (!isSelected) {
-                                    setTargetSocialCategories([...targetSocialCategories, cat.id]);
-                                  }
-                                }}
-                                className={`px-3 py-2 rounded-lg font-bold text-sm transition-all border-b-[3px] shadow-sm whitespace-nowrap ${
-                                  isSelected
-                                    ? "bg-orange-600 text-white border-orange-800 translate-y-1 border-b-0"
-                                    : "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600"
-                                }`}
-                              >
-                                {isSelected && <span className="mr-1">✔️</span>}{cat.name}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <CategoryGradePicker
+                  categories={getSocialCategories()}
+                  selected={targetSocialCategories}
+                  setSelected={setTargetSocialCategories}
+                  gradeLabel={g => g <= 2 ? `${g}年生（生活科・まち）` : `${g}年生`}
+                  headingColorClass="text-orange-300"
+                  chipSelectedClass="bg-orange-600 text-white border-orange-800"
+                />
              )}
 
              {subject === "math" && (
-                <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {[1, 2, 3, 4, 5, 6].map(g => {
-                    const gradeSkills = MATH_SKILLS.filter(s => s.grade === g);
-                    if (gradeSkills.length === 0) return null;
-                    const allSelected = gradeSkills.every(s => targetMathSkills.includes(s.id));
-                    
-                    return (
-                      <div key={g} className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 shadow-inner">
-                        <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
-                          <h3 className="text-xl font-black text-blue-200 drop-shadow-md whitespace-nowrap">{g}年生</h3>
-                          <Button size="sm" variant={allSelected ? "fun" : "outline"} className={`whitespace-nowrap ${allSelected ? "bg-amber-500 text-white text-xs border-amber-700" : "text-xs border-slate-500"}`} onClick={() => {
-                            if (allSelected) {
-                              if (targetMathSkills.length > gradeSkills.length) {
-                                setTargetMathSkills(prev => prev.filter(id => !gradeSkills.find(s => s.id === id)));
-                              }
-                            } else {
-                              const newSkills = new Set([...targetMathSkills, ...gradeSkills.map(s => s.id)]);
-                              setTargetMathSkills(Array.from(newSkills));
-                            }
-                          }}>
-                            {allSelected ? "すべて外す" : "すべて選ぶ"}
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {gradeSkills.map(skill => {
-                            const isSelected = targetMathSkills.includes(skill.id);
-                            return (
-                              <button
-                                key={skill.id}
-                                onClick={() => {
-                                  if (isSelected && targetMathSkills.length > 1) {
-                                    setTargetMathSkills(targetMathSkills.filter(id => id !== skill.id));
-                                  } else if (!isSelected) {
-                                    setTargetMathSkills([...targetMathSkills, skill.id]);
-                                  }
-                                }}
-                                className={`px-3 py-2 rounded-lg font-bold text-sm transition-all border-b-[3px] shadow-sm whitespace-nowrap ${
-                                  isSelected
-                                    ? "bg-blue-500 text-white border-blue-800 translate-y-1 border-b-0"
-                                    : "bg-slate-700 text-slate-300 border-slate-900 hover:bg-slate-600"
-                                }`}
-                              >
-                                {isSelected && <span className="mr-1">✔️</span>}{skill.name}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <CategoryGradePicker
+                  categories={MATH_SKILLS}
+                  selected={targetMathSkills}
+                  setSelected={setTargetMathSkills}
+                  gradeLabel={g => `${g}年生`}
+                  headingColorClass="text-blue-200"
+                  chipSelectedClass="bg-blue-500 text-white border-blue-800"
+                />
              )}
 
              <h3 className="text-xl font-black text-amber-200 drop-shadow-md mb-4 text-center border-b border-slate-700 pb-2 whitespace-nowrap">もんだい数</h3>
@@ -589,64 +463,7 @@ export default function Home() {
         {/* 4. お知らせと広告 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 mb-4">
           {/* Update News */}
-          <div className="game-panel p-4 flex flex-col gap-2 shadow-lg">
-             <h3 className="text-lg font-black text-amber-300 border-b border-slate-600 pb-2 flex items-center gap-2 whitespace-nowrap">
-               <span>📣</span> アップデートのお知らせ
-             </h3>
-             <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-36 overflow-y-auto pr-2 custom-scrollbar">
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/14 (最新)</div>
-                 <div>📖 <strong>「リッチ大図鑑」に全装備品を完全収録＆装備ガチャSP対応！</strong><br/>
-                 図鑑がアバター・装備品全93種の大図鑑にパワーアップ！「ふわふわ装備ガチャ♡」「装備品リッチガチャ」をSP（1000SP）で引けるよう修正し、小1の文章題・生活科の問題をすべてひらがな表記に統一しました！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/13</div>
-                 <div>🎀 <strong>ふわふわ装備ガチャ♡ 新登場！</strong><br/>
-                 かわいいティアラ・レイピア・魔導書など15種のフェミニンな装備ガチャを実装！神レア「天使の羽根のティアラ」「星屑のキラキラスタッフ」を目指してまわそう！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/13</div>
-                 <div>🎬 <strong>リッチガチャ演出を動画にリニューアル！</strong><br/>
-                 レアリティに合わせた迫力の演出動画が再生されるようになりました！ノーマル〜神レアまで、それぞれ専用映像でガチャがより盛り上がる！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/11</div>
-                 <div>🏆 <strong>じっせき画面リニューアル＆成長カルテ実績新設！</strong><br/>
-                 カルテのレベルアップや特訓正解数で大量のPT・SP・限定称号が貰える新実績が大量追加！タブ分割＆絞り込みでさらに使いやすくなりました！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/11</div>
-                 <div>📊 <strong>新機能「冒険者の成長カルテ」登場！</strong><br/>
-                 6軸レーダーチャートで自分の得意・苦手を客観分析！ワンタップで各分野の学年別特訓バトルへ出撃してLv.99を目指そう！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/11</div>
-                 <div>🧠 <strong>学年別・思考力（文章題）＆空間図形問題大幅拡充！</strong><br/>
-                 小1〜小6の教科書・学力テストに完全準拠した本格文章題・面積・体積問題を大量追加！特訓時はいつでも満額報酬を保証！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/11</div>
-                 <div>🎨 <strong>全画面でのテーマ背景同期＆画像軽量化・UI高速化！</strong><br/>
-                 どの画面でもお気に入りテーマが美しく表示され、動作もさらに軽快になりました！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/09</div>
-                 <div>実績解除でPT・SP報酬が貰える機能を実装！さらに「連続ログイン実績」が登場！毎日ログインして豪華報酬をゲットしよう！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/07</div>
-                 <div>理科・社会の単元選択出題の不具合を修正＆下の学年でも報酬が貰いやすくなりました！装備品リッチガチャ・アバター説明文・レアリティ別光演出も実装！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/08/06</div>
-                 <div>リッチガチャ２追加！ガチャ画面のレイアウトも修正し、見やすくしました！</div>
-               </li>
-               <li>
-                 <div className="text-xs text-amber-400 mb-0.5">2026/07/31</div>
-                 <div>超豪華な「リッチガチャ」が登場！かっこいい・かわいいアバターが当たるよ！</div>
-               </li>
-             </ul>
-          </div>
+          <UpdateNews />
 
           {/* Cross-promotion Ad */}
           <a 

@@ -6,7 +6,7 @@ import { getRandomQuestions, getRevengeQuestions, KanjiQuestion } from "../../li
 import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion } from "../../lib/mathData";
 import { getRandomScienceQuestions, getRevengeScienceQuestions, ScienceQuestion } from "../../lib/scienceData";
 import { getRandomSocialQuestions, getRevengeSocialQuestions, SocialQuestion } from "../../lib/socialData";
-import { getRaidBossImagePath, getCurrentJSTMonth, getCurrentJSTWeekString } from "../../lib/raidLogic";
+import { getRaidBossImagePath, getCurrentJSTMonth, getCurrentJSTWeekString, getSeasonalBossPresentation } from "../../lib/raidLogic";
 import { getCurrentJSTDateString, getNextReviewDate, GRADUATION_STAGE, isDueForReview } from "../../lib/reviewSchedule";
 import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
@@ -19,6 +19,7 @@ import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import { soundManager } from "../../lib/soundManager";
 import { useToast } from "../../components/ui/Toast";
+import { GameResultScreen } from "../../components/game/GameResultScreen";
 
 export default function GamePage() {
   const router = useRouter();
@@ -298,7 +299,12 @@ export default function GamePage() {
       setCombo(nextCombo);
       setMaxCombo(c => Math.max(c, nextCombo));
       newMastered.current.add(questionIdentifier);
-      newMastered.current.add(currentQ.word);
+      // masteredIds は漢字図鑑の「マスター済み判定」専用（k.kanji と直接比較される）。
+      // 算数・理科・社会は currentQ.word が問題文そのもの（ほぼ一意）なので、
+      // ここに含めるとドキュメントが無制限に肥大化してしまう。漢字のみ追加する。
+      if (subjectType === "kanji") {
+        newMastered.current.add(currentQ.word);
+      }
       
       if (nextCombo >= 3) {
         soundManager.playCombo(nextCombo);
@@ -541,89 +547,24 @@ export default function GamePage() {
 
   if (isFinished) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="game-panel p-12 max-w-md w-full text-center"
-        >
-          {saveFailed ? (
-            <>
-              <h1 className="text-4xl font-black text-red-500 mb-6 drop-shadow-md">
-                ⚠️ 保存できませんでした
-              </h1>
-              <div className="bg-red-100 border-4 border-red-400 text-red-700 p-4 rounded-2xl mb-8 font-bold">
-                通信状態が悪く、けっかを保存できませんでした。<br/>
-                「もういちど保存する」を押してください。<br/>
-                このままホームに戻ると今回の分の報酬は消えてしまいます。
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button
-                  size="lg"
-                  className="w-full text-xl py-5"
-                  variant="fun"
-                  onClick={() => { setIsFinished(false); setSaveFailed(false); finishGame(); }}
-                >
-                  🔄 もういちど保存する
-                </Button>
-                <Button size="md" className="w-full" variant="outline" onClick={() => router.push("/home")}>
-                  ホームにもどる（保存せず終了）
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-amber-500 mb-6 drop-shadow-game text-outline">
-                クリア！
-              </h1>
-              {unlockedMastery && (
-                <div className="bg-yellow-100 border-4 border-yellow-400 text-yellow-800 p-4 rounded-2xl mb-6 font-black animate-pulse">
-                  🎉 すごい！学年マスター達成！<br/>
-                  かくし称号とアバターをゲットしたよ！
-                </div>
-              )}
-              {isRevenge && (
-                <div className="text-xl font-black text-orange-500 mb-2 animate-bounce">
-                  🔥リベンジボーナス x2🔥
-                </div>
-              )}
-              {mode === "keyboard" && (
-                <div className="text-xl font-black text-pink-500 mb-4 animate-bounce">
-                  ⌨️ キーボードボーナス x3! ⌨️
-                </div>
-              )}
-              {maxCombo > 2 && (
-                <div className="text-lg font-bold text-amber-500 mb-2">
-                  最大コンボ: {maxCombo} (倍率 x{(1 + maxCombo * 0.1).toFixed(1)})
-                </div>
-              )}
-              {totalMistakes > 0 && (
-                <div className="text-lg font-bold text-red-500 mb-4 bg-red-50 p-2 rounded-xl">
-                  まちがえた回数: {totalMistakes} 回
-                </div>
-              )}
-              {hasPenalty && (
-                <div className="text-sm font-bold text-blue-500 mb-4 bg-blue-50 p-2 rounded-xl border border-blue-200">
-                  ℹ️ 自分の学年より下の問題があったため、もらえる経験値が少なくなったよ！
-                </div>
-              )}
-              <div className="text-4xl font-black mb-4 text-cyan-400 drop-shadow-md">+ {finalXP} XP</div>
-              <div className={`text-3xl font-black mb-10 drop-shadow-sm ${isSpSubject ? 'text-emerald-400' : 'text-amber-500'}`}>
-                + {finalPT} {isSpSubject ? 'SP' : 'PT'}
-              </div>
-
-              <Button size="lg" className="w-full text-2xl py-6" variant="fun" onClick={() => router.push("/home")}>
-                ホームにもどる
-              </Button>
-            </>
-          )}
-        </motion.div>
-      </main>
+      <GameResultScreen
+        saveFailed={saveFailed}
+        unlockedMastery={unlockedMastery}
+        isRevenge={isRevenge}
+        mode={mode}
+        maxCombo={maxCombo}
+        totalMistakes={totalMistakes}
+        hasPenalty={hasPenalty}
+        finalXP={finalXP}
+        finalPT={finalPT}
+        isSpSubject={isSpSubject}
+        onRetry={() => { setIsFinished(false); setSaveFailed(false); finishGame(); }}
+        onGoHome={() => router.push("/home")}
+      />
     );
   }
 
-  const currentMonth = new Date().getMonth() + 1;
-  const bossIcon = currentMonth === 10 ? "🎃" : currentMonth === 12 ? "⛄" : "🐲";
+  const bossIcon = getSeasonalBossPresentation("🐲", "").icon;
 
   return (
     <main className={`min-h-screen p-4 flex flex-col relative overflow-hidden transition-colors duration-1000 ${
