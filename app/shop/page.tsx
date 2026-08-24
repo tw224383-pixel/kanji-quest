@@ -24,6 +24,7 @@ import { ThemesTab } from "../../components/shop/ThemesTab";
 import { EffectsTab } from "../../components/shop/EffectsTab";
 import { TitlesTab } from "../../components/shop/TitlesTab";
 import { AvatarsTab } from "../../components/shop/AvatarsTab";
+import { useToast } from "../../components/ui/Toast";
 
 const RegularGachaAnimation = dynamic(() => import("../../components/game/RegularGachaAnimation").then(mod => mod.RegularGachaAnimation), { ssr: false });
 const RichGachaAnimation = dynamic(() => import("../../components/game/RichGachaAnimation").then(mod => mod.RichGachaAnimation), { ssr: false });
@@ -43,6 +44,7 @@ type Tab = "themes" | "effects" | "titles" | "avatars" | "equipments" | "gacha";
 export default function ShopPage() {
   const { userData, updateUserData, updateUserDataAtomic, loading } = useUser();
   const router = useRouter();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("gacha");
 
   const [previewTitle, setPreviewTitle] = useState<string | null>(null);
@@ -81,7 +83,7 @@ export default function ShopPage() {
   }
 
   const handleBuy = async (category: string, id: string, price: number) => {
-    await updateUserDataAtomic(current => {
+    const ok = await updateUserDataAtomic(current => {
       if (category === "equipment") {
         if ((current.sp || 0) < price) return null;
         const userEquips = current.equipments || [];
@@ -107,6 +109,7 @@ export default function ShopPage() {
       }
       return null;
     });
+    if (!ok) showToast("こうにゅうできませんでした。ポイント不足か通信エラーの可能性があります");
   };
 
   const handleRequestGacha = (type: "regular" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment") => {
@@ -163,7 +166,11 @@ export default function ShopPage() {
         return { sp: balance - cost, equipments: [...userEquips, resultItem.id] };
       });
 
-      if (!ok || !resultItem) { setPullingType(null); return; }
+      if (!ok || !resultItem) {
+        setPullingType(null);
+        showToast("ガチャをまわせませんでした。SP不足か通信エラーの可能性があります");
+        return;
+      }
       const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
       setGachaTargetStage(rarityLevels[resultItem.rarity] || 1);
       setPendingGachaResult(resultItem);
@@ -203,7 +210,11 @@ export default function ShopPage() {
         return { pt: current.pt - 3000, avatars: [...current.avatars, resultItem.id] };
       });
 
-      if (!ok || !resultItem) { setPullingType(null); return; }
+      if (!ok || !resultItem) {
+        setPullingType(null);
+        showToast("ガチャをまわせませんでした。PT不足か通信エラーの可能性があります");
+        return;
+      }
       const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
       setGachaTargetStage(rarityLevels[resultItem.rarity] || 1);
       setPendingGachaResult(resultItem);
@@ -264,7 +275,11 @@ export default function ShopPage() {
       return updates;
     });
 
-    if (!ok || !result) { setPullingType(null); return; }
+    if (!ok || !result) {
+      setPullingType(null);
+      showToast("ガチャをまわせませんでした。PT不足か通信エラーの可能性があります");
+      return;
+    }
     const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
     setGachaTargetStage(rarityLevels[result.rarity] || 1);
     setPendingGachaResult(result);
@@ -550,10 +565,12 @@ export default function ShopPage() {
         ownedEquipmentIds={userData.equipments || []}
         equippedEquipmentId={userData.equippedEquipment}
         onEquipAvatar={async (avatarId) => {
-          await updateUserData({ equippedAvatar: avatarId });
+          const ok = await updateUserData({ equippedAvatar: avatarId });
+          if (!ok) showToast("そうびを保存できませんでした");
         }}
         onEquipEquipment={async (equipmentId) => {
-          await updateUserData({ equippedEquipment: equipmentId });
+          const ok = await updateUserData({ equippedEquipment: equipmentId });
+          if (!ok) showToast("そうびを保存できませんでした");
         }}
         onGoToGacha={() => {
           setActiveTab("gacha");
@@ -626,11 +643,13 @@ export default function ShopPage() {
         result={gachaResult}
         onClose={() => setGachaResult(null)}
         onEquip={async (type, id) => {
-          if (type === 'avatar') await updateUserData({ equippedAvatar: id });
-          else if (type === 'equipment') await updateUserData({ equippedEquipment: id });
-          else if (type === 'title') await updateUserData({ equippedTitle: id });
-          else if (type === 'theme') await updateUserData({ theme: id });
-          else if (type === 'effect') await updateUserData({ equippedEffect: id });
+          let ok = true;
+          if (type === 'avatar') ok = await updateUserData({ equippedAvatar: id });
+          else if (type === 'equipment') ok = await updateUserData({ equippedEquipment: id });
+          else if (type === 'title') ok = await updateUserData({ equippedTitle: id });
+          else if (type === 'theme') ok = await updateUserData({ theme: id });
+          else if (type === 'effect') ok = await updateUserData({ equippedEffect: id });
+          if (!ok) showToast("そうびを保存できませんでした");
         }}
         onPullAgain={lastPullType ? () => pullGacha(lastPullType) : undefined}
         canPullAgain={

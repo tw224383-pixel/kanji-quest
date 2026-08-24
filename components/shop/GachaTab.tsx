@@ -8,6 +8,7 @@ import {
 } from "../../lib/gachaData";
 import { getAvatarImageProps } from "../../lib/itemData";
 import type { UserData } from "../../contexts/UserContext";
+import { Button } from "../ui/Button";
 
 type GachaType = "regular" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment";
 type RatesKey = GachaType | "all_3000" | "all_sp" | null;
@@ -44,12 +45,14 @@ export function GachaTab({
         <div className="flex-1 game-panel-light p-4 bg-slate-800/80 border-2 border-amber-900/50 flex flex-col justify-between">
           <div>
             <div className="text-amber-200 font-black mb-2">通常ガチャ (100 PT)</div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-4"
               onClick={() => setShowGachaRates(showGachaRates === "regular" ? null : "regular")}
-              className="mb-4 px-6 py-2 bg-amber-100/50 hover:bg-amber-100 text-amber-800 font-black text-base rounded-full shadow-sm border-2 border-amber-300 transition-colors inline-flex items-center justify-center gap-2"
             >
-              <span className="text-xl">🔍</span> 中身を見る
-            </button>
+              🔍 中身を見る
+            </Button>
           </div>
           <button
             className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap bg-amber-400 hover:bg-amber-300 text-amber-900 font-black rounded-xl shadow-[0_4px_0_0_#b45309] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || userData.pt < 100 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -66,12 +69,14 @@ export function GachaTab({
             <div className="text-amber-500 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
               <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">💎</span> リッチガチャ１ <span className="text-sm">(3000 PT)</span>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-6"
               onClick={() => setShowGachaRates(showGachaRates === "rich" ? null : "rich")}
-              className="mb-6 px-6 py-2 bg-[#fdf8e1] hover:bg-[#faedb9] text-[#5c3a21] font-black text-sm rounded-full shadow-md border-2 border-[#e6c770] transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
             >
-              <span className="text-lg">🔍</span> 中身を見る
-            </button>
+              🔍 中身を見る
+            </Button>
           </div>
           <button
             className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -88,12 +93,14 @@ export function GachaTab({
             <div className="text-purple-600 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
               <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">✨</span> リッチガチャ２ <span className="text-sm">(3000 PT)</span>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-6"
               onClick={() => setShowGachaRates(showGachaRates === "rich2" ? null : "rich2")}
-              className="mb-6 px-6 py-2 bg-[#fdf8e1] hover:bg-[#faedb9] text-[#5c3a21] font-black text-sm rounded-full shadow-md border-2 border-[#e6c770] transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
             >
-              <span className="text-lg">🔍</span> 中身を見る
-            </button>
+              🔍 中身を見る
+            </Button>
           </div>
           <button
             className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -110,12 +117,14 @@ export function GachaTab({
             <div className="text-pink-600 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
               <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">🌸</span> ふわふわガチャ♡ <span className="text-sm">(3000 PT)</span>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-6"
               onClick={() => setShowGachaRates(showGachaRates === "rich_ladies" ? null : "rich_ladies")}
-              className="mb-6 px-6 py-2 bg-[#fff0f5] hover:bg-[#ffe4e1] text-[#8b008b] font-black text-sm rounded-full shadow-md border-2 border-pink-300 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
             >
-              <span className="text-lg">🔍</span> 中身を見る
-            </button>
+              🔍 中身を見る
+            </Button>
           </div>
           <button
             className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-fluffy-gacha'} ${pullingType !== null || userData.pt < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -138,12 +147,14 @@ export function GachaTab({
               <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">🎀</span> ふわふわ装備ガチャ♡ <span className="text-sm">(3000 SP)</span>
             </div>
             <div className="text-xs text-fuchsia-600 font-bold mb-2">💫 NEW！全15種のかわいい装備が登場</div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-6"
               onClick={() => setShowGachaRates(showGachaRates === "rich_ladies_equipment" ? null : "rich_ladies_equipment")}
-              className="mb-6 px-6 py-2 bg-[#fff0f9] hover:bg-[#fce7f3] text-[#86198f] font-black text-sm rounded-full shadow-md border-2 border-fuchsia-300 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
             >
-              <span className="text-lg">🔍</span> 中身を見る
-            </button>
+              🔍 中身を見る
+            </Button>
           </div>
           <button
             className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap font-black rounded-xl transition-all ${
@@ -164,12 +175,14 @@ export function GachaTab({
             <div className="text-amber-900 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
               <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">🛡️</span> 装備品リッチガチャ <span className="text-sm">(3000 SP)</span>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-6"
               onClick={() => setShowGachaRates(showGachaRates === "rich_equipment" ? null : "rich_equipment")}
-              className="mb-6 px-6 py-2 bg-[#fdf8e1] hover:bg-[#faedb9] text-[#5c3a21] font-black text-sm rounded-full shadow-md border-2 border-[#e6c770] transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
             >
-              <span className="text-lg">🔍</span> 中身を見る
-            </button>
+              🔍 中身を見る
+            </Button>
           </div>
           <button
             className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap ${pullingType ? 'animate-pulse' : 'btn-rich-gacha'} ${pullingType !== null || (userData.sp || 0) < 3000 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -186,12 +199,14 @@ export function GachaTab({
             <div className="text-emerald-700 font-black text-xl mb-3 drop-shadow-md flex items-center justify-center gap-2">
               <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">⚔️</span> SP装備ガチャ <span className="text-sm">(1000 SP)</span>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-6"
               onClick={() => setShowGachaRates(showGachaRates === "sp_equipment" ? null : "sp_equipment")}
-              className="mb-6 px-6 py-2 bg-[#e6f7ed] hover:bg-[#c9f0d8] text-[#14532d] font-black text-sm rounded-full shadow-md border-2 border-emerald-300 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
             >
-              <span className="text-lg">🔍</span> 中身を見る
-            </button>
+              🔍 中身を見る
+            </Button>
           </div>
           <button
             className={`w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl shadow-[0_4px_0_0_#047857] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || (userData.sp || 0) < 1000 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -204,18 +219,20 @@ export function GachaTab({
       </div>
 
       <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-3">
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => setShowGachaRates(showGachaRates === "all_3000" ? null : "all_3000")}
-          className="px-5 py-2.5 bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white font-black text-sm rounded-full shadow-md border border-amber-200 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
         >
-          <span className="text-lg">🌟</span> 3000PTガチャ全中身をまとめて見る
-        </button>
-        <button
+          🌟 3000PTガチャ全中身をまとめて見る
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => setShowGachaRates(showGachaRates === "all_sp" ? null : "all_sp")}
-          className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-500 to-fuchsia-600 hover:from-emerald-500 hover:to-fuchsia-500 text-white font-black text-sm rounded-full shadow-md border border-emerald-200 transition-transform hover:scale-105 inline-flex items-center justify-center gap-2"
         >
-          <span className="text-lg">🛡️</span> 3000SP装備ガチャ全中身をまとめて見る
-        </button>
+          🛡️ 3000SP装備ガチャ全中身をまとめて見る
+        </Button>
       </div>
 
       <AnimatePresence>

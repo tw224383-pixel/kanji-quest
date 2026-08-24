@@ -5,6 +5,7 @@ import { ThemeProvider } from '../components/ui/ThemeProvider';
 import { UserProvider } from '../contexts/UserContext';
 import { ThemeContextProvider } from '../contexts/ThemeContext';
 import { PwaRegister } from '../components/PwaRegister';
+import { ToastProvider } from '../components/ui/Toast';
 
 const mPlusRounded = M_PLUS_Rounded_1c({ 
   weight: ['400', '700', '900'],
@@ -33,8 +34,10 @@ export default function RootLayout({
         <UserProvider>
           <ThemeContextProvider>
             <ThemeProvider>
-              <PwaRegister />
-              {children}
+              <ToastProvider>
+                <PwaRegister />
+                {children}
+              </ToastProvider>
             </ThemeProvider>
           </ThemeContextProvider>
         </UserProvider>

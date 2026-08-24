@@ -114,7 +114,7 @@ export type UserContextType = {
   loading: boolean;
   addXpAndPt: (xp: number, pt: number) => Promise<void>;
   buyEffect: (effectId: string, cost: number) => Promise<boolean>;
-  updateUserData: (updates: Partial<UserData>) => Promise<void>;
+  updateUserData: (updates: Partial<UserData>) => Promise<boolean>;
   updateUserDataAtomic: (updater: (current: UserData) => Partial<UserData> | null) => Promise<boolean>;
   logout: () => Promise<void>;
 };
@@ -254,20 +254,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [userData?.lastLoginDate, loading]);
 
-  const updateUserData = async (updates: Partial<UserData>) => {
-    if (!userData) return;
+  const updateUserData = async (updates: Partial<UserData>): Promise<boolean> => {
+    if (!userData) return false;
+    const previousData = userData;
     const newData = { ...userData, ...updates };
 
     if (isGuest) {
       storage.updateGuestData(updates);
       setUserData(newData);
+      return true;
     } else if (user) {
       // Optimistic UI update
       setUserData(newData);
       writeUserCache(newData);
-      // Sync to firebase
-      await setDoc(doc(db, "users", user.uid), updates, { merge: true });
+      try {
+        // Sync to firebase
+        await setDoc(doc(db, "users", user.uid), updates, { merge: true });
+        return true;
+      } catch (e) {
+        // 書き込み失敗時は楽観的更新を取り消し、呼び出し元がエラー表示できるよう false を返す
+        console.error("updateUserData failed", e);
+        setUserData(previousData);
+        writeUserCache(previousData);
+        return false;
+      }
     }
+    return false;
   };
 
   // updateUserData は呼び出し側が保持しているローカルの userData を起点に新しい値を計算するため、

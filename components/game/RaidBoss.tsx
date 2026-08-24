@@ -76,29 +76,10 @@ export function RaidBoss({ showButtons = true, showOtherGradesLink = true }: Rai
     }
   }, [isGuest, user, currentMonth, userData?.grade]);
 
-  // Give titles based on current level
-  useEffect(() => {
-    if (userData && updateUserData && userData.totalDamage > 0) {
-      const missingTitles: string[] = [];
-      const effectiveLevel = hp <= 0 && level >= MAX_RAID_LEVEL ? MAX_RAID_LEVEL + 1 : level;
-      
-      for (let i = 1; i < effectiveLevel; i++) {
-        const titleName = `Lv${i}討伐隊`;
-        if (!userData.titles.includes(titleName)) {
-          missingTitles.push(titleName);
-        }
-      }
-
-      if (missingTitles.length > 0) {
-        updateUserData({ titles: [...userData.titles, ...missingTitles] });
-        if (missingTitles.includes("Lv10討伐隊")) {
-           alert("🎉 驚異的！ついに最大レベルのレイドボスを討伐した！！「Lv10討伐隊」の称号をゲット！");
-        } else {
-           alert(`🎉 やったー！レイドボス討伐の恩恵として、新しい称号「${missingTitles[0]}」などをゲットしたよ！`);
-        }
-      }
-    }
-  }, [level, hp, userData, updateUserData]);
+  // 「LvN討伐隊」称号は、実際にトドメを刺したプレイヤーにのみ app/game/page.tsx 側の
+  // finishGame() 内で付与される。以前ここにあった「現在のボスレベルより下は全部討伐済みとみなす」
+  // 判定は、戦っていない子にも共有ボス（学年全体で1体）のレベル分だけ称号が付いてしまう不具合の
+  // 原因だったため削除した。
 
   const percent = maxHp > 0 ? Math.max(0, (hp / maxHp) * 100) : 0;
   

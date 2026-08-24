@@ -18,10 +18,12 @@ import { KeyboardInput } from "../../components/game/KeyboardInput";
 import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import { soundManager } from "../../lib/soundManager";
+import { useToast } from "../../components/ui/Toast";
 
 export default function GamePage() {
   const router = useRouter();
   const { userData, updateUserDataAtomic, loading } = useUser();
+  const { showToast } = useToast();
   const [questions, setQuestions] = useState<(KanjiQuestion | MathQuestion | ScienceQuestion | SocialQuestion)[]>([]);
   const [isMath, setIsMath] = useState(false);
   const [subjectType, setSubjectType] = useState<"kanji" | "math" | "science" | "social">("kanji");
@@ -29,6 +31,7 @@ export default function GamePage() {
   const [mode, setMode] = useState<"4choice" | "keyboard">("4choice");
   const [isFinished, setIsFinished] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const isSubmittingRef = useRef(false);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   
@@ -374,14 +377,18 @@ export default function GamePage() {
             newMastered.current.forEach(id => {
               if (newMistakes.current.has(id)) return; // 同一セッション内でまちがえ直したものは対象外
               if (!(current.mistakeIds || []).includes(id)) return;
-              const nextStage = (stages[id] ?? 0) + 1;
+              // 今回の成功「前」の段階を間隔テーブルのインデックスに使うことで、
+              // 1回目の成功が REVIEW_INTERVALS_DAYS[0]（1日後）に正しく対応するようにする。
+              // （nextStage をインデックスに使うと1日後の段階に永遠に到達しないバグがあった）
+              const currentStage = stages[id] ?? 0;
+              const nextStage = currentStage + 1;
               if (nextStage >= GRADUATION_STAGE) {
                 graduated.add(id);
                 delete stages[id];
                 delete nextReview[id];
               } else {
                 stages[id] = nextStage;
-                nextReview[id] = getNextReviewDate(nextStage, todayStr);
+                nextReview[id] = getNextReviewDate(currentStage, todayStr);
               }
             });
           }
@@ -477,6 +484,11 @@ export default function GamePage() {
           };
         });
 
+        if (!ok) {
+          setSaveFailed(true);
+          showToast("けっかを保存できませんでした。通信状態を確認してもう一度お試しください");
+        }
+
         if (ok && newlyMastered) {
           setUnlockedMastery(true);
         }
@@ -504,7 +516,11 @@ export default function GamePage() {
       }
     } catch (err) {
       console.error("Failed to finish game and update data:", err);
+      setSaveFailed(true);
+      showToast("けっかを保存できませんでした。通信状態を確認してもう一度お試しください");
     } finally {
+      // 失敗時に「もういちど保存する」ボタンから再実行できるよう、二重送信ガードを解除する
+      isSubmittingRef.current = false;
       setIsFinishing(false);
       setIsFinished(true);
     }
@@ -531,48 +547,76 @@ export default function GamePage() {
           animate={{ scale: 1, opacity: 1 }}
           className="game-panel p-12 max-w-md w-full text-center"
         >
-          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-amber-500 mb-6 drop-shadow-game text-outline">
-            クリア！
-          </h1>
-          {unlockedMastery && (
-            <div className="bg-yellow-100 border-4 border-yellow-400 text-yellow-800 p-4 rounded-2xl mb-6 font-black animate-pulse">
-              🎉 すごい！学年マスター達成！<br/>
-              かくし称号とアバターをゲットしたよ！
-            </div>
+          {saveFailed ? (
+            <>
+              <h1 className="text-4xl font-black text-red-500 mb-6 drop-shadow-md">
+                ⚠️ 保存できませんでした
+              </h1>
+              <div className="bg-red-100 border-4 border-red-400 text-red-700 p-4 rounded-2xl mb-8 font-bold">
+                通信状態が悪く、けっかを保存できませんでした。<br/>
+                「もういちど保存する」を押してください。<br/>
+                このままホームに戻ると今回の分の報酬は消えてしまいます。
+              </div>
+              <div className="flex flex-col gap-3">
+                <Button
+                  size="lg"
+                  className="w-full text-xl py-5"
+                  variant="fun"
+                  onClick={() => { setIsFinished(false); setSaveFailed(false); finishGame(); }}
+                >
+                  🔄 もういちど保存する
+                </Button>
+                <Button size="md" className="w-full" variant="outline" onClick={() => router.push("/home")}>
+                  ホームにもどる（保存せず終了）
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-amber-500 mb-6 drop-shadow-game text-outline">
+                クリア！
+              </h1>
+              {unlockedMastery && (
+                <div className="bg-yellow-100 border-4 border-yellow-400 text-yellow-800 p-4 rounded-2xl mb-6 font-black animate-pulse">
+                  🎉 すごい！学年マスター達成！<br/>
+                  かくし称号とアバターをゲットしたよ！
+                </div>
+              )}
+              {isRevenge && (
+                <div className="text-xl font-black text-orange-500 mb-2 animate-bounce">
+                  🔥リベンジボーナス x2🔥
+                </div>
+              )}
+              {mode === "keyboard" && (
+                <div className="text-xl font-black text-pink-500 mb-4 animate-bounce">
+                  ⌨️ キーボードボーナス x3! ⌨️
+                </div>
+              )}
+              {maxCombo > 2 && (
+                <div className="text-lg font-bold text-amber-500 mb-2">
+                  最大コンボ: {maxCombo} (倍率 x{(1 + maxCombo * 0.1).toFixed(1)})
+                </div>
+              )}
+              {totalMistakes > 0 && (
+                <div className="text-lg font-bold text-red-500 mb-4 bg-red-50 p-2 rounded-xl">
+                  まちがえた回数: {totalMistakes} 回
+                </div>
+              )}
+              {hasPenalty && (
+                <div className="text-sm font-bold text-blue-500 mb-4 bg-blue-50 p-2 rounded-xl border border-blue-200">
+                  ℹ️ 自分の学年より下の問題があったため、もらえる経験値が少なくなったよ！
+                </div>
+              )}
+              <div className="text-4xl font-black mb-4 text-cyan-400 drop-shadow-md">+ {finalXP} XP</div>
+              <div className={`text-3xl font-black mb-10 drop-shadow-sm ${isSpSubject ? 'text-emerald-400' : 'text-amber-500'}`}>
+                + {finalPT} {isSpSubject ? 'SP' : 'PT'}
+              </div>
+
+              <Button size="lg" className="w-full text-2xl py-6" variant="fun" onClick={() => router.push("/home")}>
+                ホームにもどる
+              </Button>
+            </>
           )}
-          {isRevenge && (
-            <div className="text-xl font-black text-orange-500 mb-2 animate-bounce">
-              🔥リベンジボーナス x2🔥
-            </div>
-          )}
-          {mode === "keyboard" && (
-            <div className="text-xl font-black text-pink-500 mb-4 animate-bounce">
-              ⌨️ キーボードボーナス x3! ⌨️
-            </div>
-          )}
-          {maxCombo > 2 && (
-            <div className="text-lg font-bold text-amber-500 mb-2">
-              最大コンボ: {maxCombo} (倍率 x{(1 + maxCombo * 0.1).toFixed(1)})
-            </div>
-          )}
-          {totalMistakes > 0 && (
-            <div className="text-lg font-bold text-red-500 mb-4 bg-red-50 p-2 rounded-xl">
-              まちがえた回数: {totalMistakes} 回
-            </div>
-          )}
-          {hasPenalty && (
-            <div className="text-sm font-bold text-blue-500 mb-4 bg-blue-50 p-2 rounded-xl border border-blue-200">
-              ℹ️ 自分の学年より下の問題があったため、もらえる経験値が少なくなったよ！
-            </div>
-          )}
-          <div className="text-4xl font-black mb-4 text-cyan-400 drop-shadow-md">+ {finalXP} XP</div>
-          <div className={`text-3xl font-black mb-10 drop-shadow-sm ${isSpSubject ? 'text-emerald-400' : 'text-amber-500'}`}>
-            + {finalPT} {isSpSubject ? 'SP' : 'PT'}
-          </div>
-          
-          <Button size="lg" className="w-full text-2xl py-6" variant="fun" onClick={() => router.push("/home")}>
-            ホームにもどる
-          </Button>
         </motion.div>
       </main>
     );

@@ -144,8 +144,8 @@ export default function RankingPage() {
         const sorted = data
           .filter(u => (u.monthlyDamage || 0) > 0 || (u.xp || 0) > 0)
           .sort((a, b) => {
-            const aDmg = a.lastMonthString === currentMonth ? (a.monthlyDamage || 0) : (a.monthlyDamage || 0);
-            const bDmg = b.lastMonthString === currentMonth ? (b.monthlyDamage || 0) : (b.monthlyDamage || 0);
+            const aDmg = a.lastMonthString === currentMonth ? (a.monthlyDamage || 0) : 0;
+            const bDmg = b.lastMonthString === currentMonth ? (b.monthlyDamage || 0) : 0;
             if (bDmg !== aDmg) return bDmg - aDmg;
             return (b.xp || 0) - (a.xp || 0);
           })
@@ -310,7 +310,7 @@ export default function RankingPage() {
               ) : (
                 <div className="flex flex-col gap-4">
                   {damageRanking.map((user, index) => {
-                    const score = user.monthlyDamage || 0;
+                    const score = user.lastMonthString === currentMonth ? (user.monthlyDamage || 0) : 0;
                     return renderUserCard(user, index, score, "ダメージ");
                   })}
                 </div>

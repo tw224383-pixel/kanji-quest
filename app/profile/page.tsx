@@ -22,6 +22,7 @@ import { storage } from "../../lib/storage";
 
 import { AdventurerGrowthReport } from "../../components/profile/AdventurerGrowthReport";
 import { ShareCodeCard } from "../../components/profile/ShareCodeCard";
+import { useToast } from "../../components/ui/Toast";
 
 const AvatarPreviewModal = dynamic(() => import("../../components/ui/AvatarPreviewModal").then(mod => mod.AvatarPreviewModal), { ssr: false });
 const EquipmentPreviewModal = dynamic(() => import("../../components/ui/EquipmentPreviewModal").then(mod => mod.EquipmentPreviewModal), { ssr: false });
@@ -37,6 +38,7 @@ type Tab = "stats" | "avatars" | "equipments" | "titles" | "themes" | "effects";
 export default function ProfilePage() {
   const { userData, updateUserData, logout, loading } = useUser();
   const router = useRouter();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("stats");
   
   const [previewTitle, setPreviewTitle] = useState<string | null>(null);
@@ -67,11 +69,13 @@ export default function ProfilePage() {
   }
 
   const handleEquip = async (category: "title" | "avatar" | "theme" | "effect" | "equipment", id: string) => {
-    if (category === "title") await updateUserData({ equippedTitle: id });
-    if (category === "avatar") await updateUserData({ equippedAvatar: id });
-    if (category === "theme") await updateUserData({ theme: id });
-    if (category === "effect") await updateUserData({ equippedEffect: id });
-    if (category === "equipment") await updateUserData({ equippedEquipment: id });
+    let ok = true;
+    if (category === "title") ok = await updateUserData({ equippedTitle: id });
+    if (category === "avatar") ok = await updateUserData({ equippedAvatar: id });
+    if (category === "theme") ok = await updateUserData({ theme: id });
+    if (category === "effect") ok = await updateUserData({ equippedEffect: id });
+    if (category === "equipment") ok = await updateUserData({ equippedEquipment: id });
+    if (!ok) showToast("へんこうを保存できませんでした。もう一度お試しください");
     setPreviewTitle(null);
     setPreviewAvatar(null);
     setPreviewEquipment(null);

@@ -9,12 +9,13 @@ import { db } from "../../lib/firebase";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateAdventurerStats } from "../../lib/userStatsLogic";
-import { 
-  AchievementItem, 
-  AchievementTabType, 
-  ACHIEVEMENT_TABS, 
-  getAchievements 
+import {
+  AchievementItem,
+  AchievementTabType,
+  ACHIEVEMENT_TABS,
+  getAchievements
 } from "../../lib/achievementLogic";
+import { useToast } from "../../components/ui/Toast";
 
 type TabType = AchievementTabType;
 type FilterType = "all" | "claimable" | "claimed" | "locked";
@@ -22,6 +23,7 @@ type FilterType = "all" | "claimable" | "claimed" | "locked";
 export default function AchievementsPage() {
   const { userData, updateUserDataAtomic, loading } = useUser();
   const router = useRouter();
+  const { showToast } = useToast();
   const [gradeBossLevel, setGradeBossLevel] = useState(1);
   const [rewardModal, setRewardModal] = useState<{ pt: number; sp: number; title: string; unlockedTitle?: string } | null>(null);
   
@@ -106,6 +108,8 @@ export default function AchievementsPage() {
     if (ok) {
       const finalReward = reward as unknown as ClaimReward;
       setRewardModal({ pt: finalReward.pt, sp: finalReward.sp, title: ach.name, unlockedTitle: finalReward.unlockedTitle });
+    } else {
+      showToast("受け取りに失敗しました。もう一度お試しください");
     }
   };
 
@@ -147,6 +151,8 @@ export default function AchievementsPage() {
     if (ok) {
       const finalReward = reward as unknown as ClaimAllReward;
       setRewardModal({ pt: finalReward.pt, sp: finalReward.sp, title: `${claimedCount}個の実績` });
+    } else {
+      showToast("受け取りに失敗しました。もう一度お試しください");
     }
   };
 
