@@ -109,7 +109,8 @@ export default function ShopPage() {
       }
       return null;
     });
-    if (!ok) showToast("こうにゅうできませんでした。ポイント不足か通信エラーの可能性があります");
+    if (ok === false) showToast("通信エラーでこうにゅうできませんでした。もう一度お試しください");
+    else if (ok === null) showToast("ポイントが足りないか、すでに持っています");
   };
 
   const handleRequestGacha = (type: "regular" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment") => {
@@ -168,7 +169,8 @@ export default function ShopPage() {
 
       if (!ok || !resultItem) {
         setPullingType(null);
-        showToast("ガチャをまわせませんでした。SP不足か通信エラーの可能性があります");
+        if (ok === false) showToast("通信エラーでガチャをまわせませんでした。もう一度お試しください");
+        else showToast("SPが足りません");
         return;
       }
       const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
@@ -212,7 +214,8 @@ export default function ShopPage() {
 
       if (!ok || !resultItem) {
         setPullingType(null);
-        showToast("ガチャをまわせませんでした。PT不足か通信エラーの可能性があります");
+        if (ok === false) showToast("通信エラーでガチャをまわせませんでした。もう一度お試しください");
+        else showToast("PTが足りません");
         return;
       }
       const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };
@@ -277,7 +280,8 @@ export default function ShopPage() {
 
     if (!ok || !result) {
       setPullingType(null);
-      showToast("ガチャをまわせませんでした。PT不足か通信エラーの可能性があります");
+      if (ok === false) showToast("通信エラーでガチャをまわせませんでした。もう一度お試しください");
+      else showToast("PTが足りません");
       return;
     }
     const rarityLevels: Record<string, number> = { "ノーマル": 1, "レア": 2, "激レア": 3, "超激レア": 4, "神レア": 5 };

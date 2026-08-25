@@ -117,9 +117,11 @@ export type UserContextType = {
   isGuest: boolean;
   loading: boolean;
   addXpAndPt: (xp: number, pt: number) => Promise<void>;
-  buyEffect: (effectId: string, cost: number) => Promise<boolean>;
+  buyEffect: (effectId: string, cost: number) => Promise<boolean | null>;
   updateUserData: (updates: Partial<UserData>) => Promise<boolean>;
-  updateUserDataAtomic: (updater: (current: UserData) => Partial<UserData> | null) => Promise<boolean>;
+  // 戻り値: true=成功 / false=通信・保存エラー（呼び出し側はエラー表示すべき）
+  // / null=updaterが意図的に中断（残高不足・二重クリック等）で、エラーではない（無表示でよい）
+  updateUserDataAtomic: (updater: (current: UserData) => Partial<UserData> | null) => Promise<boolean | null>;
   logout: () => Promise<void>;
 };
 
@@ -314,11 +316,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // updater が null を返すと書き込みを中止する（残高不足時など）。
   const updateUserDataAtomic = async (
     updater: (current: UserData) => Partial<UserData> | null
-  ): Promise<boolean> => {
+  ): Promise<boolean | null> => {
     if (isGuest) {
       if (!userData) return false;
       const updates = updater(userData);
-      if (!updates) return false;
+      if (!updates) return null;
       storage.updateGuestData(updates);
       setUserData({ ...userData, ...updates });
       return true;
@@ -340,9 +342,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       writeUserCache(newData);
       return true;
     } catch (e) {
-      if ((e as Error).message !== "aborted") {
-        console.error("updateUserDataAtomic failed", e);
+      if ((e as Error).message === "aborted") {
+        return null;
       }
+      console.error("updateUserDataAtomic failed", e);
       return false;
     }
   };

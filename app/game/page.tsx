@@ -510,7 +510,7 @@ export default function GamePage() {
           };
         });
 
-        if (!ok) {
+        if (ok === false) {
           setSaveFailed(true);
           showToast("けっかを保存できませんでした。通信状態を確認してもう一度お試しください");
         }

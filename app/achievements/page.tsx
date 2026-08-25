@@ -108,7 +108,9 @@ export default function AchievementsPage() {
     if (ok) {
       const finalReward = reward as unknown as ClaimReward;
       setRewardModal({ pt: finalReward.pt, sp: finalReward.sp, title: ach.name, unlockedTitle: finalReward.unlockedTitle });
-    } else {
+    } else if (ok === false) {
+      // ok === null は「既に受け取り済み」等の意図的な中断（二重クリック等）で
+      // エラーではないため無表示にする。実際に保存できなかった場合だけ通知する。
       showToast("受け取りに失敗しました。もう一度お試しください");
     }
   };
@@ -151,7 +153,7 @@ export default function AchievementsPage() {
     if (ok) {
       const finalReward = reward as unknown as ClaimAllReward;
       setRewardModal({ pt: finalReward.pt, sp: finalReward.sp, title: `${claimedCount}個の実績` });
-    } else {
+    } else if (ok === false) {
       showToast("受け取りに失敗しました。もう一度お試しください");
     }
   };
