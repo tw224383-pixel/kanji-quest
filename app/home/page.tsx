@@ -316,7 +316,7 @@ export default function Home() {
                   router.push(`/game?subject=social&categories=${encodeURIComponent(targetSocialCategories.join(","))}&count=${questionCount}`);
                 }
               }} 
-              className={`w-full text-xl md:text-3xl h-20 shadow-lg group relative overflow-hidden whitespace-nowrap ${
+              className={`w-full text-base sm:text-xl md:text-3xl min-h-20 h-auto py-4 pr-14 pl-3 leading-tight shadow-lg group relative overflow-hidden ${
                 subject === 'math' ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30 border-blue-700' :
                 subject === 'science' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30 border-emerald-700' :
                 subject === 'social' ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/30 border-orange-700' :
@@ -339,23 +339,23 @@ export default function Home() {
                 {kanjiMistakes > 0 || mathMistakes > 0 || scienceMistakes > 0 || socialMistakes > 0 ? (
               <div className="flex flex-col md:flex-row gap-4">
                 {kanjiMistakes > 0 ? (
-                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=kanji&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30 whitespace-nowrap">
+                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=kanji&revenge=true`)} className="flex-1 min-h-16 h-auto py-3 px-2 text-sm sm:text-md leading-tight animate-pulse shadow-red-500/30">
                     🔥 漢字 きょうのふくしゅう ({kanjiMistakes})
                   </Button>
                 ) : <div className="flex-1 hidden md:block"></div>}
 
                 {mathMistakes > 0 ? (
-                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=math&revenge=true`)} className="flex-1 h-16 text-md animate-pulse shadow-red-500/30 whitespace-nowrap">
+                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=math&revenge=true`)} className="flex-1 min-h-16 h-auto py-3 px-2 text-sm sm:text-md leading-tight animate-pulse shadow-red-500/30">
                     🔥 算数 きょうのふくしゅう ({mathMistakes})
                   </Button>
                 ) : <div className="flex-1 hidden md:block"></div>}
               </div>
             ) : hasAnyMistakesNotDue ? (
-              <Button variant="ghost" size="lg" disabled className="h-16 text-sm md:text-lg bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed whitespace-nowrap">
+              <Button variant="ghost" size="lg" disabled className="min-h-16 h-auto py-3 px-3 text-xs sm:text-sm md:text-lg leading-tight bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed">
                 📅 きょうの ふくしゅうは ないよ・またあとで きてね
               </Button>
             ) : (
-              <Button variant="ghost" size="lg" disabled className="h-16 text-sm md:text-lg bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed whitespace-nowrap">
+              <Button variant="ghost" size="lg" disabled className="min-h-16 h-auto py-3 px-3 text-xs sm:text-sm md:text-lg leading-tight bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed">
                 🔒 今は苦手なもんだいがないようだ・・・（封印中）
               </Button>
             )}
@@ -447,10 +447,10 @@ export default function Home() {
 
         {/* 3. その他のメニュー */}
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="primary" onClick={() => router.push("/encyclopedia")} className="h-full text-xl flex flex-col items-center justify-center gap-2 py-4 whitespace-nowrap">
+          <Button variant="primary" onClick={() => router.push("/encyclopedia")} className="h-full text-base sm:text-xl flex flex-col items-center justify-center gap-2 py-4 px-2 leading-tight">
             <span className="text-4xl">📖</span> かんじ図鑑
           </Button>
-          <Button variant="primary" onClick={() => router.push("/ranking")} className="h-full text-xl flex items-center justify-center gap-2 py-4 whitespace-nowrap">
+          <Button variant="primary" onClick={() => router.push("/ranking")} className="h-full text-base sm:text-xl flex flex-col items-center justify-center gap-2 py-4 px-2 leading-tight">
             <span className="text-3xl">👑</span> こんしゅうのヒーロー
           </Button>
         </div>

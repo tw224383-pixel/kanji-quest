@@ -452,12 +452,16 @@ export function AvatarEncyclopediaModal({
 
                       {/* Item Name & Series */}
                       <div className="text-center w-full mt-2">
-                        <div className={`font-black text-xs sm:text-sm line-clamp-1 ${
+                        {/* line-clamp-1 だとスマホ幅では「スイーツデコのパステルガントレット」等、
+                            大半のアイテム名が途中で切れて読めなかったため2行まで表示する。 */}
+                        <div className={`font-black text-xs sm:text-sm line-clamp-2 leading-snug min-h-[2.4em] ${
                           owned ? "text-slate-100" : "text-slate-400"
                         }`}>
                           {entry.name}
                         </div>
-                        <div className="text-[10px] font-bold text-pink-300/80 truncate mt-0.5">
+                        {/* truncate だと320px幅で「🎀 ふわふわ装備ガチ…」のように
+                            排出元ガチャ名が切れてしまうため、2行まで折り返す。 */}
+                        <div className="text-[10px] font-bold text-pink-300/80 leading-snug line-clamp-2 mt-0.5">
                           {entry.gachaName}
                         </div>
                       </div>

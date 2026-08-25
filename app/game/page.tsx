@@ -36,7 +36,14 @@ const MATH_UNITS = [
 function extractTrailingMathUnit(reading: string): string {
   const trimmed = reading.trim();
   for (const unit of MATH_UNITS) {
-    if (trimmed.endsWith(unit) && trimmed.length > unit.length) return unit;
+    if (!trimmed.endsWith(unit) || trimmed.length <= unit.length) continue;
+    // 単位を取り除いた残りが「ただの数」でない場合はヒントを出さない。
+    // 例:「10時10分」は末尾が"分"だが、残りは "10時10" となり、
+    // 「すう字だけ入力してね」と案内すると逆に混乱するため。
+    // その場合は従来どおり答え全体を入力してもらう。
+    const rest = trimmed.slice(0, trimmed.length - unit.length);
+    if (!/^\d+(\.\d+)?(\/\d+)?$/.test(rest)) continue;
+    return unit;
   }
   return "";
 }
