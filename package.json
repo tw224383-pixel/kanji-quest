@@ -9,7 +9,9 @@
     "lint": "next lint",
     "check:items": "node scripts/checkItemSync.js",
     "check:questions": "node scripts/checkQuestionData.js",
-    "deploy": "next build && firebase deploy --project kanji-quest-b1a45 --only hosting"
+    "check:rules": "node scripts/checkFirestoreRules.js",
+    "deploy": "next build && firebase deploy --project kanji-quest-b1a45 --only hosting",
+    "deploy:rules": "npm run check:rules && firebase deploy --project kanji-quest-b1a45 --only firestore:rules"
   },
   "dependencies": {
     "clsx": "^2.1.1",

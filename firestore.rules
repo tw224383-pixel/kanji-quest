@@ -3,11 +3,24 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ユーザーデータ：認証済みユーザーなら他ユーザーのプロフィール・ランキング情報も読める。書き込みは本人のみ。
-    // クライアントが直接 XP/PT/SP 等を書き込む構成のため、値の型・範囲・1回の書き込みあたりの増加量を
-    // ルールで制限し、devtools からの無制限な数値改ざんを防ぐ。
+    // クライアントが直接 XP/PT/SP 等を書き込む構成のため、ルール側で
+    //   (1) 書き込めるフィールドの許可リスト
+    //   (2) 1回の書き込みで増やせる量の上限
+    // を検証し、devtools からの無制限な数値改ざんを防ぐ。
     // 注意: これは緩和策であり完全な不正防止ではない（真の対策はサーバー側計算＝Cloud Functions化）。
-    // 実績の「まとめて受け取り」機能が PT/SP を1回の書き込みで大きく増やすため、
-    // その正規の最大合計値を考慮した上限（下記コメント参照）を設定している。
+    //
+    // 【重要・このルールを編集する人へ】
+    // Firestoreのルールは「1リクエストあたり最大1000式」までしか評価できない。
+    // 以前このバリデーションを細かくしすぎた結果、所持数の多いアカウントで上限を超え、
+    //   "Unable to evaluate the expression as the maximum of 1000 expressions has been reached"
+    // となって書き込みが丸ごと拒否され、実績の受け取りが失敗する不具合が発生した。
+    // （merge:true の更新では request.resource.data がドキュメント全体になるため、
+    //   毎回すべてのフィールドが検証され、式数が積み上がる点に注意）
+    // そのため、ここでは意図的にチェックを絞っている：
+    //   - 効果の薄い各文字列フィールドの長さチェックは行わない
+    //   - 絶対上限(ceiling)は設けない。1回あたりの増加量(delta)だけで十分に抑止できるうえ、
+    //     絶対上限は過去に「上限に達したアカウントが二度と書き込めない」ロックアウトも招いた
+    // チェックを追加する場合は必ず scripts/simulateClaim 相当の検証で式数に余裕があるか確認すること。
     match /users/{userId} {
       allow read: if request.auth != null;
 
@@ -47,27 +60,31 @@ service cloud.firestore {
       return (key in data) && (data[key] is number) ? data[key] : 0;
     }
 
-    // key: フィールド名 / updateDelta: 通常更新1回あたりの最大増加量
-    // createAllowance: アカウント作成時（ゲスト引き継ぎ含む）に許容する初期値の上限
-    // ceiling: このフィールドが取りうる絶対上限値
-    //
-    // effectiveCeiling: 過去（旧デバッグパネル等）に ceiling を超える値が書き込まれてしまった
-    // アカウントが、以後ずっと一切の更新を拒否され続ける（実質アカウント破損）のを防ぐため、
-    // 既存値が ceiling を超えている場合はその既存値を基準にする。
-    // 【修正】以前は effectiveCeiling を oldVal そのものにしていたため、newData <= effectiveCeiling
-    // (= newData <= oldVal) が要求され、汚染されたアカウントがそれ以降ずっと値を1も増やせなく
-    // なっていた（「ポイントが多い人ほど新たに獲得できない」バグ）。oldVal + maxIncrease を
-    // 上限にすることで、汚染された絶対値はそのまま（手動修正が必要）だが、通常のプレイ・実績
-    // 受け取りによる増加は引き続きでき、1回の書き込みで増やせる量も従来どおり制限される。
-    function withinDelta(newData, oldData, key, updateDelta, createAllowance, ceiling) {
+    // 1回の書き込みで増やせる量だけを制限する（絶対上限は設けない。上のコメント参照）。
+    // updateDelta: 通常更新1回あたりの最大増加量
+    // createAllowance: アカウント作成時（ゲストからの引き継ぎ含む）に許容する初期値
+    function withinDelta(newData, oldData, key, updateDelta, createAllowance) {
       let oldVal = oldData == null ? 0 : numOr0(oldData, key);
       let maxIncrease = oldData == null ? createAllowance : updateDelta;
-      let effectiveCeiling = oldVal > ceiling ? oldVal + maxIncrease : ceiling;
       return !(key in newData) || (
         newData[key] is number
         && newData[key] >= 0
-        && newData[key] <= effectiveCeiling
         && newData[key] <= oldVal + maxIncrease
+      );
+    }
+
+    // 週間XP・月間ダメージ用。期間が変わったとき（lastWeekString / lastMonthString が変化）は
+    // 0にリセットされるため、増加上限のチェックを免除する。
+    function withinPeriodDelta(newData, oldData, key, periodKey, maxDelta) {
+      return !(key in newData) || (
+        newData[key] is number
+        && newData[key] >= 0
+        && (
+          oldData == null
+          || newData[key] <= numOr0(oldData, key) + maxDelta
+          || !(periodKey in oldData)
+          || newData[periodKey] != oldData[periodKey]
+        )
       );
     }
 
@@ -83,81 +100,50 @@ service cloud.firestore {
         'bestWeeklyHeroRank', 'bestDamageRank'
       ])
 
+      // ランキングに他の子から見える名前と、ランキングの学年分けに使う値だけは検証する。
       && (!('name' in newData) || (newData.name is string && newData.name.size() <= 30))
       && (!('grade' in newData) || (newData.grade is int && newData.grade >= 1 && newData.grade <= 6))
-      && (!('theme' in newData) || (newData.theme is string && newData.theme.size() <= 50))
-      && (!('equippedTitle' in newData) || (newData.equippedTitle is string && newData.equippedTitle.size() <= 50))
-      && (!('equippedAvatar' in newData) || (newData.equippedAvatar is string && newData.equippedAvatar.size() <= 50))
-      && (!('equippedEquipment' in newData) || (newData.equippedEquipment is string && newData.equippedEquipment.size() <= 50))
-      && (!('equippedEffect' in newData) || (newData.equippedEffect is string && newData.equippedEffect.size() <= 50))
-      && (!('scaryMode' in newData) || newData.scaryMode is bool)
-      && (!('lastLoginDate' in newData) || (newData.lastLoginDate is string && newData.lastLoginDate.size() <= 10))
-      && (!('lastWeekString' in newData) || (newData.lastWeekString is string && newData.lastWeekString.size() <= 10))
-      && (!('lastMonthString' in newData) || (newData.lastMonthString is string && newData.lastMonthString.size() <= 10))
 
-      && (!('effects' in newData) || (newData.effects is list && newData.effects.size() <= 300))
-      && (!('titles' in newData) || (newData.titles is list && newData.titles.size() <= 300))
-      && (!('avatars' in newData) || (newData.avatars is list && newData.avatars.size() <= 300))
-      && (!('equipments' in newData) || (newData.equipments is list && newData.equipments.size() <= 300))
-      && (!('mistakeIds' in newData) || (newData.mistakeIds is list && newData.mistakeIds.size() <= 2000))
-      && (!('masteredIds' in newData) || (newData.masteredIds is list && newData.masteredIds.size() <= 5000))
-      && (!('claimedAchievements' in newData) || (newData.claimedAchievements is list && newData.claimedAchievements.size() <= 300))
-      && (!('mistakeStages' in newData) || (newData.mistakeStages is map && newData.mistakeStages.size() <= 2000))
-      && (!('mistakeNextReview' in newData) || (newData.mistakeNextReview is map && newData.mistakeNextReview.size() <= 2000))
-      && (!('shareCode' in newData) || (newData.shareCode is string && newData.shareCode.size() <= 12))
+      // ドキュメントの肥大化（＝コスト増・読み込み遅延）を防ぐための上限。
+      && (!('mistakeIds' in newData) || newData.mistakeIds.size() <= 2000)
+      && (!('masteredIds' in newData) || newData.masteredIds.size() <= 5000)
+      && (!('titles' in newData) || newData.titles.size() <= 500)
+      && (!('avatars' in newData) || newData.avatars.size() <= 500)
+      && (!('effects' in newData) || newData.effects.size() <= 500)
+      && (!('equipments' in newData) || newData.equipments.size() <= 500)
+      && (!('claimedAchievements' in newData) || newData.claimedAchievements.size() <= 500)
+      && (!('mistakeStages' in newData) || newData.mistakeStages.size() <= 2000)
+      && (!('mistakeNextReview' in newData) || newData.mistakeNextReview.size() <= 2000)
 
-      // ランキング実績用の自己最高順位。「更新されるのは記録が縮まる時だけ」にすることで
-      // 巻き戻し（悪い順位で上書きして後から良い順位に戻す等の不正操作）の余地を減らす。
-      && (!('bestWeeklyHeroRank' in newData) || (
-        newData.bestWeeklyHeroRank is int && newData.bestWeeklyHeroRank >= 1 && newData.bestWeeklyHeroRank <= 999
-        && (oldData == null || numOr0(oldData, 'bestWeeklyHeroRank') == 0 || newData.bestWeeklyHeroRank <= numOr0(oldData, 'bestWeeklyHeroRank'))
-      ))
-      && (!('bestDamageRank' in newData) || (
-        newData.bestDamageRank is int && newData.bestDamageRank >= 1 && newData.bestDamageRank <= 999
-        && (oldData == null || numOr0(oldData, 'bestDamageRank') == 0 || newData.bestDamageRank <= numOr0(oldData, 'bestDamageRank'))
-      ))
-
+      // 連続ログインは1日1増加まで。
       && (!('loginStreak' in newData) || (
-        newData.loginStreak is int && newData.loginStreak >= 1 && newData.loginStreak <= 5000
+        newData.loginStreak is int
+        && newData.loginStreak >= 1
         && (oldData == null || newData.loginStreak <= numOr0(oldData, 'loginStreak') + 1)
       ))
 
-      // xp / totalDamage: 通常プレイ由来のみ（1セッション最大 約3,600 相当）→ 更新は5,000まで。
-      // 作成時はゲストで蓄積した分の引き継ぎを考慮し余裕を持たせる。上限はLv300到達に必要な量(約93万)の倍以上。
-      && withinDelta(newData, oldData, 'xp', 5000, 1000000, 2000000)
-      && withinDelta(newData, oldData, 'totalDamage', 5000, 1000000, 2000000)
-      // pt / sp: 通常プレイに加え「実績まとめ受け取り」で一度に増える。
-      // 全実績（ランキング実績追加後）の合計は最大 約54.3万PT / 約20.1万SP のため、
-      // それを1回の書き込みで受け取っても弾かれないよう更新上限に余裕を持たせている。
-      // 絶対上限（ceiling）も、長期間・複数年にわたる累計プレイで正規に到達しうる範囲を
-      // 想定し、以前の設定（100万/50万）から引き上げた。
-      && withinDelta(newData, oldData, 'pt', 600000, 600000, 5000000)
-      && withinDelta(newData, oldData, 'sp', 250000, 250000, 2000000)
-      // 週間/月間カウンターは期間が変わるとリセットされるため増加上限チェックを免除する。
-      // 上限は「1セッション最大3,600 × 20回/日 × 期間」を想定して設定する。
-      // 旧設定(いずれも100万)は月間カウンターだと 3,600×20×30日 = 216万 に届かず、
-      // 熱心にプレイする子ほど月の途中で上限に達し、以後その月いっぱい finishGame の
-      // 書き込みが丸ごと拒否され続ける（＝報酬が一切保存されない）恐れがあった。
-      // pt/sp と同様に「既存値が上限を超えていても増分制限の範囲でなら書ける」形にして、
-      // 万一到達しても詰まないようにしている。
-      && (!('weeklyXp' in newData) || (
-        newData.weeklyXp is number && newData.weeklyXp >= 0
-        && (oldData == null
-            ? newData.weeklyXp <= 1000000
-            : (newData.weeklyXp <= (numOr0(oldData, 'weeklyXp') > 1000000 ? numOr0(oldData, 'weeklyXp') + 5000 : 1000000)))
-        && (oldData == null
-            || newData.weeklyXp <= numOr0(oldData, 'weeklyXp') + 5000
-            || newData.lastWeekString != (oldData.lastWeekString is string ? oldData.lastWeekString : ''))
+      // ランキング実績用の自己最高順位。記録が縮まる方向にしか更新できない。
+      && (!('bestWeeklyHeroRank' in newData) || (
+        newData.bestWeeklyHeroRank is int
+        && newData.bestWeeklyHeroRank >= 1
+        && (oldData == null || numOr0(oldData, 'bestWeeklyHeroRank') == 0
+            || newData.bestWeeklyHeroRank <= numOr0(oldData, 'bestWeeklyHeroRank'))
       ))
-      && (!('monthlyDamage' in newData) || (
-        newData.monthlyDamage is number && newData.monthlyDamage >= 0
-        && (oldData == null
-            ? newData.monthlyDamage <= 3000000
-            : (newData.monthlyDamage <= (numOr0(oldData, 'monthlyDamage') > 3000000 ? numOr0(oldData, 'monthlyDamage') + 5000 : 3000000)))
-        && (oldData == null
-            || newData.monthlyDamage <= numOr0(oldData, 'monthlyDamage') + 5000
-            || newData.lastMonthString != (oldData.lastMonthString is string ? oldData.lastMonthString : ''))
-      ));
+      && (!('bestDamageRank' in newData) || (
+        newData.bestDamageRank is int
+        && newData.bestDamageRank >= 1
+        && (oldData == null || numOr0(oldData, 'bestDamageRank') == 0
+            || newData.bestDamageRank <= numOr0(oldData, 'bestDamageRank'))
+      ))
+
+      // xp / totalDamage: 通常プレイ由来のみ（1セッション最大 約3,600 相当）→ 更新は5,000まで。
+      && withinDelta(newData, oldData, 'xp', 5000, 1000000)
+      && withinDelta(newData, oldData, 'totalDamage', 5000, 1000000)
+      // pt / sp: 「実績まとめ受け取り」で一度に大きく増える（全実績合計 最大 約54.3万PT / 約20.1万SP）。
+      && withinDelta(newData, oldData, 'pt', 600000, 600000)
+      && withinDelta(newData, oldData, 'sp', 250000, 250000)
+      && withinPeriodDelta(newData, oldData, 'weeklyXp', 'lastWeekString', 5000)
+      && withinPeriodDelta(newData, oldData, 'monthlyDamage', 'lastMonthString', 5000);
     }
 
     function isValidGlobalStats(newData) {
