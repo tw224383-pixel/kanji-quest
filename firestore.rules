@@ -133,15 +133,27 @@ service cloud.firestore {
       // 想定し、以前の設定（100万/50万）から引き上げた。
       && withinDelta(newData, oldData, 'pt', 600000, 600000, 5000000)
       && withinDelta(newData, oldData, 'sp', 250000, 250000, 2000000)
-      // 週間/月間カウンターは期間が変わるとリセットされるため増加上限チェックを免除する
+      // 週間/月間カウンターは期間が変わるとリセットされるため増加上限チェックを免除する。
+      // 上限は「1セッション最大3,600 × 20回/日 × 期間」を想定して設定する。
+      // 旧設定(いずれも100万)は月間カウンターだと 3,600×20×30日 = 216万 に届かず、
+      // 熱心にプレイする子ほど月の途中で上限に達し、以後その月いっぱい finishGame の
+      // 書き込みが丸ごと拒否され続ける（＝報酬が一切保存されない）恐れがあった。
+      // pt/sp と同様に「既存値が上限を超えていても増分制限の範囲でなら書ける」形にして、
+      // 万一到達しても詰まないようにしている。
       && (!('weeklyXp' in newData) || (
-        newData.weeklyXp is number && newData.weeklyXp >= 0 && newData.weeklyXp <= 1000000
+        newData.weeklyXp is number && newData.weeklyXp >= 0
+        && (oldData == null
+            ? newData.weeklyXp <= 1000000
+            : (newData.weeklyXp <= (numOr0(oldData, 'weeklyXp') > 1000000 ? numOr0(oldData, 'weeklyXp') + 5000 : 1000000)))
         && (oldData == null
             || newData.weeklyXp <= numOr0(oldData, 'weeklyXp') + 5000
             || newData.lastWeekString != (oldData.lastWeekString is string ? oldData.lastWeekString : ''))
       ))
       && (!('monthlyDamage' in newData) || (
-        newData.monthlyDamage is number && newData.monthlyDamage >= 0 && newData.monthlyDamage <= 1000000
+        newData.monthlyDamage is number && newData.monthlyDamage >= 0
+        && (oldData == null
+            ? newData.monthlyDamage <= 3000000
+            : (newData.monthlyDamage <= (numOr0(oldData, 'monthlyDamage') > 3000000 ? numOr0(oldData, 'monthlyDamage') + 5000 : 3000000)))
         && (oldData == null
             || newData.monthlyDamage <= numOr0(oldData, 'monthlyDamage') + 5000
             || newData.lastMonthString != (oldData.lastMonthString is string ? oldData.lastMonthString : ''))
