@@ -39,6 +39,8 @@ const BASE = {
   lastWeekString: "2026-W35", monthlyDamage: 500, lastMonthString: "2026-08",
   scaryMode: false, claimedAchievements: [], lastLoginDate: "2026-08-25",
   loginStreak: 3, categorySolved: {}, mistakeStages: {}, mistakeNextReview: {}, shareCode: "",
+  dailyCategoryPt: { math_g3_add: 1500, kanji_g3: 300 }, lastPtEarnDate: "2026-08-27",
+  prevWeeklyXp: 0, prevWeekString: "", prevMonthlyDamage: 0, prevMonthString: "",
 };
 const merge = o => Object.assign({}, BASE, o);
 
@@ -60,6 +62,14 @@ const CASES = [
   ["legit: new week resets weeklyXp",     "ALLOW", merge({ weeklyXp: 50, lastWeekString: "2026-W36" })],
   ["legit: new month resets monthlyDmg",  "ALLOW", merge({ monthlyDamage: 50, lastMonthString: "2026-09" })],
   ["legit: loginStreak 3 -> 4",           "ALLOW", merge({ loginStreak: 4, lastLoginDate: "2026-08-26" })],
+  ["legit: dailyCategoryPt skill +800 (same day)", "ALLOW", merge({ pt: 1300, dailyCategoryPt: { math_g3_add: 2300, kanji_g3: 300 } })],
+  ["legit: new day resets dailyCategoryPt", "ALLOW", merge({ pt: 700, dailyCategoryPt: { math_g3_logic: 200 }, lastPtEarnDate: "2026-08-28" })],
+  ["legit: many skills played in one day (36 keys)", "ALLOW", merge({ dailyCategoryPt: Object.fromEntries(Array.from({length: 36}, (_, i) => [`math_s${i}`, 100])) })],
+  ["CHEAT: dailyCategoryPt with too many keys", "DENY", merge({ dailyCategoryPt: Object.fromEntries(Array.from({length: 80}, (_, i) => [`c${i}`, 1])) })],
+  ["legit: 週の切り替わりで先週分を prev* へ退避", "ALLOW", merge({ weeklyXp: 120, lastWeekString: "2026-W36", prevWeeklyXp: 100, prevWeekString: "2026-W35" })],
+  ["legit: 月の切り替わりで先月分を prev* へ退避", "ALLOW", merge({ monthlyDamage: 80, lastMonthString: "2026-09", prevMonthlyDamage: 500, prevMonthString: "2026-08" })],
+  ["CHEAT: prevWeeklyXp が負の値",           "DENY",  merge({ prevWeeklyXp: -50, prevWeekString: "2026-W35" })],
+  ["CHEAT: prevMonthlyDamage が数値でない",  "DENY",  merge({ prevMonthlyDamage: "999999", prevMonthString: "2026-08" })],
 ];
 
 (async () => {

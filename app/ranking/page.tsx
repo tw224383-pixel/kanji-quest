@@ -11,7 +11,7 @@ import { LoadingScreen } from "../../components/ui/LoadingScreen";
 import { AvatarPreviewModal } from "../../components/ui/AvatarPreviewModal";
 import { EquipmentPreviewModal } from "../../components/ui/EquipmentPreviewModal";
 import { useRouter } from "next/navigation";
-import { getCurrentJSTWeekString, getCurrentJSTMonth } from "../../lib/raidLogic";
+import { getCurrentJSTWeekString, getCurrentJSTMonth, getPreviousJSTWeekString, getPreviousJSTMonth } from "../../lib/raidLogic";
 
 type RankingUser = {
   id: string;
@@ -25,6 +25,11 @@ type RankingUser = {
   lastWeekString?: string;
   monthlyDamage?: number;
   lastMonthString?: string;
+  // 確定済みの前期間の成績（先週のヒーロー・先月のダメージ用）
+  prevWeeklyXp?: number;
+  prevWeekString?: string;
+  prevMonthlyDamage?: number;
+  prevMonthString?: string;
   theme?: string;
 };
 
@@ -35,17 +40,30 @@ export default function RankingPage() {
   const [gradeFilter, setGradeFilter] = useState<number>(userData?.grade || 1);
   const [heroRanking, setHeroRanking] = useState<RankingUser[]>([]);
   const [damageRanking, setDamageRanking] = useState<RankingUser[]>([]);
+  const [lastWeekHeroRanking, setLastWeekHeroRanking] = useState<RankingUser[]>([]);
+  const [lastMonthDamageRanking, setLastMonthDamageRanking] = useState<RankingUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
   const [previewingEquipmentModal, setPreviewingEquipmentModal] = useState<string | null>(null);
 
   const currentWeekString = getCurrentJSTWeekString();
   const currentMonth = getCurrentJSTMonth();
+  const previousWeekString = getPreviousJSTWeekString();
+  const previousMonth = getPreviousJSTMonth();
 
-  // ランキング実績用：現在表示中のランキングに自分が何位で載っているかを検出し、
-  // これまでの自己ベストより良ければ記録する（ランキングは都度計算のため、
-  // このページを訪れたタイミングでしか順位を観測できない）。
-  const recordBestRank = (field: "bestWeeklyHeroRank" | "bestDamageRank", rank: number) => {
+  // ランキング実績用：自分が過去の期間（先週・先月）の最終順位に何位で載っていたかを検出し、
+  // これまでの自己ベストより良ければ記録する。
+  //
+  // 以前は「週や月の途中でたまたまランキングを覗いた瞬間」の順位をそのまま確定させていたため、
+  //   (a) 数人しかプレイしていないうちに覗くとTOP10〜1位まで簡単に確定してしまう
+  //   (b) 「期間の終わり間際だけ確定させる」対策も試したが、今度は土日・月末にログインできない
+  //       子が実績を取り損ねてしまう
+  // という問題があった。そこで「期間が終わった後、今の期間中にランキングを開いたタイミングで
+  // “先週・先月の確定済みデータ” を参照する」方式に変更した。自分のドキュメントは今期に入って
+  // まだプレイしていない間は前期の値を保持しているため、いつ開いても先週・先月の最終順位を
+  // 正しく参照できる（土日・月末に限定する必要がなくなる）。
+  const recordBestRank = (field: "bestWeeklyHeroRank" | "bestDamageRank", rank: number, poolSize: number, minPool: number) => {
+    if (poolSize < minPool) return;
     updateUserDataAtomic(current => {
       const existing = current[field];
       if (existing !== undefined && existing <= rank) return null;
@@ -119,12 +137,6 @@ export default function RankingPage() {
           .slice(0, 10);
 
         setHeroRanking(sorted);
-
-        if (gradeFilter === userData?.grade) {
-          const selfId = isGuest ? "guest" : user?.uid;
-          const selfIndex = selfId ? sorted.findIndex(u => u.id === selfId) : -1;
-          if (selfIndex !== -1) recordBestRank("bestWeeklyHeroRank", selfIndex + 1);
-        }
       } catch (err) {
         console.error("Failed to fetch hero ranking", err);
       }
@@ -133,6 +145,76 @@ export default function RankingPage() {
 
     // Firebase Authの初期化が完了する前にクエリを投げると permission-denied になるため待つ
     if (tab === "hero" && !authLoading) fetchHero();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gradeFilter, tab, userData, authLoading]);
+
+  // 先週のヒーロー（学年別・確定済み）フェッチ ＋ 実績判定
+  // 今週まだプレイしていないユーザーは lastWeekString が先週のままなので、
+  // このクエリで「先週の最終順位」を確定値として参照できる（土日限定にしない）。
+  useEffect(() => {
+    const fetchLastWeekHero = async () => {
+      try {
+        // 【重要】lastWeekString / weeklyXp ではなく、確定済みスナップショットの
+        // prevWeekString / prevWeeklyXp を参照する。lastWeekString は「最後にプレイした週」を
+        // 指す上書き式の値なので、今週プレイした時点で先週の成績が消えてしまい、
+        // 週が進むほどランキングから人が消えて実績もほぼ付与されなくなっていた。
+        const q = query(
+          collection(db, "users"),
+          where("grade", "==", gradeFilter),
+          where("prevWeekString", "==", previousWeekString),
+          orderBy("prevWeeklyXp", "desc"),
+          limit(10)
+        );
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => {
+          const d = doc.data();
+          const isCurrentUser = userData && (doc.id === userData.id || doc.id === "guest");
+          return {
+            id: doc.id,
+            ...d,
+            equippedEquipment: isCurrentUser ? userData.equippedEquipment : d.equippedEquipment
+          } as RankingUser;
+        });
+
+        if (isGuest && userData && userData.grade === gradeFilter && userData.prevWeekString === previousWeekString) {
+          const exists = data.find(u => u.id === "guest");
+          if (!exists) {
+            data.push({
+              id: "guest",
+              name: userData.name,
+              grade: userData.grade,
+              xp: userData.xp,
+              equippedTitle: userData.equippedTitle,
+              equippedAvatar: userData.equippedAvatar,
+              equippedEquipment: userData.equippedEquipment,
+              prevWeeklyXp: userData.prevWeeklyXp,
+              prevWeekString: userData.prevWeekString,
+            });
+          }
+        }
+
+        const sorted = data
+          .filter(u => (u.prevWeeklyXp || 0) > 0)
+          .sort((a, b) => {
+            const diff = (b.prevWeeklyXp || 0) - (a.prevWeeklyXp || 0);
+            return diff !== 0 ? diff : (b.xp || 0) - (a.xp || 0);
+          })
+          .slice(0, 10);
+
+        setLastWeekHeroRanking(sorted);
+
+        if (gradeFilter === userData?.grade) {
+          const selfId = isGuest ? "guest" : user?.uid;
+          const selfIndex = selfId ? sorted.findIndex(u => u.id === selfId) : -1;
+          // TOP10枠なので、実際に10人以上が競っていた週のみ確定させる。
+          if (selfIndex !== -1) recordBestRank("bestWeeklyHeroRank", selfIndex + 1, sorted.length, 10);
+        }
+      } catch (err) {
+        console.error("Failed to fetch last week hero ranking", err);
+      }
+    };
+
+    if (tab === "hero" && !authLoading) fetchLastWeekHero();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gradeFilter, tab, userData, authLoading]);
 
@@ -189,10 +271,6 @@ export default function RankingPage() {
           .slice(0, 5);
 
         setDamageRanking(sorted);
-
-        const selfId = isGuest ? "guest" : user?.uid;
-        const selfIndex = selfId ? sorted.findIndex(u => u.id === selfId) : -1;
-        if (selfIndex !== -1) recordBestRank("bestDamageRank", selfIndex + 1);
       } catch (err) {
         console.error("Failed to fetch damage ranking", err);
       }
@@ -200,6 +278,70 @@ export default function RankingPage() {
     };
 
     if (tab === "damage" && !authLoading) fetchDamage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, userData, authLoading]);
+
+  // 先月の全学年ダメージ TOP5（確定済み）フェッチ ＋ 実績判定
+  useEffect(() => {
+    const fetchLastMonthDamage = async () => {
+      try {
+        // 週間ヒーロー側と同じ理由で、確定済みスナップショット（prevMonthString /
+        // prevMonthlyDamage）を参照する。lastMonthString で引くと、今月プレイした人の
+        // 先月分が消えているため、実際に本番では該当者が0人になっていた。
+        const q = query(
+          collection(db, "users"),
+          where("prevMonthString", "==", previousMonth),
+          orderBy("prevMonthlyDamage", "desc"),
+          limit(5)
+        );
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => {
+          const d = doc.data();
+          const isCurrentUser = userData && (doc.id === userData.id || doc.id === "guest");
+          return {
+            id: doc.id,
+            ...d,
+            equippedEquipment: isCurrentUser ? userData.equippedEquipment : d.equippedEquipment
+          } as RankingUser;
+        });
+
+        if (isGuest && userData && userData.prevMonthString === previousMonth) {
+          const exists = data.find(u => u.id === "guest");
+          if (!exists) {
+            data.push({
+              id: "guest",
+              name: userData.name,
+              grade: userData.grade,
+              xp: userData.xp,
+              equippedTitle: userData.equippedTitle,
+              equippedAvatar: userData.equippedAvatar,
+              equippedEquipment: userData.equippedEquipment,
+              prevMonthlyDamage: userData.prevMonthlyDamage,
+              prevMonthString: userData.prevMonthString,
+            });
+          }
+        }
+
+        const sorted = data
+          .filter(u => (u.prevMonthlyDamage || 0) > 0)
+          .sort((a, b) => {
+            const diff = (b.prevMonthlyDamage || 0) - (a.prevMonthlyDamage || 0);
+            return diff !== 0 ? diff : (b.xp || 0) - (a.xp || 0);
+          })
+          .slice(0, 5);
+
+        setLastMonthDamageRanking(sorted);
+
+        const selfId = isGuest ? "guest" : user?.uid;
+        const selfIndex = selfId ? sorted.findIndex(u => u.id === selfId) : -1;
+        // TOP5枠なので、実際に5人以上が競っていた月のみ確定させる。
+        if (selfIndex !== -1) recordBestRank("bestDamageRank", selfIndex + 1, sorted.length, 5);
+      } catch (err) {
+        console.error("Failed to fetch last month damage ranking", err);
+      }
+    };
+
+    if (tab === "damage" && !authLoading) fetchLastMonthDamage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, userData, authLoading]);
 
@@ -330,6 +472,19 @@ export default function RankingPage() {
                 </div>
               )}
             </div>
+
+            {/* 先週のヒーロー（確定済み・実績の判定はこちらで行う） */}
+            <div className="game-panel p-6 mt-5">
+              <h2 className="text-lg font-black text-slate-300 mb-1 text-center">🕰 先週の{gradeFilter}年生ヒーロー（最終結果）</h2>
+              <div className="text-xs font-bold text-slate-400 text-center mb-5">TOP10入りの実績は、ここに載っていれば確定するよ！</div>
+              {lastWeekHeroRanking.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 font-bold text-sm">先週はまだ記録がなかったよ！</div>
+              ) : (
+                <div className="flex flex-col gap-3 opacity-90">
+                  {lastWeekHeroRanking.slice(0, 5).map((u, index) => renderUserCard(u, index, u.prevWeeklyXp || 0, "WP"))}
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -356,6 +511,19 @@ export default function RankingPage() {
                     const score = user.monthlyDamage || 0;
                     return renderUserCard(user, index, score, "ダメージ");
                   })}
+                </div>
+              )}
+            </div>
+
+            {/* 先月の全学年ダメージ（確定済み・実績の判定はこちらで行う） */}
+            <div className="game-panel p-6 mt-5">
+              <h2 className="text-lg font-black text-slate-300 mb-1 text-center">🕰 先月の全学年ダメージ（最終結果）</h2>
+              <div className="text-xs font-bold text-slate-400 text-center mb-5">TOP5入りの実績は、ここに載っていれば確定するよ！</div>
+              {lastMonthDamageRanking.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 font-bold text-sm">先月はまだ記録がなかったよ！</div>
+              ) : (
+                <div className="flex flex-col gap-3 opacity-90">
+                  {lastMonthDamageRanking.map((u, index) => renderUserCard(u, index, u.prevMonthlyDamage || 0, "ダメージ"))}
                 </div>
               )}
             </div>

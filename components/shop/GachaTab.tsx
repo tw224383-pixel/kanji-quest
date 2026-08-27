@@ -10,7 +10,7 @@ import { getAvatarImageProps } from "../../lib/itemData";
 import type { UserData } from "../../contexts/UserContext";
 import { Button } from "../ui/Button";
 
-type GachaType = "regular" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment";
+type GachaType = "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment";
 type RatesKey = GachaType | "all_3000" | "all_sp" | null;
 
 export function GachaTab({
@@ -34,7 +34,7 @@ export function GachaTab({
     <div className="game-panel p-8 text-center max-w-2xl mx-auto relative overflow-hidden">
       <div className="text-6xl mb-6">🎁</div>
       <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
-      <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT、リッチガチャは3000PT、豪華な装備ガチャは1000SPでまわせる！</p>
+      <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT（10連は1000PT）、リッチガチャは3000PT、豪華な装備ガチャは1000SPでまわせる！</p>
 
       <div className="flex flex-col gap-6 justify-center mb-6 items-stretch max-w-md mx-auto">
         {/* --- PT Gachas --- */}
@@ -60,6 +60,13 @@ export function GachaTab({
             disabled={pullingType !== null || userData.pt < 100}
           >
             {pullingType ? "..." : userData.pt < 100 ? "PT不足" : "100 PT でまわす！"}
+          </button>
+          <button
+            className={`w-full mt-2 py-3 text-base md:text-lg tracking-wide whitespace-nowrap bg-orange-500 hover:bg-orange-400 text-white font-black rounded-xl shadow-[0_4px_0_0_#9a3412] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || userData.pt < 1000 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => handleRequestGacha("regular10")}
+            disabled={pullingType !== null || userData.pt < 1000}
+          >
+            {pullingType ? "..." : userData.pt < 1000 ? "PT不足" : "🎉 10連 1000 PT でまわす！"}
           </button>
         </div>
 

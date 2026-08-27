@@ -23,9 +23,15 @@ execFileSync(
     "--target", "es2020",
     "--esModuleInterop",
     "--skipLibCheck",
+    "--resolveJsonModule",
   ],
   { cwd: ROOT, stdio: "inherit", shell: true }
 );
+// tsc の --outDir はディレクトリ構造を保持しないため .json はコピーされない。
+// resolveJsonModule でコンパイルは通っても実行時の require が見つからず失敗するので、
+// 生成された .js の隣に furigana JSON をコピーしておく。
+fs.copyFileSync(path.join(ROOT, "lib", "scienceFurigana.json"), path.join(tmpDir, "scienceFurigana.json"));
+fs.copyFileSync(path.join(ROOT, "lib", "socialFurigana.json"), path.join(tmpDir, "socialFurigana.json"));
 
 let errors = 0;
 

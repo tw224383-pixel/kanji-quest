@@ -97,7 +97,9 @@ service cloud.firestore {
         'monthlyDamage', 'lastMonthString', 'scaryMode', 'claimedAchievements',
         'lastLoginDate', 'loginStreak', 'categorySolved',
         'mistakeStages', 'mistakeNextReview', 'shareCode',
-        'bestWeeklyHeroRank', 'bestDamageRank'
+        'bestWeeklyHeroRank', 'bestDamageRank',
+        'dailyCategoryPt', 'lastPtEarnDate',
+        'prevWeeklyXp', 'prevWeekString', 'prevMonthlyDamage', 'prevMonthString'
       ])
 
       // ランキングに他の子から見える名前と、ランキングの学年分けに使う値だけは検証する。
@@ -143,7 +145,18 @@ service cloud.firestore {
       && withinDelta(newData, oldData, 'pt', 600000, 600000)
       && withinDelta(newData, oldData, 'sp', 250000, 250000)
       && withinPeriodDelta(newData, oldData, 'weeklyXp', 'lastWeekString', 5000)
-      && withinPeriodDelta(newData, oldData, 'monthlyDamage', 'lastMonthString', 5000);
+      && withinPeriodDelta(newData, oldData, 'monthlyDamage', 'lastMonthString', 5000)
+      // 系統別・1日のPT上限判定用の内部カウンタ（同じ系統の問題の周回でのPT稼ぎ対策）。
+      // キーは算数30スキル＋漢字6学年の計36通りが上限で、しかも日付が変わるとリセット
+      // されるため、余裕を見た件数だけ制限する。実際のPT不正増加は pt 自体の delta 上限
+      // （上の withinDelta('pt', ...)）で防いでいるため、ここでは値ごとの厳密な検証はしない
+      // （マップの各キーを個別検証すると式数が積み上がり 1000式上限に触れやすくなるため）。
+      && (!('dailyCategoryPt' in newData) || (newData.dailyCategoryPt is map && newData.dailyCategoryPt.size() <= 60))
+
+      // 先週・先月の確定成績スナップショット。orderBy でランキングに使うため型だけ担保する。
+      // 絶対上限は設けない（週間XPに上限がない以上、上限を置くと過去のロックアウト事故を繰り返す）。
+      && (!('prevWeeklyXp' in newData) || (newData.prevWeeklyXp is number && newData.prevWeeklyXp >= 0))
+      && (!('prevMonthlyDamage' in newData) || (newData.prevMonthlyDamage is number && newData.prevMonthlyDamage >= 0));
     }
 
     function isValidGlobalStats(newData) {

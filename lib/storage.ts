@@ -8,6 +8,7 @@ const XP_KEY = "kq_xp";
 const PT_KEY = "kq_pt";
 const EFFECTS_KEY = "kq_effects";
 const MODE_KEY = "kq_answer_mode";
+const FURIGANA_KEY = "kq_furigana_mode";
 const MATH_SKILLS_KEY = "kq_math_skills";
 
 export const storage = {
@@ -71,6 +72,12 @@ export const storage = {
       mistakeNextReview: JSON.parse(localStorage.getItem("kq_mistake_next_review") || "{}"),
       bestWeeklyHeroRank: localStorage.getItem("kq_best_weekly_hero_rank") ? parseInt(localStorage.getItem("kq_best_weekly_hero_rank")!, 10) : undefined,
       bestDamageRank: localStorage.getItem("kq_best_damage_rank") ? parseInt(localStorage.getItem("kq_best_damage_rank")!, 10) : undefined,
+      dailyCategoryPt: JSON.parse(localStorage.getItem("kq_daily_category_pt") || "{}"),
+      lastPtEarnDate: localStorage.getItem("kq_last_pt_earn_date") || "",
+      prevWeeklyXp: parseInt(localStorage.getItem("kq_prev_weekly_xp") || "0", 10),
+      prevWeekString: localStorage.getItem("kq_prev_week") || "",
+      prevMonthlyDamage: parseInt(localStorage.getItem("kq_prev_monthly_damage") || "0", 10),
+      prevMonthString: localStorage.getItem("kq_prev_month") || "",
     };
   },
   updateGuestData: (updates: any) => {
@@ -102,6 +109,12 @@ export const storage = {
     if (updates.mistakeNextReview !== undefined) localStorage.setItem("kq_mistake_next_review", JSON.stringify(updates.mistakeNextReview));
     if (updates.bestWeeklyHeroRank !== undefined) localStorage.setItem("kq_best_weekly_hero_rank", updates.bestWeeklyHeroRank.toString());
     if (updates.bestDamageRank !== undefined) localStorage.setItem("kq_best_damage_rank", updates.bestDamageRank.toString());
+    if (updates.dailyCategoryPt !== undefined) localStorage.setItem("kq_daily_category_pt", JSON.stringify(updates.dailyCategoryPt));
+    if (updates.lastPtEarnDate !== undefined) localStorage.setItem("kq_last_pt_earn_date", updates.lastPtEarnDate);
+    if (updates.prevWeeklyXp !== undefined) localStorage.setItem("kq_prev_weekly_xp", updates.prevWeeklyXp.toString());
+    if (updates.prevWeekString !== undefined) localStorage.setItem("kq_prev_week", updates.prevWeekString);
+    if (updates.prevMonthlyDamage !== undefined) localStorage.setItem("kq_prev_monthly_damage", updates.prevMonthlyDamage.toString());
+    if (updates.prevMonthString !== undefined) localStorage.setItem("kq_prev_month", updates.prevMonthString);
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("kq_guest_update"));
@@ -114,6 +127,15 @@ export const storage = {
   setAnswerMode: (mode: "4choice" | "keyboard") => {
     if (typeof window === "undefined") return;
     localStorage.setItem(MODE_KEY, mode);
+  },
+  // ふりがなモード：算数・理科・社会の問題文と選択肢をひらがな表示にする（端末ごとの好み設定）。
+  getFuriganaMode: () => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(FURIGANA_KEY) === "true";
+  },
+  setFuriganaMode: (on: boolean) => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(FURIGANA_KEY, on ? "true" : "false");
   },
   getMathSkills: () => {
     if (typeof window === "undefined") return null;

@@ -2,8 +2,11 @@ export type SocialQuestion = {
   id: string;
   grade: number;
   word: string;     // 問題文
+  wordKana?: string; // ふりがなモード用：word をひらがなにした版
   reading: string;  // 正解（表示・判定用）
+  readingKana?: string;
   choices: string[]; // 4択の選択肢（正解を含む）
+  choicesKana?: string[];
   category?: string;
   rationale?: string;
 };
@@ -3672,13 +3675,13 @@ export const SOCIAL_QUESTIONS: SocialQuestion[] = [
   {
     "id": "soc_g6_33",
     "grade": 6,
-    "word": "国民の販密な生活を支えるため、専門的な誓展機関や国遣路路などを整備する貿易係りの財源は何から杸得されますか？",
+    "word": "国民の豊かな生活を支えるため、学校や道路、公園などを整備する費用は、主に何をもとにまかなわれていますか？",
     "reading": "税金",
     "choices": [
       "税金",
       "寄付金",
-      "別次金",
-      "购入資金"
+      "宝くじの売上金",
+      "会社の利益"
     ],
     "category": "小学6年社会（政治・経済・国際）",
     "rationale": "学校や道路、公園などの整備や社会保障など、税金は国民の生活を支えるために広く使われます。"
@@ -3896,7 +3899,7 @@ export const SOCIAL_QUESTIONS: SocialQuestion[] = [
   {
     "id": "soc_g6_49",
     "grade": 6,
-    "word": "日本国汏法で保障されている「基本的人権」に含まれる段岐・衰舌を禁止する原則の山名は何ですか？",
+    "word": "日本国憲法が保障する「基本的人権」のうち、性別や生まれによる差別を禁止している権利を何といいますか？",
     "reading": "平等権",
     "choices": [
       "転居の自由",
@@ -6045,6 +6048,27 @@ export function getSocialCategories(): SocialCategoryInfo[] {
   return Array.from(map.values());
 }
 
+// ふりがなモード用データ（scripts/generateFurigana.js が生成、id引き）。
+// 元データを直接書き換えず別ファイルに持つことで、既存の設問データへの影響をゼロにしている。
+import socialFurigana from "./socialFurigana.json";
+type FuriganaEntry = { wordKana: string; readingKana: string; choicesKana: string[] };
+const SOCIAL_FURIGANA = socialFurigana as Record<string, FuriganaEntry>;
+
+function attachSocialKana(q: SocialQuestion): SocialQuestion {
+  const k = SOCIAL_FURIGANA[q.id];
+  return k ? { ...q, wordKana: k.wordKana, readingKana: k.readingKana, choicesKana: k.choicesKana } : q;
+}
+
+// choices をシャッフルする際、choicesKana があれば同じ並び順でシャッフルして対応を保つ。
+function shuffleSocialChoices(q: SocialQuestion): SocialQuestion {
+  const order = q.choices.map((_, i) => i).sort(() => Math.random() - 0.5);
+  return {
+    ...q,
+    choices: order.map(i => q.choices[i]),
+    choicesKana: q.choicesKana ? order.map(i => q.choicesKana![i]) : undefined,
+  };
+}
+
 export function getRandomSocialQuestions(target: (number | string)[], count: number = 5): SocialQuestion[] {
   let filtered: SocialQuestion[] = [];
   if (target && target.length > 0) {
@@ -6055,14 +6079,14 @@ export function getRandomSocialQuestions(target: (number | string)[], count: num
     }
   }
   const pool = filtered.length > 0 ? filtered : SOCIAL_QUESTIONS;
-  
-  const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => ({...q, choices: [...q.choices].sort(() => Math.random() - 0.5)}));
+
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => shuffleSocialChoices(attachSocialKana(q)));
   return shuffled.slice(0, count);
 }
 
 export function getRevengeSocialQuestions(mistakeIds: string[], count: number = 10): SocialQuestion[] {
   const filtered = SOCIAL_QUESTIONS.filter(q => mistakeIds.includes(q.word) || mistakeIds.includes(q.id));
   const pool = filtered.length > 0 ? filtered : SOCIAL_QUESTIONS;
-  const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => ({...q, choices: [...q.choices].sort(() => Math.random() - 0.5)}));
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => shuffleSocialChoices(attachSocialKana(q)));
   return shuffled.slice(0, count);
 }

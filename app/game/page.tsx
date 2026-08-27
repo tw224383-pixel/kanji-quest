@@ -8,6 +8,7 @@ import { getRandomScienceQuestions, getRevengeScienceQuestions, ScienceQuestion 
 import { getRandomSocialQuestions, getRevengeSocialQuestions, SocialQuestion } from "../../lib/socialData";
 import { getRaidBossImagePath, getCurrentJSTMonth, getCurrentJSTWeekString, getSeasonalBossPresentation } from "../../lib/raidLogic";
 import { getCurrentJSTDateString, getNextReviewDate, GRADUATION_STAGE, isDueForReview } from "../../lib/reviewSchedule";
+import { rollPeriodSnapshot } from "../../lib/periodSnapshot";
 import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, increment } from "firebase/firestore";
@@ -48,6 +49,43 @@ function extractTrailingMathUnit(reading: string): string {
   return "";
 }
 
+// 同じ系統の問題ばかり周回してPTを稼ぎ続けるのを防ぐための、ゆるやかな1日のPT上限。
+// 上限を超えたぶんは0にはせず割合を落として加算する（急に0になると不公平感が強いため）。
+// XPはそのまま満額もらえる（学習の記録自体は減らさない）。SP（理科・社会）は対象外。
+const DAILY_PT_CAP = 5000;
+const DAILY_PT_OVER_CAP_RATE = 0.2;
+
+// 上限を数える単位（＝「系統」）のキーを、実際に出題された問題から決める。
+//   算数: 問題IDが `math_{skillId}_{乱数}` 形式なので skillId を取り出す（例: math_g3_add_x7yz → g3_add）
+//   漢字: 学年ごとに1つの系統として扱う（例: kanji_g3）
+// セッション内に複数系統が混ざる場合は、最も多く出題された系統に計上する。
+function resolveGrindKey(
+  questions: { id?: string; grade?: number }[],
+  subjectType: string,
+  userGrade: number
+): string {
+  const counts: Record<string, number> = {};
+  for (const q of questions) {
+    let key: string | null = null;
+    if (subjectType === "math") {
+      const id = q.id || "";
+      // 乱数部分（末尾の _xxxxx）を落として skillId を復元する
+      const m = id.match(/^math_(.+)_[^_]+$/);
+      if (m) key = `math_${m[1]}`;
+    } else if (subjectType === "kanji") {
+      key = `kanji_g${q.grade || userGrade}`;
+    }
+    if (!key) continue;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  let best: string | null = null;
+  let bestCount = -1;
+  for (const [k, n] of Object.entries(counts)) {
+    if (n > bestCount) { bestCount = n; best = k; }
+  }
+  return best || `${subjectType}_g${userGrade}`;
+}
+
 export default function GamePage() {
   const router = useRouter();
   const { userData, updateUserDataAtomic, loading } = useUser();
@@ -57,6 +95,7 @@ export default function GamePage() {
   const [subjectType, setSubjectType] = useState<"kanji" | "math" | "science" | "social">("kanji");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mode, setMode] = useState<"4choice" | "keyboard">("4choice");
+  const [furiganaMode, setFuriganaMode] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -70,6 +109,10 @@ export default function GamePage() {
   const newMastered = useRef<Set<string>>(new Set());
   const newMistakes = useRef<Set<string>>(new Set());
   const [unlockedMastery, setUnlockedMastery] = useState(false);
+  // 1日に稼げるPTには緩やかな上限がある（同じ計算問題の周回でのPT稼ぎ対策）。
+  // 上限を超えたら awardedPt に実際に加算された（減額後の）PT を入れ、理由を画面に表示する。
+  const [ptWasCapped, setPtWasCapped] = useState(false);
+  const [awardedPt, setAwardedPt] = useState<number | null>(null);
   
   // Review Mode & Boss Mode
   const [isReviewMode, setIsReviewMode] = useState(false);
@@ -195,6 +238,7 @@ export default function GamePage() {
         }
       }
     }
+    setFuriganaMode(storage.getFuriganaMode());
     const savedMode = storage.getAnswerMode() as "4choice" | "keyboard";
     const params = new URLSearchParams(window.location.search);
     const sub = params.get("subject") || subjectType;
@@ -260,6 +304,23 @@ export default function GamePage() {
   if (loading || questions.length === 0) return <div>ロード中...</div>;
 
   const currentQ = questions[currentIndex];
+
+  // ふりがなモード：漢字の読みを教える「かんじ」科目自体では意味がないので対象外にする。
+  const applyFurigana = furiganaMode && subjectType !== "kanji";
+  const displayWord = applyFurigana && 'wordKana' in currentQ && currentQ.wordKana ? currentQ.wordKana : currentQ.word;
+  const displayReading = applyFurigana && 'readingKana' in currentQ && currentQ.readingKana ? currentQ.readingKana : currentQ.reading;
+  const displayChoices = applyFurigana && 'choicesKana' in currentQ && currentQ.choicesKana ? currentQ.choicesKana : currentQ.choices;
+
+  // 算数の問題文フォントサイズ：「23 + 45」のような短い計算式は大きく見やすいままにしたいが、
+  // 文章題は長くなるほど画面からはみ出してスクロールが大変になるため、文字数に応じて自動で縮める。
+  const mathWordSizeClass = (text: string) => {
+    const len = text.length;
+    if (len <= 8) return 'text-[70px] md:text-[90px]';
+    if (len <= 16) return 'text-5xl md:text-7xl';
+    if (len <= 28) return 'text-3xl md:text-5xl';
+    if (len <= 45) return 'text-xl md:text-3xl';
+    return 'text-lg md:text-2xl';
+  };
 
   const renderMathWord = (word: string) => {
     const parts = word.split(/([➕➖✖️➗＝＝])/);
@@ -387,6 +448,8 @@ export default function GamePage() {
         const correctQuestionsCount = Math.max(1, questions.length - totalMistakes);
 
         let newlyMastered = false;
+        let sessionPtWasCapped = false;
+        let sessionAwardedPt = finalPT;
 
         // 複数タブ・複数端末での同時プレイでXP/PT/苦手リスト等が上書き消失しないよう、
         // Firestoreトランザクション内で常に最新のサーバー側データ（current）を起点に計算する。
@@ -460,10 +523,15 @@ export default function GamePage() {
             }
           });
 
+          // 週・月が切り替わったら weeklyXp / monthlyDamage は0に戻る。そのまま捨てると
+          // 「先週のヒーロー」「先月のダメージ」ランキングの元データが失われてしまうため、
+          // リセットする直前の値を prev* へ退避しておく（rollPeriodSnapshot が判断する）。
           const currentWeekString = getCurrentJSTWeekString();
+          const weekRoll = rollPeriodSnapshot(current.lastWeekString, currentWeekString, current.weeklyXp, current.prevWeekString, current.prevWeeklyXp);
           const newWeeklyXp = (current.lastWeekString === currentWeekString ? (current.weeklyXp || 0) : 0) + finalXP;
 
           const currentMonthString = getCurrentJSTMonth();
+          const monthRoll = rollPeriodSnapshot(current.lastMonthString, currentMonthString, current.monthlyDamage, current.prevMonthString, current.prevMonthlyDamage);
           const newMonthlyDamage = (current.lastMonthString === currentMonthString ? (current.monthlyDamage || 0) : 0) + finalXP;
 
           // カテゴリ別の正解数を集計する。算数は1セッションに複数カテゴリ（計算・論理・図形）の
@@ -493,6 +561,29 @@ export default function GamePage() {
             updatedCategorySolved[cat] = (updatedCategorySolved[cat] || 0) + cnt;
           });
 
+          // 同じ系統の問題ばかり周回してPTを稼ぎ続けるのを防ぐための、系統別・1日ぶんの
+          // 緩やかなPT上限。合計獲得PTそのものには上限を設けない（別の系統に切り替えれば
+          // 普通に稼げる）。SP科目（理科・社会）はPTを稼がないので対象外。
+          //
+          // 「系統」の粒度はスキル単位（例:「3桁のたしざん」）にしている。カテゴリ単位
+          // （計算/思考力/図形）にすると、たしざんを周回しただけで分数のわりざんまで
+          // 減額されてしまい、まじめに幅広く練習する子まで巻き添えになるため。
+          let earnedPt = finalPT;
+          let newDailyCategoryPt = current.dailyCategoryPt || {};
+          let newLastPtEarnDate = current.lastPtEarnDate || "";
+          if (!isSpSubject) {
+            const grindKey = resolveGrindKey(questions, subjectType, userData?.grade || 1);
+            const isNewPtDay = current.lastPtEarnDate !== todayStr;
+            const skillPtSoFar = isNewPtDay ? 0 : (current.dailyCategoryPt?.[grindKey] || 0);
+            if (skillPtSoFar >= DAILY_PT_CAP && finalPT > 0) {
+              earnedPt = Math.ceil(finalPT * DAILY_PT_OVER_CAP_RATE);
+              sessionPtWasCapped = true;
+            }
+            newDailyCategoryPt = { ...(isNewPtDay ? {} : (current.dailyCategoryPt || {})), [grindKey]: skillPtSoFar + earnedPt };
+            newLastPtEarnDate = todayStr;
+          }
+          sessionAwardedPt = earnedPt;
+
           // 苦手リストに残っていない問題の復習スケジュール情報は破棄してマップを肥大化させない
           const mistakeSet = new Set(updatedMistakes);
           Object.keys(stages).forEach(id => { if (!mistakeSet.has(id)) delete stages[id]; });
@@ -500,8 +591,10 @@ export default function GamePage() {
 
           return {
             xp: current.xp + finalXP,
-            pt: isSpSubject ? current.pt : current.pt + finalPT,
+            pt: isSpSubject ? current.pt : current.pt + earnedPt,
             sp: isSpSubject ? (current.sp || 0) + finalPT : (current.sp || 0),
+            dailyCategoryPt: newDailyCategoryPt,
+            lastPtEarnDate: newLastPtEarnDate,
             masteredIds: updatedMastered,
             mistakeIds: updatedMistakes,
             mistakeStages: stages,
@@ -512,6 +605,8 @@ export default function GamePage() {
             lastMonthString: currentMonthString,
             weeklyXp: newWeeklyXp,
             lastWeekString: currentWeekString,
+            ...weekRoll.snapshot("prevWeeklyXp", "prevWeekString"),
+            ...monthRoll.snapshot("prevMonthlyDamage", "prevMonthString"),
             titles: Array.from(newTitles),
             avatars: Array.from(newAvatars),
           };
@@ -524,6 +619,14 @@ export default function GamePage() {
 
         if (ok && newlyMastered) {
           setUnlockedMastery(true);
+        }
+
+        if (ok) {
+          setAwardedPt(sessionAwardedPt);
+          if (sessionPtWasCapped) {
+            setPtWasCapped(true);
+            showToast(`🌙 同じ系統の問題で今日はもうたくさんPTを稼いだから、今回は少なめの ${sessionAwardedPt}PT だよ！ちがう問題にも挑戦してみよう`);
+          }
         }
 
         // レイドボスにダメージを与える。トドメを刺したら「LvN討伐隊」称号を付与する
@@ -583,7 +686,8 @@ export default function GamePage() {
         totalMistakes={totalMistakes}
         hasPenalty={hasPenalty}
         finalXP={finalXP}
-        finalPT={finalPT}
+        finalPT={awardedPt ?? finalPT}
+        ptWasCapped={ptWasCapped}
         isSpSubject={isSpSubject}
         onRetry={() => { setIsFinished(false); setSaveFailed(false); finishGame(); }}
         onGoHome={() => router.push("/home")}
@@ -737,12 +841,12 @@ export default function GamePage() {
             {(subjectType === "science" || subjectType === "social") ? (
               <div className="w-full my-4 px-2 sm:px-6 relative z-10">
                 <div className="bg-slate-900/90 border-2 border-emerald-400/80 rounded-2xl p-4 sm:p-6 shadow-2xl text-left font-sans font-bold text-lg sm:text-2xl text-emerald-100 leading-relaxed tracking-wide">
-                  {currentQ.word}
+                  {displayWord}
                 </div>
               </div>
             ) : (
-              <div className={`${isMath ? 'text-[70px] md:text-[90px] font-sans font-black' : 'text-[120px] font-serif'} leading-none drop-shadow-md my-4 relative z-10 ${isBossBattle ? (userData?.scaryMode ? 'text-red-100' : 'text-red-900') : 'text-slate-800'}`}>
-                {isMath ? renderMathWord(currentQ.word) : currentQ.word}
+              <div className={`${isMath ? `${mathWordSizeClass(displayWord)} font-sans font-black` : 'text-[120px] font-serif'} leading-tight drop-shadow-md my-4 relative z-10 ${isBossBattle ? (userData?.scaryMode ? 'text-red-100' : 'text-red-900') : 'text-slate-800'}`}>
+                {isMath ? renderMathWord(displayWord) : currentQ.word}
                 {'okurigana' in currentQ && currentQ.okurigana && (
                   <span className="text-[0.5em] opacity-80 font-sans ml-1 tracking-normal">{currentQ.okurigana}</span>
                 )}
@@ -765,7 +869,7 @@ export default function GamePage() {
                 </div>
 
                 <div className="text-lg font-bold text-slate-200 mb-3">
-                  正解： <span className="text-2xl font-black text-amber-300">「{currentQ.reading}」</span>
+                  正解： <span className="text-2xl font-black text-amber-300">「{displayReading}」</span>
                 </div>
 
                 {'rationale' in currentQ && currentQ.rationale && (
@@ -795,9 +899,10 @@ export default function GamePage() {
           {/* 解答エリア */}
           <div className="w-full">
             {mode === "4choice" || subjectType === "science" || subjectType === "social" ? (
-              <AnswerOptions 
-                choices={currentQ.choices} 
-                onAnswer={handleAnswer} 
+              <AnswerOptions
+                choices={currentQ.choices}
+                displayChoices={displayChoices}
+                onAnswer={handleAnswer}
                 disabled={feedback !== null || isReviewMode}
               />
             ) : (

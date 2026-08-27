@@ -116,13 +116,24 @@ export function GachaResultModal({
           </div>
 
           {/* Large Front-and-Center Artwork Display */}
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.25, type: "spring", stiffness: 200 }}
             className="relative z-10 my-4 flex items-center justify-center"
           >
-            {result.icon.startsWith('/') ? (
+            {result.type === 'title' ? (
+              // 称号はキャラ絵ではなく「名前」なので、絵文字を大きく見せると
+              // アバターを引いたと勘違いされてしまう。実際にゲーム内で表示される
+              // 「【 称号名 】」の見た目に合わせたプレート表示にする。
+              <div className="w-full max-w-xs sm:max-w-sm px-6 py-5 rounded-2xl flex flex-col items-center gap-2 bg-slate-950 border-4 border-amber-400/80 shadow-2xl">
+                <span className="text-3xl">{result.icon}</span>
+                <span className="text-amber-200 font-black text-lg sm:text-xl bg-white/10 px-4 py-1.5 rounded-full">
+                  【 {cleanName} 】
+                </span>
+                <span className="text-slate-400 text-xs font-bold">プロフィールにつけられる「しょうごう」だよ</span>
+              </div>
+            ) : result.icon.startsWith('/') ? (
               <div className="w-56 h-56 sm:w-72 sm:h-72 rounded-3xl overflow-hidden relative shadow-[0_0_40px_rgba(0,0,0,0.8)] flex items-center justify-center bg-black border-4 border-amber-400/90 group">
                 <img
                   src={result.icon}

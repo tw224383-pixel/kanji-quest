@@ -18,6 +18,25 @@
         { "fieldPath": "lastMonthString", "order": "ASCENDING" },
         { "fieldPath": "monthlyDamage", "order": "DESCENDING" }
       ]
+    },
+    {
+      "//": "先週のヒーロー（学年別・確定済み）: 期間切替時に退避した prevWeeklyXp の高い順に取得する",
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "grade", "order": "ASCENDING" },
+        { "fieldPath": "prevWeekString", "order": "ASCENDING" },
+        { "fieldPath": "prevWeeklyXp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "先月のダメージ TOP5（全学年・確定済み）: prevMonthlyDamage の高い順に取得する",
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "prevMonthString", "order": "ASCENDING" },
+        { "fieldPath": "prevMonthlyDamage", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

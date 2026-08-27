@@ -103,6 +103,16 @@ export function getCurrentJSTMonth() {
   return jst.toISOString().slice(0, 7);
 }
 
+// 先月の月間ダメージランキング実績判定用（今週開いた瞬間に確定させる方式だと
+// 週末・月末にログインしなかった子が不利になるため、「先月分の確定値」を今月中に
+// 参照する方式に変更した。詳しくは getPreviousJSTWeekString のコメント参照）。
+export function getPreviousJSTMonth() {
+  const d = new Date();
+  const jst = new Date(d.getTime() + (9 * 60 * 60 * 1000));
+  const prevMonth = new Date(Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth() - 1, 1));
+  return prevMonth.toISOString().slice(0, 7);
+}
+
 // ハロウィン(10月)・クリスマス(12月)の見た目上書き。以前は raid/page.tsx・RaidBoss.tsx・
 // game/page.tsx の3箇所に個別実装され、しかも端末のローカル時刻を見ていたため、
 // 端末とサーバーで判定がズレうる状態だった。JST基準でここに一本化する。
@@ -117,9 +127,8 @@ export function getSeasonalBossPresentation(baseIcon: string, baseName: string):
   return { icon: baseIcon, name: baseName };
 }
 
-export function getCurrentJSTWeekString() {
-  const d = new Date();
-  const jst = new Date(d.getTime() + (9 * 60 * 60 * 1000));
+function jstWeekStringForDate(baseDate: Date) {
+  const jst = new Date(baseDate.getTime() + (9 * 60 * 60 * 1000));
   // Calculate ISO week
   const date = new Date(jst.getTime());
   date.setUTCHours(0, 0, 0, 0);
@@ -127,6 +136,20 @@ export function getCurrentJSTWeekString() {
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
   const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   return `${date.getUTCFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
+}
+
+export function getCurrentJSTWeekString() {
+  return jstWeekStringForDate(new Date());
+}
+
+// 先週の週間ヒーローランキング実績判定用。
+// 以前は「土日など週の終わり際にランキングを開いた瞬間の順位」を確定させていたが、
+// 土日にログインしない子が実績を取り損ねてしまう不公平があった。
+// 週が切り替わった直後はまだ自分のドキュメントに先週分の weeklyXp / lastWeekString が
+// 残っている（今週分のプレイでリセットされるまでの間）ので、今週このページを開いた
+// タイミングで「先週の確定順位」を過去分として参照し、そこに入っていれば実績を確定する。
+export function getPreviousJSTWeekString() {
+  return jstWeekStringForDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 }
 
 export type RaidDamageResult = { success: boolean; defeatedLevels: number[] };

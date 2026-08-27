@@ -2,8 +2,11 @@ export type ScienceQuestion = {
   id: string;
   grade: number;
   word: string;     // 問題文
+  wordKana?: string; // ふりがなモード用：word をひらがなにした版
   reading: string;  // 正解（表示・判定用）
+  readingKana?: string;
   choices: string[]; // 4択の選択肢（正解を含む）
+  choicesKana?: string[];
   category?: string;
   rationale?: string;
 };
@@ -6046,6 +6049,27 @@ export function getScienceCategories(): ScienceCategoryInfo[] {
   return Array.from(map.values());
 }
 
+// ふりがなモード用データ（scripts/generateFurigana.js が生成、id引き）。
+// 元データを直接書き換えず別ファイルに持つことで、既存の設問データへの影響をゼロにしている。
+import scienceFurigana from "./scienceFurigana.json";
+type FuriganaEntry = { wordKana: string; readingKana: string; choicesKana: string[] };
+const SCIENCE_FURIGANA = scienceFurigana as Record<string, FuriganaEntry>;
+
+function attachScienceKana(q: ScienceQuestion): ScienceQuestion {
+  const k = SCIENCE_FURIGANA[q.id];
+  return k ? { ...q, wordKana: k.wordKana, readingKana: k.readingKana, choicesKana: k.choicesKana } : q;
+}
+
+// choices をシャッフルする際、choicesKana があれば同じ並び順でシャッフルして対応を保つ。
+function shuffleScienceChoices(q: ScienceQuestion): ScienceQuestion {
+  const order = q.choices.map((_, i) => i).sort(() => Math.random() - 0.5);
+  return {
+    ...q,
+    choices: order.map(i => q.choices[i]),
+    choicesKana: q.choicesKana ? order.map(i => q.choicesKana![i]) : undefined,
+  };
+}
+
 export function getRandomScienceQuestions(target: (number | string)[], count: number = 5): ScienceQuestion[] {
   let filtered: ScienceQuestion[] = [];
   if (target && target.length > 0) {
@@ -6056,14 +6080,14 @@ export function getRandomScienceQuestions(target: (number | string)[], count: nu
     }
   }
   const pool = filtered.length > 0 ? filtered : SCIENCE_QUESTIONS;
-  
-  const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => ({...q, choices: [...q.choices].sort(() => Math.random() - 0.5)}));
+
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => shuffleScienceChoices(attachScienceKana(q)));
   return shuffled.slice(0, count);
 }
 
 export function getRevengeScienceQuestions(mistakeIds: string[], count: number = 10): ScienceQuestion[] {
   const filtered = SCIENCE_QUESTIONS.filter(q => mistakeIds.includes(q.word) || mistakeIds.includes(q.id));
   const pool = filtered.length > 0 ? filtered : SCIENCE_QUESTIONS;
-  const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => ({...q, choices: [...q.choices].sort(() => Math.random() - 0.5)}));
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).map(q => shuffleScienceChoices(attachScienceKana(q)));
   return shuffled.slice(0, count);
 }

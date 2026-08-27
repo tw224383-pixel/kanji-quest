@@ -5,6 +5,8 @@ import { auth, db } from "../lib/firebase";
 import { onAuthStateChanged, User, signOut, signInAnonymously } from "firebase/auth";
 import { doc, setDoc, getDoc, runTransaction } from "firebase/firestore";
 import { storage } from "../lib/storage";
+import { rollPeriodSnapshot } from "../lib/periodSnapshot";
+import { getCurrentJSTWeekString, getCurrentJSTMonth } from "../lib/raidLogic";
 
 export type UserData = {
   id?: string;
@@ -43,6 +45,17 @@ export type UserData = {
   // 訪れたタイミングで更新される（ランキングは都度計算のためリアルタイム判定はできない）。
   bestWeeklyHeroRank?: number;
   bestDamageRank?: number;
+  // 系統（スキル）別・1日のPT上限判定用（同じ系統の問題の周回でのPT稼ぎ対策）。
+  // 日付（lastPtEarnDate）が変わると系統ごとリセットされる。合計PTそのものには上限なし。
+  dailyCategoryPt?: { [skillKey: string]: number };
+  lastPtEarnDate?: string;
+  // 「先週のヒーロー」「先月のダメージ」ランキング＝確定済みの前期間の成績。
+  // weeklyXp / lastWeekString は次の期間に入ると上書きされて前期間の値が消えてしまうため、
+  // 期間が切り替わった最初の書き込みで、リセット前の値をここへ退避（スナップショット）する。
+  prevWeeklyXp?: number;
+  prevWeekString?: string;
+  prevMonthlyDamage?: number;
+  prevMonthString?: string;
 };
 
 const DEFAULT_USER_DATA: UserData = {
@@ -213,7 +226,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               mistakeNextReview: data.mistakeNextReview || {},
               shareCode: data.shareCode || "",
               bestWeeklyHeroRank: data.bestWeeklyHeroRank || undefined,
-              bestDamageRank: data.bestDamageRank || undefined
+              bestDamageRank: data.bestDamageRank || undefined,
+              dailyCategoryPt: data.dailyCategoryPt || {},
+              lastPtEarnDate: data.lastPtEarnDate || "",
+              prevWeeklyXp: data.prevWeeklyXp || 0,
+              prevWeekString: data.prevWeekString || "",
+              prevMonthlyDamage: data.prevMonthlyDamage || 0,
+              prevMonthString: data.prevMonthString || ""
             };
             setUserData(newData);
             writeUserCache(newData);
@@ -272,9 +291,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           // 別タブで既に今日分の更新が反映済みなら何もしない（複数タブでの二重加算防止）
           if (current.lastLoginDate === todayStr) return null;
           const newStreak = current.lastLoginDate === yesterdayStr ? (current.loginStreak || 0) + 1 : 1;
+          // 週・月が切り替わっていれば、先週分・先月分の成績をここで退避しておく。
+          // ゲーム終了時にも同じ退避を行っているが、それだと「新しい週にまだ一度も
+          // プレイしていない子」の記録が退避されず、先週ランキングから漏れてしまう。
+          // アプリを開いた時点で退避しておけば、ランキングを見に来た全員が対象になる。
+          const weekRoll = rollPeriodSnapshot(current.lastWeekString, getCurrentJSTWeekString(), current.weeklyXp, current.prevWeekString, current.prevWeeklyXp);
+          const monthRoll = rollPeriodSnapshot(current.lastMonthString, getCurrentJSTMonth(), current.monthlyDamage, current.prevMonthString, current.prevMonthlyDamage);
           return {
             lastLoginDate: todayStr,
             loginStreak: newStreak,
+            ...weekRoll.snapshot("prevWeeklyXp", "prevWeekString"),
+            ...monthRoll.snapshot("prevMonthlyDamage", "prevMonthString"),
           };
         });
       }

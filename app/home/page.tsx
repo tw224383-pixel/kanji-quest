@@ -29,6 +29,7 @@ export default function Home() {
   const { userData, updateUserData, loading, isGuest } = useUser();
   const router = useRouter();
   const [mode, setMode] = useState<"4choice" | "keyboard">("4choice");
+  const [furiganaMode, setFuriganaMode] = useState<boolean>(false);
   const [subject, setSubject] = useState<"kanji" | "math" | "science" | "social">("kanji");
   const [isAnimating, setIsAnimating] = useState(false);
   const [targetGrades, setTargetGrades] = useState<number[]>([1]);
@@ -81,6 +82,7 @@ export default function Home() {
       }
     }
     setMode(storage.getAnswerMode() as "4choice" | "keyboard");
+    setFuriganaMode(storage.getFuriganaMode());
   }, [userData]);
 
   useEffect(() => {
@@ -150,6 +152,11 @@ export default function Home() {
     storage.setAnswerMode(m);
   };
 
+  const handleFuriganaModeChange = (on: boolean) => {
+    setFuriganaMode(on);
+    storage.setFuriganaMode(on);
+  };
+
   return (
     <main className="min-h-screen p-6 relative">
       {/* Dark overlay is now handled globally by ThemeBackground */}
@@ -191,6 +198,17 @@ export default function Home() {
                 ※ 理科・社会は4択ボタン専用です（キーボードボーナス対象外）
               </div>
             )}
+
+            <label className="mt-4 flex items-center justify-center gap-2 cursor-pointer bg-slate-900/60 rounded-xl py-3 px-4 border border-slate-700 hover:border-amber-400/60 transition-colors">
+              <input
+                type="checkbox"
+                checked={furiganaMode}
+                onChange={(e) => handleFuriganaModeChange(e.target.checked)}
+                className="w-5 h-5 accent-amber-400"
+              />
+              <span className="font-black text-slate-200">ふりがなモード</span>
+              <span className="text-xs text-slate-400 font-bold">（算数・理科・社会の もんだいを ひらがなで 表示）</span>
+            </label>
           </div>
 
           {/* Subject Selection */}

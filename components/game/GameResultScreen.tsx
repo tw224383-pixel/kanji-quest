@@ -13,6 +13,7 @@ interface GameResultScreenProps {
   hasPenalty: boolean;
   finalXP: number;
   finalPT: number;
+  ptWasCapped?: boolean;
   isSpSubject: boolean;
   onRetry: () => void;
   onGoHome: () => void;
@@ -28,6 +29,7 @@ export function GameResultScreen({
   hasPenalty,
   finalXP,
   finalPT,
+  ptWasCapped,
   isSpSubject,
   onRetry,
   onGoHome,
@@ -92,6 +94,11 @@ export function GameResultScreen({
             {hasPenalty && (
               <div className="text-sm font-bold text-blue-500 mb-4 bg-blue-50 p-2 rounded-xl border border-blue-200">
                 ℹ️ 自分の学年より下の問題があったため、もらえる経験値が少なくなったよ！
+              </div>
+            )}
+            {ptWasCapped && (
+              <div className="text-sm font-bold text-indigo-500 mb-4 bg-indigo-50 p-2 rounded-xl border border-indigo-200">
+                🌙 同じ系統の問題で今日はもうたくさんPTを稼いだから、もらえるPTが少なめになっているよ。ちがう科目・分野にも挑戦してみよう！
               </div>
             )}
             <div className="text-4xl font-black mb-4 text-cyan-400 drop-shadow-md">+ {finalXP} XP</div>

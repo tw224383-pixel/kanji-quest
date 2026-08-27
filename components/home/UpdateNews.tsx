@@ -6,7 +6,47 @@ export function UpdateNews() {
       </h3>
       <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-36 overflow-y-auto pr-2 custom-scrollbar">
         <li>
-          <div className="text-xs text-amber-400 mb-0.5">2026/08/14 (最新)</div>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/28 (最新)</div>
+          <div>🥇 <strong>ランキング実績が正しく受け取れるように修正！</strong><br/>
+          先週・先月の成績がきちんと保存されるようになり、「先週のヒーロー」「先月のダメージ」に載っていれば、いつランキングを開いても実績がもらえるようになりました！</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/28</div>
+          <div>📖 <strong>ふりがなモードの読みまちがいを修正！</strong><br/>
+          「元寇（げんこう）」「承久の乱（じょうきゅうのらん）」「維管束（いかんそく）」など、歴史や理科の言葉のふりがなを正しく直しました。</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/28</div>
+          <div>🪙 <strong>PTのもらいかたを調整＆ガチャの表示バグを修正！</strong><br/>
+          同じ問題ばかりくり返したときだけPTが少なくなるようになりました（ちがう問題ならいつも通りもらえるよ）。ガチャで一度かぶったアイテムが、次に新しく当てても「再獲得」と出てしまうバグも修正しました。</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/27</div>
+          <div>📝 <strong>算数の文章題が読みやすく！</strong><br/>
+          長い文章題のときだけ自動で文字サイズを小さくし、スクロールしなくても問題全体が見やすくなりました！</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/27</div>
+          <div>📖 <strong>「ふりがなモード」を追加！</strong><br/>
+          ホーム画面のチェックボックスをONにすると、算数・理科・社会の問題文と選択肢がぜんぶひらがな表示になります！</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/27</div>
+          <div>🎉 <strong>通常ガチャに「10連」が登場！</strong><br/>
+          1000PTで10回いっきにガチャがまわせるようになりました！通常ガチャの消費PTが正しく表示されないバグも修正済み。</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/27</div>
+          <div>🥇 <strong>ランキングまわりのバグを修正！</strong><br/>
+          「今週のヒーロー」「今月のダメージランキング」が正しい順位で表示されるように修正し、先週・先月の最終結果をもとにランキング実績を受け取れるようにしました。</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/27</div>
+          <div>🏷️ <strong>ガチャの称号アイテム表示を修正！</strong><br/>
+          称号を引いたときに絵文字が大きく出てアバターと間違えやすかったのを、「【称号名】」のプレート表示にしてわかりやすくしました。</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/14</div>
           <div>📖 <strong>「リッチ大図鑑」に全装備品を完全収録＆装備ガチャSP対応！</strong><br/>
           図鑑がアバター・装備品全93種の大図鑑にパワーアップ！「ふわふわ装備ガチャ♡」「装備品リッチガチャ」をSP（1000SP）で引けるよう修正し、小1の文章題・生活科の問題をすべてひらがな表記に統一しました！</div>
         </li>
