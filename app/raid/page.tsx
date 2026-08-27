@@ -7,7 +7,7 @@ import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth, getSeasonalBossPresentation, getCachedRaidBossStatus } from "../../lib/raidLogic";
-import { collection, query, limit, getDocs, where } from "firebase/firestore";
+import { collection, query, limit, orderBy, getDocs, where } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 
@@ -56,15 +56,18 @@ export default function RaidPage() {
     return () => { cancelled = true; };
   }, [userData?.grade]);
 
-  // 全学年ダメージ TOP5（表示は5件だけなので取得も5件に絞る。以前はwhere句のみで
-  // 上限が無く、その月にプレイした全ユーザーを毎回読み取ってしまっていた）
+  // 全学年ダメージ TOP5。
+  // orderBy をサーバー側で必ず付けること。付けないとFirestoreはドキュメントID順の
+  // 「たまたま先頭N件」を返すため、その中から上位5件を選んでも本当の上位者にならない
+  // （利用者が増えてから顕在化した不具合。app/ranking/page.tsx も同じ理由で修正済み）。
   useEffect(() => {
     const fetchTopRanking = async () => {
       try {
         const q = query(
           collection(db, "users"),
           where("lastMonthString", "==", getCurrentJSTMonth()),
-          limit(30)
+          orderBy("monthlyDamage", "desc"),
+          limit(5)
         );
         const snap = await getDocs(q);
         const ranking = snap.docs.map(docSnap => {
@@ -74,7 +77,7 @@ export default function RaidPage() {
             damage: data.monthlyDamage || 0,
             isUser: docSnap.id === auth.currentUser?.uid
           };
-        }).sort((a, b) => b.damage - a.damage).slice(0, 5);
+        }).filter(r => r.damage > 0);
         setTopRanking(ranking);
       } catch (err) {
         console.error(err);

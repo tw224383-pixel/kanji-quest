@@ -1,0 +1,24 @@
+{
+  "indexes": [
+    {
+      "//": "今週のヒーロー（学年別）: 今週プレイした人だけを weeklyXp の高い順に取得する",
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "grade", "order": "ASCENDING" },
+        { "fieldPath": "lastWeekString", "order": "ASCENDING" },
+        { "fieldPath": "weeklyXp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "今月のダメージ TOP5（全学年）: 今月プレイした人だけを monthlyDamage の高い順に取得する",
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "lastMonthString", "order": "ASCENDING" },
+        { "fieldPath": "monthlyDamage", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

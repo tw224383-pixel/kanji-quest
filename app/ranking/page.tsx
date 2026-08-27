@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, where, query, limit } from "firebase/firestore";
+import { collection, getDocs, where, query, limit, orderBy } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
@@ -64,10 +64,19 @@ export default function RankingPage() {
     const fetchHero = async () => {
       setLoading(true);
       try {
+        // 【重要】必ずサーバー側で並べ替える。
+        // 以前は orderBy を付けずに limit だけで取得していたため、Firestoreは
+        // ドキュメントID順の「たまたま先頭N件」を返し、その中だけを並べ替えていた。
+        // 利用者が数十人のうちは全員取れていて正しく見えたが、234人規模になった
+        // 時点で本当の上位者が取得対象から漏れ、ランキングがほぼ無意味になっていた。
+        // 今週プレイした人だけを weeklyXp の高い順に10件だけ取れば、正確なうえに
+        // 読み取り回数も大幅に減る（複合インデックスは firestore.indexes.json）。
         const q = query(
           collection(db, "users"),
           where("grade", "==", gradeFilter),
-          limit(30)
+          where("lastWeekString", "==", currentWeekString),
+          orderBy("weeklyXp", "desc"),
+          limit(10)
         );
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => {
@@ -80,8 +89,9 @@ export default function RankingPage() {
           } as RankingUser;
         });
 
-        // Add guest user if guest
-        if (isGuest && userData && userData.grade === gradeFilter) {
+        // Add guest user if guest（ゲストはFirestoreに存在しないのでクエリ結果に入らない）。
+        // 先週以前のweeklyXpが残っている場合は今週の記録ではないので加えない。
+        if (isGuest && userData && userData.grade === gradeFilter && userData.lastWeekString === currentWeekString) {
           const exists = data.find(u => u.id === "guest");
           if (!exists) {
             data.push({
@@ -98,12 +108,13 @@ export default function RankingPage() {
           }
         }
 
+        // サーバー側で並べ替え済み。ゲストは Firestore に存在しないためここで差し込み、
+        // まだ今週のWPが0の人は「今週のヒーロー」には出さない。
         const sorted = data
+          .filter(u => (u.weeklyXp || 0) > 0)
           .sort((a, b) => {
-            const aXp = a.lastWeekString === currentWeekString ? (a.weeklyXp || 0) : 0;
-            const bXp = b.lastWeekString === currentWeekString ? (b.weeklyXp || 0) : 0;
-            if (bXp !== aXp) return bXp - aXp;
-            return (b.xp || 0) - (a.xp || 0);
+            const diff = (b.weeklyXp || 0) - (a.weeklyXp || 0);
+            return diff !== 0 ? diff : (b.xp || 0) - (a.xp || 0);
           })
           .slice(0, 10);
 
@@ -130,7 +141,15 @@ export default function RankingPage() {
     const fetchDamage = async () => {
       setLoading(true);
       try {
-        const q = query(collection(db, "users"), limit(30));
+        // ヒーロー側と同様、必ずサーバー側で並べ替える（理由は fetchHero のコメント参照）。
+        // 全学年が対象なので、orderBy なしだと234人中の「たまたま先頭30件」から
+        // TOP5を選ぶことになり、本当の上位者がまず入らなかった。
+        const q = query(
+          collection(db, "users"),
+          where("lastMonthString", "==", currentMonth),
+          orderBy("monthlyDamage", "desc"),
+          limit(5)
+        );
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => {
           const d = doc.data();
@@ -142,7 +161,8 @@ export default function RankingPage() {
           } as RankingUser;
         });
 
-        if (isGuest && userData) {
+        // ゲストはFirestoreに存在しないのでここで差し込む（今月の記録がある場合のみ）。
+        if (isGuest && userData && userData.lastMonthString === currentMonth) {
           const exists = data.find(u => u.id === "guest");
           if (!exists) {
             data.push({
@@ -159,13 +179,12 @@ export default function RankingPage() {
           }
         }
 
+        // サーバー側で並べ替え済み。ダメージ0の人は「ダメージランキング」には出さない。
         const sorted = data
-          .filter(u => (u.monthlyDamage || 0) > 0 || (u.xp || 0) > 0)
+          .filter(u => (u.monthlyDamage || 0) > 0)
           .sort((a, b) => {
-            const aDmg = a.lastMonthString === currentMonth ? (a.monthlyDamage || 0) : 0;
-            const bDmg = b.lastMonthString === currentMonth ? (b.monthlyDamage || 0) : 0;
-            if (bDmg !== aDmg) return bDmg - aDmg;
-            return (b.xp || 0) - (a.xp || 0);
+            const diff = (b.monthlyDamage || 0) - (a.monthlyDamage || 0);
+            return diff !== 0 ? diff : (b.xp || 0) - (a.xp || 0);
           })
           .slice(0, 5);
 
@@ -301,13 +320,13 @@ export default function RankingPage() {
               {loading ? (
                 <LoadingScreen fullScreen={false} />
               ) : heroRanking.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 font-bold">まだ だれもいないよ！チャンス！</div>
+                <div className="text-center py-12 text-gray-400 font-bold">
+                  今週はまだ だれも バトルしていないよ！<br />さいしょのヒーローに なろう！
+                </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {heroRanking.map((user, index) => {
-                    const score = user.lastWeekString === currentWeekString ? (user.weeklyXp || 0) : 0;
-                    return renderUserCard(user, index, score, "WP");
-                  })}
+                  {/* クエリで今週分に絞り込み済みなので weeklyXp をそのまま表示してよい */}
+                  {heroRanking.map((user, index) => renderUserCard(user, index, user.weeklyXp || 0, "WP"))}
                 </div>
               )}
             </div>
@@ -333,7 +352,8 @@ export default function RankingPage() {
               ) : (
                 <div className="flex flex-col gap-4">
                   {damageRanking.map((user, index) => {
-                    const score = user.lastMonthString === currentMonth ? (user.monthlyDamage || 0) : 0;
+                    // クエリで今月分に絞り込み済み
+                    const score = user.monthlyDamage || 0;
                     return renderUserCard(user, index, score, "ダメージ");
                   })}
                 </div>
