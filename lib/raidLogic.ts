@@ -39,8 +39,8 @@ export function getRaidBossIcon(level: number): string {
 
 export function getRaidBossImagePath(level: number, isScary: boolean = true): string {
   const dir = isScary ? "/images/boss" : "/images/boss/cute";
-  // Lv11は「同じような姿の、さらに上位の存在」という位置づけなのでLv10の竜の絵を流用する
-  if (level >= TRANSCENDENT_LEVEL) return `${dir}/dragon.webp`;
+  // Lv11「すべてを超えし者」は専用の絵（リアル／キュートそれぞれ用意されている）
+  if (level >= TRANSCENDENT_LEVEL) return `${dir}/uraboss.webp`;
   if (level <= 1) return `${dir}/slime.webp`;
   if (level === 2) return `${dir}/bat.webp`;
   if (level === 3) return `${dir}/wolf.webp`;
