@@ -8,7 +8,7 @@ export function UpdateNews() {
         <li>
           <div className="text-xs text-amber-400 mb-0.5">2026/08/29 (最新)</div>
           <div>🌌 <strong>裏ボス「すべてを超えし者」登場！</strong><br/>
-          Lv10のアルティメットドラゴンを たおすと、その先に <strong>HP 999万</strong> の裏ボスがあらわれるよ！
+          Lv10のアルティメットドラゴンと たたかっていると「？？？？？？」の気配が…！たおすと、その先に <strong>HP 9,999,999</strong> の裏ボスがあらわれるよ！
           学年みんなで けずりきれたら、<strong>その学年ぜんいんに 10万PT と 5万SP</strong> がプレゼントされます。ごほうびは つぎにアプリを ひらいたときに うけとれるよ！</div>
         </li>
         <li>

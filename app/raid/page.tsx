@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/Button";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth, getSeasonalBossPresentation, getCachedRaidBossStatus } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, getRaidBossImagePath, getCurrentJSTMonth, getSeasonalBossPresentation, getCachedRaidBossStatus, TRANSCENDENT_LEVEL, HIDDEN_BOSS_NAME, isTranscendentRevealed } from "../../lib/raidLogic";
 import { collection, query, limit, orderBy, getDocs, where } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
+import { safeLocalStorage } from "../../lib/safeLocalStorage";
 
 type GradeData = {
   grade: number;
@@ -19,10 +20,12 @@ type GradeData = {
 };
 
 export default function RaidPage() {
-  const { userData } = useUser();
+  const { userData, isGuest } = useUser();
   const router = useRouter();
   const [otherGrades, setOtherGrades] = useState<GradeData[]>([]);
   const [topRanking, setTopRanking] = useState<{name: string, damage: number, isUser: boolean}[]>([]);
+  // 自分の学年が裏ボスに到達しているか（未到達なら図鑑では伏せ字にする）
+  const [transcendentRevealed, setTranscendentRevealed] = useState(false);
 
   useEffect(() => {
     // 他学年のボス状況：常時購読(onSnapshot)ではなく、短いTTLキャッシュ付きの単発取得に
@@ -53,8 +56,28 @@ export default function RaidPage() {
         });
       }).catch(() => {});
     }
+    // 自分の学年が裏ボスに到達しているかを確認する（図鑑の伏せ字の出し分けに使う）。
+    // ゲストはボスの進行状況をローカルに持っているので、そちらを見る必要がある
+    // （Firestore を見ると常に未到達扱いになり、到達しても伏せ字のままになってしまう）。
+    if (userData?.grade) {
+      if (isGuest) {
+        const lv = parseInt(safeLocalStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10);
+        const month = safeLocalStorage.getItem("kq_raid_month_" + userData.grade) || currentMonth;
+        const cleared = (safeLocalStorage.getItem("kq_raid_transcendent_" + userData.grade) || "").split(",").filter(Boolean);
+        setTranscendentRevealed((month === currentMonth && isTranscendentRevealed(lv)) || cleared.length > 0);
+      } else {
+        // 認証ユーザーは上のループと同じキャッシュを共有するので読み取りは増えない
+        getCachedRaidBossStatus(userData.grade).then(status => {
+          if (cancelled) return;
+          const reached = status.month === currentMonth && isTranscendentRevealed(status.level);
+          // 過去に一度でも討伐していれば、月が変わっても正体は見せたままにする
+          setTranscendentRevealed(reached || status.transcendentClearedMonths.length > 0);
+        }).catch(() => {});
+      }
+    }
+
     return () => { cancelled = true; };
-  }, [userData?.grade]);
+  }, [userData?.grade, isGuest]);
 
   // 全学年ダメージ TOP5。
   // orderBy をサーバー側で必ず付けること。付けないとFirestoreはドキュメントID順の
@@ -206,12 +229,38 @@ export default function RaidPage() {
           みんなで力をあわせて、レベル10の完全討伐をめざそう！
         </div>
         <div className="space-y-3">
-          {[1,2,3,4,5,6,7,8,9,10].map(level => {
+          {[1,2,3,4,5,6,7,8,9,10,TRANSCENDENT_LEVEL].map(level => {
+            // 裏ボスは、自分の学年がそこへ到達するまで正体を伏せる。
+            // 図鑑には枠だけ「？？？？？？」で見えていて、
+            // 「Lv10の先にまだ何かいる」と気づけるようにする。
+            const isHidden = level >= TRANSCENDENT_LEVEL && !transcendentRevealed;
             const icon = getRaidBossIcon(level);
-            const name = getRaidBossName(level);
+            const name = isHidden ? HIDDEN_BOSS_NAME : getRaidBossName(level);
             const maxHp = getRaidBossMaxHp(level);
             const imagePath = getRaidBossImagePath(level, isScary);
-            
+
+            if (isHidden) {
+              return (
+                <div key={level} className="rounded-2xl p-3 shadow-sm border-2 border-dashed border-fuchsia-500/50 bg-slate-900/80 relative overflow-hidden flex items-center gap-4">
+                  <div className="relative z-10 w-12 h-12 flex items-center justify-center rounded-xl font-black text-sm shrink-0 bg-black/60 text-fuchsia-400 border border-fuchsia-700">
+                    Lv.??
+                  </div>
+                  <div className="relative z-10 w-12 h-12 rounded-full shrink-0 border-2 border-fuchsia-500/40 bg-black flex items-center justify-center text-2xl text-fuchsia-400 animate-pulse">
+                    ?
+                  </div>
+                  <div className="relative z-10 flex-1">
+                    <div className="font-black text-lg leading-tight text-fuchsia-300 tracking-widest animate-pulse">{HIDDEN_BOSS_NAME}</div>
+                    <div className="text-sm font-bold mt-1 text-fuchsia-400/80">
+                      最大HP: ???????
+                      <span className="block text-xs text-slate-400 font-bold mt-0.5">
+                        Lv.10 を討伐した学年だけが、その先を見ることができる…
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={level} className={`bg-white/80 rounded-2xl p-3 shadow-sm border relative overflow-hidden flex items-center gap-4 ${isScary ? 'border-red-900/50 bg-black/95' : 'border-slate-200'}`}>
                 {isScary ? (

@@ -166,7 +166,7 @@ service cloud.firestore {
       // hp の上限は通常ボス(最大25.5万)ではなくLv11のHPに合わせている。
       return newData.keys().hasOnly(['level', 'hp', 'month', 'transcendentClearedMonths'])
         && (!('level' in newData) || (newData.level is int && newData.level >= 1 && newData.level <= 11))
-        && (!('hp' in newData) || (newData.hp is number && newData.hp >= 0 && newData.hp <= 9990000))
+        && (!('hp' in newData) || (newData.hp is number && newData.hp >= 0 && newData.hp <= 9999999))
         && (!('month' in newData) || (newData.month is string && newData.month.size() <= 10))
         // Lv11を討伐した月の記録。学年全員がこれを見て報酬を受け取るため、
         // 件数だけ制限して中身は検証しない（式数を増やしすぎないため）。

@@ -193,7 +193,7 @@ export default function Home() {
               すべてを超えし者 討伐！
             </h2>
             <p className="text-slate-200 font-bold text-sm sm:text-base mb-5 leading-relaxed">
-              {userData.grade}年生 みんなの力で、999万HPの裏ボスを たおしたよ！<br />
+              {userData.grade}年生 みんなの力で、9,999,999HPの裏ボスを たおしたよ！<br />
               学年ぜんいんに ごほうびが とどきました。
             </p>
             <div className="bg-slate-950/80 border border-fuchsia-500/40 rounded-2xl p-4 mb-6 flex flex-col gap-2">

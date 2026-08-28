@@ -1,7 +1,7 @@
 // Lv11「すべてを超えし者」は、Lv10を討伐したあとに出現するボーナスステージ。
-// 学年全員で挑む裏ボスなので、通常ボス（合計約108万HP）とは桁を変えて999万HPにしてある。
+// 学年全員で挑む裏ボスなので、通常ボス（合計約108万HP）とは桁を変えて9,999,999HPにしてある。
 export const TRANSCENDENT_LEVEL = 11;
-export const TRANSCENDENT_HP = 9990000;
+export const TRANSCENDENT_HP = 9999999;
 // 討伐できたら、その学年の全員がこの報酬を受け取れる（受け取りは各自の初回アクセス時）
 export const TRANSCENDENT_REWARD_PT = 100000;
 export const TRANSCENDENT_REWARD_SP = 50000;
@@ -103,12 +103,12 @@ const TRANSCENDENT_PROFILE: Record<"cute" | "scary", BossProfile> = {
   cute: {
     alias: "すべてを超えし者",
     profile: "アルティメットドラゴンを倒したその先に、静かに待っていた「もうひとつの姿」。",
-    story: "たおされた古竜が、みんなの努力そのものを取りこんで生まれ変わった究極の存在。999万という途方もないHPを持ち、ひとりの力ではまず削りきれない。学年みんなで毎日こつこつ挑み続けたときだけ、その扉は開く。討伐できれば、学年の全員に特大の報酬が贈られる。",
+    story: "たおされた古竜が、みんなの努力そのものを取りこんで生まれ変わった究極の存在。9,999,999という途方もないHPを持ち、ひとりの力ではまず削りきれない。学年みんなで毎日こつこつ挑み続けたときだけ、その扉は開く。討伐できれば、学年の全員に特大の報酬が贈られる。",
   },
   scary: {
     alias: "すべてを超えし者",
     profile: "最強の真竜を倒した者の前にのみ姿を現す、次元の外側からの来訪者。",
-    story: "あらゆる試練を乗り越えた者だけが観測できる、概念そのものの化身。その体力は999万に達し、単独での討伐は不可能とされる。だが学年すべての勇者が力を束ねたとき、この絶対的な壁にもひびが入るという。討ち滅ぼした暁には、学年全員へ莫大な祝福がもたらされる。",
+    story: "あらゆる試練を乗り越えた者だけが観測できる、概念そのものの化身。その体力は9,999,999に達し、単独での討伐は不可能とされる。だが学年すべての勇者が力を束ねたとき、この絶対的な壁にもひびが入るという。討ち滅ぼした暁には、学年全員へ莫大な祝福がもたらされる。",
   },
 };
 
@@ -116,6 +116,22 @@ export function getRaidBossProfile(level: number, isScary: boolean): BossProfile
   if (level >= TRANSCENDENT_LEVEL) return TRANSCENDENT_PROFILE[isScary ? "scary" : "cute"];
   const safeLevel = Math.min(Math.max(1, level), 10);
   return isScary ? SCARY_BOSS_PROFILES[safeLevel] : CUTE_BOSS_PROFILES[safeLevel];
+}
+
+// 裏ボスは、その学年が実際にLv11へ到達するまで正体を伏せる。
+// Lv10の先に「？？？？？？」という枠だけが見えている状態にして、
+// 「まだ何かいるらしい」と気づけるようにするための表示用ヘルパー。
+export const HIDDEN_BOSS_NAME = "？？？？？？";
+
+/** その学年がすでに裏ボスに到達（または討伐）していれば true */
+export function isTranscendentRevealed(level: number): boolean {
+  return level >= TRANSCENDENT_LEVEL;
+}
+
+/** 図鑑などで表示する名前。未到達なら伏せ字にする */
+export function getRaidBossDisplayName(level: number, revealed: boolean): string {
+  if (level >= TRANSCENDENT_LEVEL && !revealed) return HIDDEN_BOSS_NAME;
+  return getRaidBossName(level);
 }
 
 export const MAX_RAID_LEVEL = TRANSCENDENT_LEVEL;

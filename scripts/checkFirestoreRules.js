@@ -80,7 +80,7 @@ const CASES = [
 const GS_BASE = { level: 10, hp: 255000, month: "2026-08" };
 const GS_CASES = [
   ["globalStats: 通常のダメージ反映",                    "ALLOW", { level: 10, hp: 100000, month: "2026-08" }],
-  ["globalStats: Lv11(裏ボス)へ移行・999万HP",           "ALLOW", { level: 11, hp: 9990000, month: "2026-08" }],
+  ["globalStats: Lv11(裏ボス)へ移行・999万HP",           "ALLOW", { level: 11, hp: 9999999, month: "2026-08" }],
   ["globalStats: Lv11討伐を記録",                        "ALLOW", { level: 11, hp: 0, month: "2026-08", transcendentClearedMonths: ["2026-08"] }],
   ["globalStats: CHEAT Lv12は存在しない",                "DENY",  { level: 12, hp: 100, month: "2026-08" }],
   ["globalStats: CHEAT HPが999万超",                     "DENY",  { level: 11, hp: 99999999, month: "2026-08" }],

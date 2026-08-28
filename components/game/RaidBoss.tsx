@@ -172,6 +172,16 @@ export function RaidBoss({ showButtons = true, showOtherGradesLink = true }: Rai
             <span className="text-emerald-300"> {TRANSCENDENT_REWARD_SP.toLocaleString()}SP</span> がもらえる！
           </div>
         </div>
+      ) : level === TRANSCENDENT_LEVEL - 1 ? (
+        // 最後の通常ボス(Lv10)と戦っている間だけ、その先に何かいることを匂わせる
+        <div className="mt-3 rounded-2xl border-2 border-dashed border-fuchsia-500/50 bg-slate-900/70 p-3 text-center relative z-10">
+          <div className="text-fuchsia-300 font-black text-sm tracking-widest animate-pulse">
+            ？？？？？？
+          </div>
+          <div className="text-slate-300 font-bold text-xs mt-1">
+            この竜を たおした その先に、なにかの気配がある…
+          </div>
+        </div>
       ) : (
         <div className={`text-xs font-bold text-center mt-2 opacity-70 ${isScary ? 'text-red-400' : 'text-purple-600'}`}>
           ※クエストをクリアしてXPを稼ぐと、ボスにダメージを与えられるぞ！
