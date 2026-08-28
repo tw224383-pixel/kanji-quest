@@ -120,6 +120,8 @@ export default function RankingPage() {
               equippedTitle: userData.equippedTitle,
               equippedAvatar: userData.equippedAvatar,
               equippedEquipment: userData.equippedEquipment,
+              // theme を渡さないと、ゲストは自分のカードだけ背景が既定のままになる
+              theme: userData.theme,
               weeklyXp: userData.weeklyXp,
               lastWeekString: userData.lastWeekString,
             });
@@ -187,6 +189,8 @@ export default function RankingPage() {
               equippedTitle: userData.equippedTitle,
               equippedAvatar: userData.equippedAvatar,
               equippedEquipment: userData.equippedEquipment,
+              // theme を渡さないと、ゲストは自分のカードだけ背景が既定のままになる
+              theme: userData.theme,
               prevWeeklyXp: userData.prevWeeklyXp,
               prevWeekString: userData.prevWeekString,
             });
@@ -255,6 +259,8 @@ export default function RankingPage() {
               equippedTitle: userData.equippedTitle,
               equippedAvatar: userData.equippedAvatar,
               equippedEquipment: userData.equippedEquipment,
+              // theme を渡さないと、ゲストは自分のカードだけ背景が既定のままになる
+              theme: userData.theme,
               monthlyDamage: userData.monthlyDamage,
               lastMonthString: userData.lastMonthString,
             });
@@ -316,6 +322,8 @@ export default function RankingPage() {
               equippedTitle: userData.equippedTitle,
               equippedAvatar: userData.equippedAvatar,
               equippedEquipment: userData.equippedEquipment,
+              // theme を渡さないと、ゲストは自分のカードだけ背景が既定のままになる
+              theme: userData.theme,
               prevMonthlyDamage: userData.prevMonthlyDamage,
               prevMonthString: userData.prevMonthString,
             });
@@ -347,9 +355,12 @@ export default function RankingPage() {
 
   const renderUserCard = (user: RankingUser, index: number, score: number, scoreLabel: string) => {
     const { level } = calculateLevel(user.xp || 0);
+    // 背景画像は全て .webp に統一されている（過去に .jpg から一括変換した）。
+    // ここだけ .jpg のままだったため画像が404になり、テーマを設定している子でも
+    // 背景が出ずに真っ暗なカードになっていた。ThemeBackground.tsx と同じ組み立て方にそろえる。
     const isDefault = !user.theme || user.theme === "default";
     const themeName = user.theme === "time_space" ? "space" : user.theme;
-    const bgUrl = isDefault ? "/images/ui/fantasy_bg.webp" : `/images/themes/bg_${themeName}.jpg`;
+    const bgUrl = isDefault ? "/images/ui/fantasy_bg.webp" : `/images/themes/bg_${themeName}.webp`;
 
     return (
       <div key={user.id} className="relative flex items-center gap-4 bg-slate-800/80 border-2 border-slate-500/50 p-4 rounded-2xl shadow-inner overflow-hidden">
