@@ -96,6 +96,7 @@ export const MAX_RAID_LEVEL = 10;
 import { db } from "./firebase";
 import { doc, getDoc, runTransaction } from "firebase/firestore";
 import { storage } from "./storage";
+import { safeLocalStorage } from "./safeLocalStorage";
 
 export function getCurrentJSTMonth() {
   const d = new Date();
@@ -164,9 +165,9 @@ export async function dealDamageToRaidBoss(damage: number, grade: number): Promi
 
   if (storage.isGuest()) {
     try {
-      let level = parseInt(localStorage.getItem("kq_raid_level_" + grade) || "1", 10);
-      let hp = parseInt(localStorage.getItem("kq_raid_hp_" + grade) || getRaidBossMaxHp(1).toString(), 10);
-      const month = localStorage.getItem("kq_raid_month_" + grade) || currentMonth;
+      let level = parseInt(safeLocalStorage.getItem("kq_raid_level_" + grade) || "1", 10);
+      let hp = parseInt(safeLocalStorage.getItem("kq_raid_hp_" + grade) || getRaidBossMaxHp(1).toString(), 10);
+      const month = safeLocalStorage.getItem("kq_raid_month_" + grade) || currentMonth;
 
       if (month !== currentMonth) {
         level = 1;
@@ -185,9 +186,9 @@ export async function dealDamageToRaidBoss(damage: number, grade: number): Promi
         hp = 0;
       }
 
-      localStorage.setItem("kq_raid_level_" + grade, level.toString());
-      localStorage.setItem("kq_raid_hp_" + grade, hp.toString());
-      localStorage.setItem("kq_raid_month_" + grade, currentMonth);
+      safeLocalStorage.setItem("kq_raid_level_" + grade, level.toString());
+      safeLocalStorage.setItem("kq_raid_hp_" + grade, hp.toString());
+      safeLocalStorage.setItem("kq_raid_month_" + grade, currentMonth);
       return { success: true, defeatedLevels };
     } catch (e) {
       console.error("Guest raid boss update error:", e);
@@ -253,17 +254,17 @@ export async function dealDamageToRaidBossBatched(damage: number, grade: number)
   if (damage <= 0) return { success: false, defeatedLevels: [] };
   if (typeof window === "undefined") return dealDamageToRaidBoss(damage, grade);
 
-  const pending = parseInt(localStorage.getItem(pendingDamageKey(grade)) || "0", 10) + damage;
-  const count = parseInt(localStorage.getItem(pendingCountKey(grade)) || "0", 10) + 1;
+  const pending = parseInt(safeLocalStorage.getItem(pendingDamageKey(grade)) || "0", 10) + damage;
+  const count = parseInt(safeLocalStorage.getItem(pendingCountKey(grade)) || "0", 10) + 1;
 
   if (count < RAID_SYNC_INTERVAL) {
-    localStorage.setItem(pendingDamageKey(grade), pending.toString());
-    localStorage.setItem(pendingCountKey(grade), count.toString());
+    safeLocalStorage.setItem(pendingDamageKey(grade), pending.toString());
+    safeLocalStorage.setItem(pendingCountKey(grade), count.toString());
     return { success: true, defeatedLevels: [] };
   }
 
-  localStorage.setItem(pendingDamageKey(grade), "0");
-  localStorage.setItem(pendingCountKey(grade), "0");
+  safeLocalStorage.setItem(pendingDamageKey(grade), "0");
+  safeLocalStorage.setItem(pendingCountKey(grade), "0");
   return dealDamageToRaidBoss(pending, grade);
 }
 
@@ -272,10 +273,10 @@ export async function dealDamageToRaidBossBatched(damage: number, grade: number)
 if (typeof window !== "undefined") {
   const flushAllPending = () => {
     for (let g = 1; g <= 6; g++) {
-      const pending = parseInt(localStorage.getItem(pendingDamageKey(g)) || "0", 10);
+      const pending = parseInt(safeLocalStorage.getItem(pendingDamageKey(g)) || "0", 10);
       if (pending > 0 && !storage.isGuest()) {
-        localStorage.setItem(pendingDamageKey(g), "0");
-        localStorage.setItem(pendingCountKey(g), "0");
+        safeLocalStorage.setItem(pendingDamageKey(g), "0");
+        safeLocalStorage.setItem(pendingCountKey(g), "0");
         dealDamageToRaidBoss(pending, g).catch(() => {});
       }
     }

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { storage } from "../../lib/storage";
 import Link from "next/link";
 import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth, getSeasonalBossPresentation, getCachedRaidBossStatus } from "../../lib/raidLogic";
+import { safeLocalStorage } from "../../lib/safeLocalStorage";
 
 interface RaidBossProps {
   showButtons?: boolean;
@@ -26,16 +27,16 @@ export function RaidBoss({ showButtons = true, showOtherGradesLink = true }: Rai
     if (isGuest) {
       const grade = userData?.grade || 1;
       const handleGuestUpdate = () => {
-        let localLv = parseInt(localStorage.getItem("kq_raid_level_" + grade) || "1", 10);
-        let localHp = parseInt(localStorage.getItem("kq_raid_hp_" + grade) || getRaidBossMaxHp(1).toString(), 10);
-        const month = localStorage.getItem("kq_raid_month_" + grade) || currentMonth;
+        let localLv = parseInt(safeLocalStorage.getItem("kq_raid_level_" + grade) || "1", 10);
+        let localHp = parseInt(safeLocalStorage.getItem("kq_raid_hp_" + grade) || getRaidBossMaxHp(1).toString(), 10);
+        const month = safeLocalStorage.getItem("kq_raid_month_" + grade) || currentMonth;
         
         if (month !== currentMonth) {
           localLv = 1;
           localHp = getRaidBossMaxHp(1);
-          localStorage.setItem("kq_raid_level_" + grade, "1");
-          localStorage.setItem("kq_raid_hp_" + grade, localHp.toString());
-          localStorage.setItem("kq_raid_month_" + grade, currentMonth);
+          safeLocalStorage.setItem("kq_raid_level_" + grade, "1");
+          safeLocalStorage.setItem("kq_raid_hp_" + grade, localHp.toString());
+          safeLocalStorage.setItem("kq_raid_month_" + grade, currentMonth);
         }
 
         setLevel(localLv);

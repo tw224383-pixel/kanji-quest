@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { soundManager } from "../../lib/soundManager";
 import { useToast } from "../../components/ui/Toast";
 import { GameResultScreen } from "../../components/game/GameResultScreen";
+import { safeLocalStorage } from "../../lib/safeLocalStorage";
 
 // キーボード入力モードで「単位を入れるべきか分からない」問題への対策。
 // 算数の正解に単位が含まれる場合、その単位を入力欄の横に表示し数字だけ打てば
@@ -126,8 +127,8 @@ export default function GamePage() {
       const fetchBossLevel = async () => {
         const currentMonth = getCurrentJSTMonth();
         if (storage.isGuest()) {
-          let level = parseInt(localStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10);
-          const month = localStorage.getItem("kq_raid_month_" + userData.grade) || currentMonth;
+          let level = parseInt(safeLocalStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10);
+          const month = safeLocalStorage.getItem("kq_raid_month_" + userData.grade) || currentMonth;
           if (month !== currentMonth) level = 1;
           setBossLevel(level);
         } else {

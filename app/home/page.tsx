@@ -24,6 +24,7 @@ import { getCurrentJSTDateString, isDueForReview } from "../../lib/reviewSchedul
 import { getCachedRaidBossStatus } from "../../lib/raidLogic";
 import { CategoryGradePicker } from "../../components/home/CategoryGradePicker";
 import { UpdateNews } from "../../components/home/UpdateNews";
+import { safeLocalStorage } from "../../lib/safeLocalStorage";
 
 export default function Home() {
   const { userData, updateUserData, loading, isGuest } = useUser();
@@ -108,7 +109,7 @@ export default function Home() {
       if (!userData) return;
       try {
         if (isGuest) {
-          const localLv = parseInt(localStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10);
+          const localLv = parseInt(safeLocalStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10);
           setGradeBossLevel(localLv);
         } else {
           const status = await getCachedRaidBossStatus(userData.grade);

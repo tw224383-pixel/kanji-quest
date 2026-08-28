@@ -15,6 +15,7 @@ import {
   getAchievements
 } from "../../lib/achievementLogic";
 import { useToast } from "../../components/ui/Toast";
+import { safeLocalStorage } from "../../lib/safeLocalStorage";
 
 type TabType = AchievementTabType;
 type FilterType = "all" | "claimable" | "claimed" | "locked";
@@ -34,7 +35,7 @@ export default function AchievementsPage() {
       if (!userData) return;
       try {
         if (isGuest) {
-          setGradeBossLevel(parseInt(localStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10));
+          setGradeBossLevel(parseInt(safeLocalStorage.getItem("kq_raid_level_" + userData.grade) || "1", 10));
         } else {
           const status = await getCachedRaidBossStatus(userData.grade);
           setGradeBossLevel(status.level);

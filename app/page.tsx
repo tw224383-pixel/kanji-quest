@@ -20,13 +20,28 @@ export default function TopPage() {
   const [isLoginMode, setIsLoginMode] = useState(false); // 新規登録をデフォルトに
   const [showQR, setShowQR] = useState(false);
 
+  const [guestName, setGuestName] = useState<string | null>(null);
+
+  // ログイン・新規登録・ゲスト開始のあとは、クライアント側遷移ではなく完全な再読み込みで
+  // ホームへ移動する。UserProvider の初期化はマウント時の1回だけなので、router.push だと
+  // 「ログインしたのに直前のゲスト状態のまま」「ゲストにしたのにデータ未設定のまま」といった
+  // 食い違いが残り、ホームで固まったり元の画面へ戻されたりする原因になる。
+  const goHomeWithReload = () => {
+    window.location.assign("/home");
+  };
+
   useEffect(() => {
+    // 以前はゲストの記録がある端末だと、この画面を開いた瞬間に /home へ飛ばしていた。
+    // そのため「学校でとうろくしたアカウントに、家や共用端末からログインしたい」ときに
+    // ログイン画面へたどり着けず、事実上ログイン不能になっていた。
+    // ゲストの続きは下の「つづきから あそぶ」ボタンから1タップで戻れるようにしたうえで、
+    // 自動リダイレクトはやめて、必ずログインを選べるようにする。
     if (storage.isGuest()) {
-      router.push("/home");
-      return;
+      setGuestName(storage.getGuestName());
     }
+    // 本アカウントでサインイン済みならそのままホームへ（こちらは従来どおり）
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
+      if (user && !user.isAnonymous) {
         router.push("/home");
       }
     });
@@ -45,7 +60,7 @@ export default function TopPage() {
     } else {
       storage.setGuest(name, grade);
     }
-    router.push("/home");
+    goHomeWithReload();
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -72,7 +87,7 @@ export default function TopPage() {
       if (isLoginMode) {
         await signInWithEmailAndPassword(auth, dummyEmail, dummyPassword);
         storage.clearGuest();
-        router.push("/home");
+        goHomeWithReload();
       } else {
         const userCred = await createUserWithEmailAndPassword(auth, dummyEmail, dummyPassword);
         await setDoc(doc(db, "users", userCred.user.uid), {
@@ -83,7 +98,7 @@ export default function TopPage() {
           effects: ["default"],
         });
         storage.clearGuest();
-        router.push("/home");
+        goHomeWithReload();
       }
     } catch (err: any) {
       console.error(err);
@@ -115,6 +130,27 @@ export default function TopPage() {
           📱 スマホ・タブレットであそぶ
         </button>
         
+        {/* この端末にゲストの記録が残っている場合の「続きから」導線。
+            以前はここで自動的に /home へ飛ばしていたため、ログイン画面に入れなかった。 */}
+        {guestName && (
+          <div className="w-full mb-6 p-4 rounded-2xl bg-emerald-900/60 border-2 border-emerald-400/60 shadow-inner flex flex-col gap-2">
+            <div className="text-emerald-100 font-bold text-sm text-center">
+              この たんまつに 「{guestName}」の とちゅうデータが あります
+            </div>
+            <Button
+              type="button"
+              variant="fun"
+              onClick={goHomeWithReload}
+              className="w-full py-3 text-lg"
+            >
+              ▶ つづきから あそぶ
+            </Button>
+            <div className="text-emerald-200/80 font-bold text-xs text-center">
+              べつのアカウントで あそぶときは、下から ログインしてね
+            </div>
+          </div>
+        )}
+
         {/* モード切り替えタブ */}
         <div className="flex w-full gap-2 mb-6">
           <Button 

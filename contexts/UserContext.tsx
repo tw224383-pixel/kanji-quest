@@ -7,6 +7,7 @@ import { doc, setDoc, getDoc, runTransaction } from "firebase/firestore";
 import { storage } from "../lib/storage";
 import { rollPeriodSnapshot } from "../lib/periodSnapshot";
 import { getCurrentJSTWeekString, getCurrentJSTMonth } from "../lib/raidLogic";
+import { safeLocalStorage } from "../lib/safeLocalStorage";
 
 export type UserData = {
   id?: string;
@@ -98,11 +99,11 @@ const USER_CACHE_KEY = "kq_user_cache";
 const USER_CACHE_MAX_AGE_MS = 5 * 60 * 1000; // 5分
 
 function writeUserCache(data: UserData) {
-  localStorage.setItem(USER_CACHE_KEY, JSON.stringify({ data, cachedAt: Date.now() }));
+  safeLocalStorage.setItem(USER_CACHE_KEY, JSON.stringify({ data, cachedAt: Date.now() }));
 }
 
 function readFreshUserCache(): UserData | null {
-  const raw = localStorage.getItem(USER_CACHE_KEY);
+  const raw = safeLocalStorage.getItem(USER_CACHE_KEY);
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
@@ -147,6 +148,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 【重要】この処理が途中で例外を投げると onAuthStateChanged が登録されず、
+    // loading が true のまま固定されて「読み込み中 100%」から永久に進まなくなる。
+    // 実際、サイトデータをブロックしている端末では localStorage を参照した瞬間に
+    // 例外が出るため、別の端末からログインできないという不具合になっていた。
+    // localStorage は safeLocalStorage 経由（例外を投げない）に統一したうえで、
+    // ここでも保険として全体を try/catch で囲い、失敗しても必ず loading を解除する。
+    let cleanup: (() => void) | undefined;
+    try {
+      cleanup = initAuth();
+    } catch (e) {
+      console.error("ユーザー情報の初期化に失敗しました", e);
+      setLoading(false);
+    }
+    return () => { try { cleanup?.(); } catch { /* 後始末の失敗は無視 */ } };
+
+    function initAuth(): (() => void) | undefined {
     // Try to load cached user data immediately to prevent loading screen flashing.
     // 直近(5分以内)のキャッシュのみ信用する。古いキャッシュは他端末での更新を
     // 見逃す恐れがあるため使わず、Firestoreからの最新データを待つ。
@@ -273,13 +290,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return () => document.removeEventListener("visibilitychange", onVisible);
       } else {
         setUserData(null);
-        localStorage.removeItem(USER_CACHE_KEY);
+        safeLocalStorage.removeItem(USER_CACHE_KEY);
         setLoading(false);
       }
     });
 
     return () => unsubscribe();
+    }
   }, []);
+
+  // 最後の安全網：どんな理由であれ一定時間たっても初期化が終わらない場合は、
+  // 「読み込み中」で固まったまま何もできない状態にせず、先へ進めるようにする。
+  // （通信が極端に遅い端末や、Firebaseの初期化が失敗したケースを想定）
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setTimeout(() => {
+      console.warn("初期化に時間がかかりすぎたため、読み込み中の表示を解除します");
+      setLoading(false);
+    }, 12000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   useEffect(() => {
     if (userData && !loading) {
