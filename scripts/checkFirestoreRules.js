@@ -70,6 +70,22 @@ const CASES = [
   ["legit: 月の切り替わりで先月分を prev* へ退避", "ALLOW", merge({ monthlyDamage: 80, lastMonthString: "2026-09", prevMonthlyDamage: 500, prevMonthString: "2026-08" })],
   ["CHEAT: prevWeeklyXp が負の値",           "DENY",  merge({ prevWeeklyXp: -50, prevWeekString: "2026-W35" })],
   ["CHEAT: prevMonthlyDamage が数値でない",  "DENY",  merge({ prevMonthlyDamage: "999999", prevMonthString: "2026-08" })],
+  ["legit: すべてを超えし者の報酬(+10万PT/+5万SP)を受け取る", "ALLOW",
+    merge({ pt: 500 + 100000, sp: 200 + 50000, claimedTranscendentMonths: ["2026-08"] })],
+  ["CHEAT: 報酬を装って +900万PT",           "DENY",
+    merge({ pt: 9000000, claimedTranscendentMonths: ["2026-08"] })],
+];
+
+// globalStats（学年共有のレイドボス）側のテスト
+const GS_BASE = { level: 10, hp: 255000, month: "2026-08" };
+const GS_CASES = [
+  ["globalStats: 通常のダメージ反映",                    "ALLOW", { level: 10, hp: 100000, month: "2026-08" }],
+  ["globalStats: Lv11(裏ボス)へ移行・999万HP",           "ALLOW", { level: 11, hp: 9990000, month: "2026-08" }],
+  ["globalStats: Lv11討伐を記録",                        "ALLOW", { level: 11, hp: 0, month: "2026-08", transcendentClearedMonths: ["2026-08"] }],
+  ["globalStats: CHEAT Lv12は存在しない",                "DENY",  { level: 12, hp: 100, month: "2026-08" }],
+  ["globalStats: CHEAT HPが999万超",                     "DENY",  { level: 11, hp: 99999999, month: "2026-08" }],
+  ["globalStats: CHEAT 討伐記録が多すぎる",              "DENY",  { level: 11, hp: 0, month: "2026-08", transcendentClearedMonths: Array.from({length: 30}, (_, i) => "m" + i) }],
+  ["globalStats: CHEAT 未知のフィールド",                "DENY",  { level: 10, hp: 100, month: "2026-08", isAdmin: true }],
 ];
 
 (async () => {
@@ -77,13 +93,23 @@ const CASES = [
     client_id: CLIENT_ID, client_secret: CLIENT_SECRET,
     refresh_token: config.tokens.refresh_token, grant_type: "refresh_token" })).access_token;
 
-  const testCases = CASES.map(([, exp, data]) => ({
-    expectation: exp,
-    request: { auth: { uid: UID, token: {} }, method: "update",
-      path: `/databases/(default)/documents/users/${UID}`,
-      time: new Date().toISOString(), resource: { data } },
-    resource: { data: BASE },
-  }));
+  const testCases = [
+    ...CASES.map(([, exp, data]) => ({
+      expectation: exp,
+      request: { auth: { uid: UID, token: {} }, method: "update",
+        path: `/databases/(default)/documents/users/${UID}`,
+        time: new Date().toISOString(), resource: { data } },
+      resource: { data: BASE },
+    })),
+    ...GS_CASES.map(([, exp, data]) => ({
+      expectation: exp,
+      request: { auth: { uid: UID, token: {} }, method: "update",
+        path: `/databases/(default)/documents/globalStats/raidBoss_3`,
+        time: new Date().toISOString(), resource: { data } },
+      resource: { data: GS_BASE },
+    })),
+  ];
+  const ALL = [...CASES, ...GS_CASES];
 
   const res = await post(`https://firebaserules.googleapis.com/v1/projects/${PROJECT_ID}:test`, token, {
     source: { files: [{ name: "firestore.rules", content: rulesSource }] },
@@ -93,7 +119,7 @@ const CASES = [
 
   let bad = 0;
   (res.testResults || []).forEach((r, i) => {
-    const [label, exp] = CASES[i];
+    const [label, exp] = ALL[i];
     const ok = r.state === "SUCCESS";
     if (!ok) bad++;
     console.log(`${ok ? "PASS" : "**FAIL**"}  expect ${exp.padEnd(5)}  ${label}`);

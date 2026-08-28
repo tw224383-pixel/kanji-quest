@@ -85,6 +85,7 @@ export const storage = {
       prevWeekString: safeLocalStorage.getItem("kq_prev_week") || "",
       prevMonthlyDamage: parseInt(safeLocalStorage.getItem("kq_prev_monthly_damage") || "0", 10),
       prevMonthString: safeLocalStorage.getItem("kq_prev_month") || "",
+      claimedTranscendentMonths: JSON.parse(safeLocalStorage.getItem("kq_claimed_transcendent") || "[]"),
     };
   },
   updateGuestData: (updates: any) => {
@@ -122,6 +123,7 @@ export const storage = {
     if (updates.prevWeekString !== undefined) safeLocalStorage.setItem("kq_prev_week", updates.prevWeekString);
     if (updates.prevMonthlyDamage !== undefined) safeLocalStorage.setItem("kq_prev_monthly_damage", updates.prevMonthlyDamage.toString());
     if (updates.prevMonthString !== undefined) safeLocalStorage.setItem("kq_prev_month", updates.prevMonthString);
+    if (updates.claimedTranscendentMonths !== undefined) safeLocalStorage.setItem("kq_claimed_transcendent", JSON.stringify(updates.claimedTranscendentMonths));
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("kq_guest_update"));

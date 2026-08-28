@@ -5,7 +5,7 @@ import { useUser } from "../../hooks/useUser";
 import { motion } from "framer-motion";
 import { storage } from "../../lib/storage";
 import Link from "next/link";
-import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth, getSeasonalBossPresentation, getCachedRaidBossStatus } from "../../lib/raidLogic";
+import { getRaidBossIcon, getRaidBossName, getRaidBossMaxHp, MAX_RAID_LEVEL, TRANSCENDENT_LEVEL, TRANSCENDENT_HP, TRANSCENDENT_REWARD_PT, TRANSCENDENT_REWARD_SP, getRaidBossImagePath, getRaidBossProfile, getCurrentJSTMonth, getSeasonalBossPresentation, getCachedRaidBossStatus } from "../../lib/raidLogic";
 import { safeLocalStorage } from "../../lib/safeLocalStorage";
 
 interface RaidBossProps {
@@ -115,6 +115,11 @@ export function RaidBoss({ showButtons = true, showOtherGradesLink = true }: Rai
              <span className={isScary ? 'text-white drop-shadow-[0_0_10px_rgba(255,0,0,0.8)] tracking-widest' : ''}>{bossName}</span> 
              {hp <= 0 && level >= MAX_RAID_LEVEL ? (
                <span className="text-amber-500 bg-white/80 px-2 rounded-lg text-lg animate-pulse whitespace-nowrap">MAX 討伐済</span>
+             ) : level >= TRANSCENDENT_LEVEL ? (
+               // Lv10討伐後のボーナスステージ。通常の「Lv.11」ではなく特別扱いで見せる
+               <span className="text-fuchsia-200 bg-gradient-to-r from-fuchsia-700 to-indigo-700 border border-fuchsia-300/70 px-2 rounded-lg text-lg animate-pulse whitespace-nowrap shadow-[0_0_14px_rgba(232,121,249,0.7)]">
+                 ★ 裏ボス
+               </span>
              ) : (
                <span className={`${isScary ? 'text-red-500 bg-black/60 border border-red-500/50 shadow-inner' : 'text-purple-600 bg-white/50'} px-2 rounded-lg text-lg whitespace-nowrap`}>Lv.{level}</span>
              )}
@@ -154,9 +159,24 @@ export function RaidBoss({ showButtons = true, showOtherGradesLink = true }: Rai
          </motion.div>
       </div>
       
-      <div className={`text-xs font-bold text-center mt-2 opacity-70 ${isScary ? 'text-red-400' : 'text-purple-600'}`}>
-        ※クエストをクリアしてXPを稼ぐと、ボスにダメージを与えられるぞ！
-      </div>
+      {level >= TRANSCENDENT_LEVEL && hp > 0 ? (
+        // ボーナスステージ中は、何のために戦っているのかが一目で分かるようにする
+        <div className="mt-3 rounded-2xl border-2 border-fuchsia-400/70 bg-gradient-to-r from-fuchsia-950/90 to-indigo-950/90 p-3 text-center shadow-[0_0_20px_rgba(232,121,249,0.35)] relative z-10">
+          <div className="text-fuchsia-200 font-black text-sm sm:text-base drop-shadow">
+            🌌 ボーナスステージ「すべてを超えし者」出現中！
+          </div>
+          <div className="text-fuchsia-100/90 font-bold text-xs mt-1 leading-relaxed">
+            HP {TRANSCENDENT_HP.toLocaleString()} の裏ボス。学年みんなで けずりきれば、<br />
+            <span className="text-amber-300">{userData?.grade || 1}年生 ぜんいん</span> に
+            <span className="text-amber-300"> {TRANSCENDENT_REWARD_PT.toLocaleString()}PT</span> と
+            <span className="text-emerald-300"> {TRANSCENDENT_REWARD_SP.toLocaleString()}SP</span> がもらえる！
+          </div>
+        </div>
+      ) : (
+        <div className={`text-xs font-bold text-center mt-2 opacity-70 ${isScary ? 'text-red-400' : 'text-purple-600'}`}>
+          ※クエストをクリアしてXPを稼ぐと、ボスにダメージを与えられるぞ！
+        </div>
+      )}
 
       {showButtons && (
         <div className="mt-4 text-center relative z-10 flex flex-col md:flex-row justify-center gap-3">

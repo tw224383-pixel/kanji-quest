@@ -99,7 +99,8 @@ service cloud.firestore {
         'mistakeStages', 'mistakeNextReview', 'shareCode',
         'bestWeeklyHeroRank', 'bestDamageRank',
         'dailyCategoryPt', 'lastPtEarnDate',
-        'prevWeeklyXp', 'prevWeekString', 'prevMonthlyDamage', 'prevMonthString'
+        'prevWeeklyXp', 'prevWeekString', 'prevMonthlyDamage', 'prevMonthString',
+        'claimedTranscendentMonths'
       ])
 
       // ランキングに他の子から見える名前と、ランキングの学年分けに使う値だけは検証する。
@@ -114,6 +115,7 @@ service cloud.firestore {
       && (!('effects' in newData) || newData.effects.size() <= 500)
       && (!('equipments' in newData) || newData.equipments.size() <= 500)
       && (!('claimedAchievements' in newData) || newData.claimedAchievements.size() <= 500)
+      && (!('claimedTranscendentMonths' in newData) || newData.claimedTranscendentMonths.size() <= 12)
       && (!('mistakeStages' in newData) || newData.mistakeStages.size() <= 2000)
       && (!('mistakeNextReview' in newData) || newData.mistakeNextReview.size() <= 2000)
 
@@ -160,10 +162,18 @@ service cloud.firestore {
     }
 
     function isValidGlobalStats(newData) {
-      return newData.keys().hasOnly(['level', 'hp', 'month'])
-        && (!('level' in newData) || (newData.level is int && newData.level >= 1 && newData.level <= 10))
-        && (!('hp' in newData) || (newData.hp is number && newData.hp >= 0 && newData.hp <= 300000))
-        && (!('month' in newData) || (newData.month is string && newData.month.size() <= 10));
+      // Lv11「すべてを超えし者」はLv10討伐後のボーナスステージ。HPが999万あるため、
+      // hp の上限は通常ボス(最大25.5万)ではなくLv11のHPに合わせている。
+      return newData.keys().hasOnly(['level', 'hp', 'month', 'transcendentClearedMonths'])
+        && (!('level' in newData) || (newData.level is int && newData.level >= 1 && newData.level <= 11))
+        && (!('hp' in newData) || (newData.hp is number && newData.hp >= 0 && newData.hp <= 9990000))
+        && (!('month' in newData) || (newData.month is string && newData.month.size() <= 10))
+        // Lv11を討伐した月の記録。学年全員がこれを見て報酬を受け取るため、
+        // 件数だけ制限して中身は検証しない（式数を増やしすぎないため）。
+        && (!('transcendentClearedMonths' in newData) || (
+          newData.transcendentClearedMonths is list
+          && newData.transcendentClearedMonths.size() <= 12
+        ));
     }
   }
 }

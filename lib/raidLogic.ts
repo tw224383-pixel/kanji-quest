@@ -1,4 +1,13 @@
+// Lv11「すべてを超えし者」は、Lv10を討伐したあとに出現するボーナスステージ。
+// 学年全員で挑む裏ボスなので、通常ボス（合計約108万HP）とは桁を変えて999万HPにしてある。
+export const TRANSCENDENT_LEVEL = 11;
+export const TRANSCENDENT_HP = 9990000;
+// 討伐できたら、その学年の全員がこの報酬を受け取れる（受け取りは各自の初回アクセス時）
+export const TRANSCENDENT_REWARD_PT = 100000;
+export const TRANSCENDENT_REWARD_SP = 50000;
+
 export function getRaidBossMaxHp(level: number): number {
+  if (level >= TRANSCENDENT_LEVEL) return TRANSCENDENT_HP;
   const hps = [
     25000,   // Lv 1
     35000,   // Lv 2
@@ -15,6 +24,7 @@ export function getRaidBossMaxHp(level: number): number {
 }
 
 export function getRaidBossIcon(level: number): string {
+  if (level >= TRANSCENDENT_LEVEL) return "🌌"; // すべてを超えし者
   if (level <= 1) return "💧"; // Slime
   if (level === 2) return "🦇"; // Bat
   if (level === 3) return "🐺"; // Wolf
@@ -29,6 +39,8 @@ export function getRaidBossIcon(level: number): string {
 
 export function getRaidBossImagePath(level: number, isScary: boolean = true): string {
   const dir = isScary ? "/images/boss" : "/images/boss/cute";
+  // Lv11は「同じような姿の、さらに上位の存在」という位置づけなのでLv10の竜の絵を流用する
+  if (level >= TRANSCENDENT_LEVEL) return `${dir}/dragon.webp`;
   if (level <= 1) return `${dir}/slime.webp`;
   if (level === 2) return `${dir}/bat.webp`;
   if (level === 3) return `${dir}/wolf.webp`;
@@ -42,6 +54,7 @@ export function getRaidBossImagePath(level: number, isScary: boolean = true): st
 }
 
 export function getRaidBossName(level: number): string {
+  if (level >= TRANSCENDENT_LEVEL) return "すべてを超えし者";
   if (level <= 1) return "プチスライム";
   if (level === 2) return "ダークバット";
   if (level === 3) return "シャドウウルフ";
@@ -86,12 +99,26 @@ const SCARY_BOSS_PROFILES: Record<number, BossProfile> = {
   10: { alias: "終焉を呼ぶ厄災", profile: "世界の終わりの日に目覚めると予言されている、最古にして最強の真竜。", story: "その羽ばたきは世界を暴風で包み、口から吐き出される滅びのブレスは空間そのものを歪める。人間の知識と力を超えた存在であり、神々ですら封印するしかなかったという。" }
 };
 
+const TRANSCENDENT_PROFILE: Record<"cute" | "scary", BossProfile> = {
+  cute: {
+    alias: "すべてを超えし者",
+    profile: "アルティメットドラゴンを倒したその先に、静かに待っていた「もうひとつの姿」。",
+    story: "たおされた古竜が、みんなの努力そのものを取りこんで生まれ変わった究極の存在。999万という途方もないHPを持ち、ひとりの力ではまず削りきれない。学年みんなで毎日こつこつ挑み続けたときだけ、その扉は開く。討伐できれば、学年の全員に特大の報酬が贈られる。",
+  },
+  scary: {
+    alias: "すべてを超えし者",
+    profile: "最強の真竜を倒した者の前にのみ姿を現す、次元の外側からの来訪者。",
+    story: "あらゆる試練を乗り越えた者だけが観測できる、概念そのものの化身。その体力は999万に達し、単独での討伐は不可能とされる。だが学年すべての勇者が力を束ねたとき、この絶対的な壁にもひびが入るという。討ち滅ぼした暁には、学年全員へ莫大な祝福がもたらされる。",
+  },
+};
+
 export function getRaidBossProfile(level: number, isScary: boolean): BossProfile {
+  if (level >= TRANSCENDENT_LEVEL) return TRANSCENDENT_PROFILE[isScary ? "scary" : "cute"];
   const safeLevel = Math.min(Math.max(1, level), 10);
   return isScary ? SCARY_BOSS_PROFILES[safeLevel] : CUTE_BOSS_PROFILES[safeLevel];
 }
 
-export const MAX_RAID_LEVEL = 10;
+export const MAX_RAID_LEVEL = TRANSCENDENT_LEVEL;
 
 import { db } from "./firebase";
 import { doc, getDoc, runTransaction } from "firebase/firestore";
@@ -189,6 +216,15 @@ export async function dealDamageToRaidBoss(damage: number, grade: number): Promi
       safeLocalStorage.setItem("kq_raid_level_" + grade, level.toString());
       safeLocalStorage.setItem("kq_raid_hp_" + grade, hp.toString());
       safeLocalStorage.setItem("kq_raid_month_" + grade, currentMonth);
+      // ゲストは自分ひとりの世界なので、討伐した月をそのままローカルに記録しておく
+      // （認証ユーザーと同じ受け取り処理で報酬を渡せるようにするため）。
+      if (defeatedLevels.includes(TRANSCENDENT_LEVEL)) {
+        const key = "kq_raid_transcendent_" + grade;
+        const cleared = (safeLocalStorage.getItem(key) || "").split(",").filter(Boolean);
+        if (!cleared.includes(currentMonth)) {
+          safeLocalStorage.setItem(key, [...cleared, currentMonth].slice(-12).join(","));
+        }
+      }
       return { success: true, defeatedLevels };
     } catch (e) {
       console.error("Guest raid boss update error:", e);
@@ -225,7 +261,25 @@ export async function dealDamageToRaidBoss(damage: number, grade: number): Promi
             hp = 0;
           }
 
-          transaction.set(ref, { level, hp, month: currentMonth }, { merge: true });
+          const update: Record<string, unknown> = { level, hp, month: currentMonth };
+
+          // Lv11「すべてを超えし者」を討伐したら、その月を記録しておく。
+          // Firestoreのルール上、クライアントは他の子のドキュメントに書き込めないため、
+          // ここで報酬を配ることはできない。代わりに「討伐した月」を学年共有のこの
+          // ドキュメントに残し、各自がアプリを開いたときに自分の分を受け取る方式にする
+          // （lib/transcendentReward.ts）。月initialのリセットは level/hp/month しか
+          // 触らないので、merge:true でこの記録は残り続ける。
+          if (defeatedLevels.includes(TRANSCENDENT_LEVEL)) {
+            const cleared: string[] = Array.isArray(data.transcendentClearedMonths)
+              ? data.transcendentClearedMonths.filter((m: unknown) => typeof m === "string")
+              : [];
+            if (!cleared.includes(currentMonth)) {
+              // 配列が無制限に伸びないよう直近12か月ぶんだけ残す
+              update.transcendentClearedMonths = [...cleared, currentMonth].slice(-12);
+            }
+          }
+
+          transaction.set(ref, update, { merge: true });
         });
         return { success: true, defeatedLevels };
       } catch (e) {
@@ -288,19 +342,35 @@ if (typeof window !== "undefined") {
 
 // ホーム/レイド/じっせき画面など複数箇所で同じ「学年のボス状況」を短時間に何度も
 // 参照するため、短いTTLでメモリキャッシュしてFirestore読み取りを減らす。
-const raidStatusCache = new Map<number, { data: { level: number; hp: number; month: string }; fetchedAt: number }>();
+export type RaidBossStatus = {
+  level: number;
+  hp: number;
+  month: string;
+  /** Lv11「すべてを超えし者」を討伐した月の一覧（学年全員への報酬配布の判定に使う） */
+  transcendentClearedMonths: string[];
+};
+
+const raidStatusCache = new Map<number, { data: RaidBossStatus; fetchedAt: number }>();
 const RAID_STATUS_CACHE_TTL_MS = 60 * 1000;
 
-export async function getCachedRaidBossStatus(grade: number): Promise<{ level: number; hp: number; month: string }> {
+export async function getCachedRaidBossStatus(grade: number): Promise<RaidBossStatus> {
   const cached = raidStatusCache.get(grade);
   if (cached && Date.now() - cached.fetchedAt < RAID_STATUS_CACHE_TTL_MS) {
     return cached.data;
   }
   const ref = doc(db, "globalStats", "raidBoss_" + grade);
   const snap = await getDoc(ref);
-  const data = snap.exists()
-    ? { level: snap.data().level || 1, hp: snap.data().hp ?? getRaidBossMaxHp(snap.data().level || 1), month: snap.data().month || getCurrentJSTMonth() }
-    : { level: 1, hp: getRaidBossMaxHp(1), month: getCurrentJSTMonth() };
+  const d = snap.exists() ? snap.data() : null;
+  const data: RaidBossStatus = d
+    ? {
+        level: d.level || 1,
+        hp: d.hp ?? getRaidBossMaxHp(d.level || 1),
+        month: d.month || getCurrentJSTMonth(),
+        transcendentClearedMonths: Array.isArray(d.transcendentClearedMonths)
+          ? d.transcendentClearedMonths.filter((m: unknown) => typeof m === "string")
+          : [],
+      }
+    : { level: 1, hp: getRaidBossMaxHp(1), month: getCurrentJSTMonth(), transcendentClearedMonths: [] };
   raidStatusCache.set(grade, { data, fetchedAt: Date.now() });
   return data;
 }

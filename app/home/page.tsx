@@ -22,12 +22,13 @@ import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { hasUnclaimedAchievements } from "../../lib/achievementLogic";
 import { getCurrentJSTDateString, isDueForReview } from "../../lib/reviewSchedule";
 import { getCachedRaidBossStatus } from "../../lib/raidLogic";
+import { claimTranscendentRewards, type TranscendentClaimResult } from "../../lib/transcendentReward";
 import { CategoryGradePicker } from "../../components/home/CategoryGradePicker";
 import { UpdateNews } from "../../components/home/UpdateNews";
 import { safeLocalStorage } from "../../lib/safeLocalStorage";
 
 export default function Home() {
-  const { userData, updateUserData, loading, isGuest } = useUser();
+  const { userData, updateUserData, updateUserDataAtomic, loading, isGuest } = useUser();
   const router = useRouter();
   const [mode, setMode] = useState<"4choice" | "keyboard">("4choice");
   const [furiganaMode, setFuriganaMode] = useState<boolean>(false);
@@ -41,6 +42,7 @@ export default function Home() {
   const [previewingEquipmentModal, setPreviewingEquipmentModal] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [gradeBossLevel, setGradeBossLevel] = useState<number>(1);
+  const [transcendentReward, setTranscendentReward] = useState<TranscendentClaimResult | null>(null);
   // targetGrades の自動初期化は最初の1回だけ行う。userData 参照は裏の書き込み
   // （ログインストリーク更新など）のたびに変わるため、「初期値[1]のまま」を
   // 判定条件にすると、ユーザーが意図的に「1年のみ」を選んだ場合も毎回上書きされてしまう。
@@ -122,6 +124,19 @@ export default function Home() {
     fetchGradeStats();
   }, [userData, isGuest]);
 
+  // Lv11「すべてを超えし者」を学年で討伐できていたら、自分の分の報酬をここで受け取る。
+  // 判定に使うボス情報は上の fetchGradeStats と同じキャッシュを共有するので、
+  // この機能のためにFirestoreの読み取りが増えることはない。
+  // 未受取が無ければ書き込みも一切発生しない。
+  const transcendentChecked = useRef(false);
+  useEffect(() => {
+    if (!userData || loading || transcendentChecked.current) return;
+    transcendentChecked.current = true;
+    claimTranscendentRewards(userData, updateUserDataAtomic)
+      .then(res => { if (res.claimedCount > 0) setTranscendentReward(res); })
+      .catch(err => console.error("すべてを超えし者の報酬受け取りに失敗", err));
+  }, [userData, loading, updateUserDataAtomic]);
+
   if (loading) return <LoadingScreen />;
   if (!userData) {
     router.push("/");
@@ -162,6 +177,38 @@ export default function Home() {
     <main className="min-h-screen p-6 relative">
       {/* Dark overlay is now handled globally by ThemeBackground */}
       {/* ThemeBackground is handled globally by ThemeProvider */}
+
+      {/* Lv11「すべてを超えし者」討伐報酬の受け取り通知（学年全員に配られる） */}
+      {transcendentReward && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl" onClick={() => setTranscendentReward(null)}>
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0, y: 30 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            onClick={e => e.stopPropagation()}
+            className="bg-slate-900 border-4 border-fuchsia-400 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-[0_0_70px_rgba(232,121,249,0.6)]"
+          >
+            <div className="text-6xl mb-3 animate-bounce">🌌</div>
+            <h2 className="text-2xl sm:text-3xl font-black text-fuchsia-300 drop-shadow-[0_0_15px_rgba(232,121,249,0.8)] mb-2">
+              すべてを超えし者 討伐！
+            </h2>
+            <p className="text-slate-200 font-bold text-sm sm:text-base mb-5 leading-relaxed">
+              {userData.grade}年生 みんなの力で、999万HPの裏ボスを たおしたよ！<br />
+              学年ぜんいんに ごほうびが とどきました。
+            </p>
+            <div className="bg-slate-950/80 border border-fuchsia-500/40 rounded-2xl p-4 mb-6 flex flex-col gap-2">
+              <div className="text-3xl font-black text-amber-400 drop-shadow">+ {transcendentReward.totalPt.toLocaleString()} PT</div>
+              <div className="text-2xl font-black text-emerald-400 drop-shadow">+ {transcendentReward.totalSp.toLocaleString()} SP</div>
+              {transcendentReward.claimedCount > 1 && (
+                <div className="text-xs font-bold text-slate-400">（{transcendentReward.claimedCount}回ぶんの討伐報酬）</div>
+              )}
+            </div>
+            <Button variant="fun" size="lg" className="w-full text-xl py-4" onClick={() => setTranscendentReward(null)}>
+              やったー！
+            </Button>
+          </motion.div>
+        </div>
+      )}
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

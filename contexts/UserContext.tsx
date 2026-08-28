@@ -57,6 +57,8 @@ export type UserData = {
   prevWeekString?: string;
   prevMonthlyDamage?: number;
   prevMonthString?: string;
+  // Lv11「すべてを超えし者」討伐報酬を受け取った月の一覧（二重受取の防止）
+  claimedTranscendentMonths?: string[];
 };
 
 const DEFAULT_USER_DATA: UserData = {
@@ -249,7 +251,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               prevWeeklyXp: data.prevWeeklyXp || 0,
               prevWeekString: data.prevWeekString || "",
               prevMonthlyDamage: data.prevMonthlyDamage || 0,
-              prevMonthString: data.prevMonthString || ""
+              prevMonthString: data.prevMonthString || "",
+              claimedTranscendentMonths: data.claimedTranscendentMonths || []
             };
             setUserData(newData);
             writeUserCache(newData);
