@@ -7,9 +7,9 @@ export function UpdateNews() {
       <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-36 overflow-y-auto pr-2 custom-scrollbar">
         <li>
           <div className="text-xs text-amber-400 mb-0.5">2026/08/29 (最新)</div>
-          <div>🌌 <strong>裏ボス「すべてを超えし者」登場！</strong><br/>
-          Lv10のアルティメットドラゴンと たたかっていると「？？？？？？」の気配が…！たおすと、その先に <strong>HP 9,999,999</strong> の裏ボスがあらわれるよ！
-          学年みんなで けずりきれたら、<strong>その学年ぜんいんに 10万PT と 5万SP</strong> がプレゼントされます。ごほうびは つぎにアプリを ひらいたときに うけとれるよ！</div>
+          <div>❓ <strong>「？？？？？？」</strong><br/>
+          Lv10の アルティメットドラゴンを たおした学年だけが たどりつける <strong>なにか</strong> を、こっそり追加しました。
+          もし たおすことが できたら…その学年の <strong>ぜんいん</strong> に、とんでもない ごほうびが とどくらしい。</div>
         </li>
         <li>
           <div className="text-xs text-amber-400 mb-0.5">2026/08/28</div>

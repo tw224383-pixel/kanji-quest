@@ -159,9 +159,13 @@ export default function RaidPage() {
         
         <div className="space-y-6">
           {otherGrades.map((d, index) => {
+            // 他学年が先に裏ボスへ到達しても、自分の学年がまだなら正体は伏せる。
+            // （ここを出してしまうと「？？？？？？」で隠している意味がなくなる）
+            // 伏せたままでも「あの学年、なにかに たどり着いてる…」と伝わるようにする。
+            const isHiddenBoss = d.level >= TRANSCENDENT_LEVEL && !transcendentRevealed;
             const seasonal = getSeasonalBossPresentation(getRaidBossIcon(d.level), getRaidBossName(d.level));
             const currentBossIcon = seasonal.icon;
-            const currentBossName = seasonal.name;
+            const currentBossName = isHiddenBoss ? HIDDEN_BOSS_NAME : seasonal.name;
 
 
             const hpPercent = d.maxHp > 0 ? Math.max(0, (d.hp / d.maxHp) * 100) : 0;
@@ -175,7 +179,10 @@ export default function RaidPage() {
               transition={{ delay: index * 0.1 }}
               className={`bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-700 relative overflow-hidden ${isScary ? 'border-red-500 bg-black' : ''}`}
             >
-              {isScary ? (
+              {isHiddenBoss ? (
+                // 正体を伏せる学年は、専用の絵も出さずに暗いままにしておく
+                <div className="absolute inset-0 z-0 bg-gradient-to-r from-fuchsia-950/60 via-slate-950/80 to-slate-950 pointer-events-none"></div>
+              ) : isScary ? (
                 <>
                   <div className="absolute inset-0 z-0 opacity-40 bg-cover bg-center pointer-events-none" style={{ backgroundImage: `url('${bossImagePath}')` }}></div>
                   <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent pointer-events-none"></div>
@@ -185,14 +192,18 @@ export default function RaidPage() {
               )}
               <div className="flex justify-between items-center mb-2 relative z-10">
                 <div className="flex items-center gap-2">
-                  {!isScary && <img src={bossImagePath} alt="boss" className="w-8 h-8 rounded-full border-2 border-slate-300 object-cover shadow-sm" />}
-                  <div className={`font-black text-lg ${isScary ? 'text-white drop-shadow-[0_0_5px_rgba(255,0,0,0.8)]' : 'text-slate-100'}`}>
+                  {isHiddenBoss ? (
+                    <span className="w-8 h-8 rounded-full border-2 border-fuchsia-500/50 bg-black flex items-center justify-center text-fuchsia-400 font-black animate-pulse">?</span>
+                  ) : (
+                    !isScary && <img src={bossImagePath} alt="boss" className="w-8 h-8 rounded-full border-2 border-slate-300 object-cover shadow-sm" />
+                  )}
+                  <div className={`font-black text-lg ${isHiddenBoss ? 'text-fuchsia-300 tracking-widest animate-pulse' : isScary ? 'text-white drop-shadow-[0_0_5px_rgba(255,0,0,0.8)]' : 'text-slate-100'}`}>
                     <span className={`text-sm mr-2 ${isScary ? 'text-red-300' : 'text-slate-400'}`}>{d.grade}年生</span>
                     {currentBossName}
                   </div>
                 </div>
-                <div className={`font-bold px-3 py-1 rounded-full text-sm ${isScary ? 'text-red-400 bg-red-950/80 border border-red-900' : 'text-red-400 bg-red-950/50 border border-red-900'}`}>
-                  Lv.{d.level}
+                <div className={`font-bold px-3 py-1 rounded-full text-sm ${isHiddenBoss ? 'text-fuchsia-300 bg-fuchsia-950/70 border border-fuchsia-700' : isScary ? 'text-red-400 bg-red-950/80 border border-red-900' : 'text-red-400 bg-red-950/50 border border-red-900'}`}>
+                  Lv.{isHiddenBoss ? "??" : d.level}
                 </div>
               </div>
               
