@@ -6,7 +6,7 @@ import {
   richEquipmentGachaRates, richLadiesGachaRates, richLadiesEquipmentGachaRates,
   all3000GachaRates, all3000SpCombinedEquipmentRates
 } from "../../lib/gachaData";
-import { getAvatarImageProps } from "../../lib/itemData";
+import { getAvatarImageProps, getAvatarThumbUrl } from "../../lib/itemData";
 import type { UserData } from "../../contexts/UserContext";
 import { Button } from "../ui/Button";
 
@@ -306,9 +306,20 @@ export function GachaTab({
                           <span className="text-base flex items-center justify-center min-w-[20px]">
                             {item.icon.startsWith('/') ? (() => {
                               const imgProps = getAvatarImageProps(item.icon);
+                              // 20x20pxでしか表示しないので、原寸(1024px/約270KB)ではなく
+                              // サムネイル(128px/約6KB)を読む。この一覧は1回開くだけで
+                              // 50枚以上並ぶため、原寸だと13MB超の通信が発生していた。
                               return (
                                 <div className="w-5 h-5 rounded-full overflow-hidden inline-block relative align-middle">
-                                  <img src={item.icon} alt="icon" className={`w-full h-full object-cover ${imgProps.className}`} style={imgProps.style} />
+                                  <img
+                                    src={getAvatarThumbUrl(item.icon)}
+                                    alt="icon"
+                                    loading="lazy"
+                                    decoding="async"
+                                    className={`w-full h-full object-cover ${imgProps.className}`}
+                                    style={imgProps.style}
+                                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = item.icon; }}
+                                  />
                                 </div>
                               );
                             })() : (

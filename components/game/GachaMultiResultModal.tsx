@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../ui/Button";
+import { getAvatarThumbUrl } from "../../lib/itemData";
 
 interface GachaMultiResultItem {
   id: string;
@@ -88,7 +89,15 @@ export function GachaMultiResultModal({
                       </span>
                     )}
                     {item.icon.startsWith('/') ? (
-                      <img src={item.icon} alt={cleanName} className="w-full h-full object-contain" />
+                      // 10連は小さいタイルが10枚並ぶだけなので、原寸ではなくサムネイルを使う
+                      <img
+                        src={getAvatarThumbUrl(item.icon)}
+                        alt={cleanName}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-contain"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = item.icon; }}
+                      />
                     ) : (
                       <span className="text-2xl sm:text-3xl">{item.icon}</span>
                     )}

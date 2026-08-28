@@ -11,7 +11,9 @@
     "check:questions": "node scripts/checkQuestionData.js",
     "check:rules": "node scripts/checkFirestoreRules.js",
     "deploy": "next build && firebase deploy --project kanji-quest-b1a45 --only hosting",
-    "deploy:rules": "npm run check:rules && firebase deploy --project kanji-quest-b1a45 --only firestore:rules"
+    "deploy:rules": "npm run check:rules && firebase deploy --project kanji-quest-b1a45 --only firestore:rules",
+    "gen:thumbs": "node scripts/generateThumbs.js",
+    "check:thumbs": "node scripts/checkThumbs.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",
