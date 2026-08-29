@@ -143,9 +143,10 @@ service cloud.firestore {
       // xp / totalDamage: 通常プレイ由来のみ（1セッション最大 約3,600 相当）→ 更新は5,000まで。
       && withinDelta(newData, oldData, 'xp', 5000, 1000000)
       && withinDelta(newData, oldData, 'totalDamage', 5000, 1000000)
-      // pt / sp: 「実績まとめ受け取り」で一度に大きく増える（全実績合計 最大 約54.3万PT / 約20.1万SP）。
-      && withinDelta(newData, oldData, 'pt', 600000, 600000)
-      && withinDelta(newData, oldData, 'sp', 250000, 250000)
+      // pt / sp: 「実績まとめ受け取り」で一度に大きく増える（全実績合計 約58.6万PT / 約21.8万SP）。
+      // 実績を足すたびに上限に触れて全書き込みが拒否される事故を避けるため、余裕を持たせてある。
+      && withinDelta(newData, oldData, 'pt', 900000, 900000)
+      && withinDelta(newData, oldData, 'sp', 400000, 400000)
       && withinPeriodDelta(newData, oldData, 'weeklyXp', 'lastWeekString', 5000)
       && withinPeriodDelta(newData, oldData, 'monthlyDamage', 'lastMonthString', 5000)
       // 系統別・1日のPT上限判定用の内部カウンタ（同じ系統の問題の周回でのPT稼ぎ対策）。

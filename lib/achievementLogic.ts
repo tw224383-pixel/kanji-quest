@@ -52,6 +52,9 @@ export function getAchievements(userData: UserData, gradeBossLevel: number = 1):
   const sciLevel = stats.find(s => s.key === "science")?.level || 1;
   const socLevel = stats.find(s => s.key === "social")?.level || 1;
   const totalSolvedCount = stats.reduce((acc, s) => acc + s.totalSolved, 0);
+  // バランス実績用：一番低い分野のレベルと、1問でも正解した分野の数
+  const minLevel = stats.reduce((min, s) => Math.min(min, s.level), Infinity);
+  const touchedCategories = stats.filter(s => s.totalSolved > 0).length;
 
   return [
     // ==========================================
@@ -102,6 +105,17 @@ export function getAchievements(userData: UserData, gradeBossLevel: number = 1):
     { id: "growth_soc_50", name: "地球儀を回す者", desc: "社会理解レベルが Lv.50 に到達！", icon: "🌍", rewardPt: 5000, rewardSp: 2000, rewardTitle: "世界探検家", unlocked: socLevel >= 50, category: "growth" },
     { id: "growth_soc_99", name: "歴史を創りし者", desc: "社会理解レベルが Lv.99 に到達！", icon: "👑", rewardPt: 15000, rewardSp: 6000, rewardTitle: "歴史を創りし者", unlocked: socLevel >= 99, category: "growth" },
 
+    // --- バランス実績（全分野の底上げ）---
+    // 実測では38%の子が漢字しかやっておらず、レーダーチャートが1本だけ尖った状態だった。
+    // 「平均レベル」の実績だと漢字だけ伸ばしても達成できてしまい行動が変わらないため、
+    // 「一番低い分野」を基準にして、穴を埋めないと取れない実績を用意する。
+    { id: "balance_5", name: "バランス感覚", desc: "6分野すべてを Lv.5 以上にする！", icon: "⚖️", rewardPt: 1500, rewardSp: 600, unlocked: minLevel >= 5, category: "growth" },
+    { id: "balance_10", name: "六道の探究者", desc: "6分野すべてを Lv.10 以上にする！", icon: "🧭", rewardPt: 4000, rewardSp: 1600, rewardTitle: "六道の探究者", unlocked: minLevel >= 10, category: "growth" },
+    { id: "balance_20", name: "文武両道の極み", desc: "6分野すべてを Lv.20 以上にする！", icon: "🌐", rewardPt: 10000, rewardSp: 4000, rewardTitle: "文武両道", unlocked: minLevel >= 20, category: "growth" },
+    { id: "balance_40", name: "全能の賢者", desc: "6分野すべてを Lv.40 以上にする！", icon: "🔱", rewardPt: 25000, rewardSp: 10000, rewardTitle: "全能の賢者", unlocked: minLevel >= 40, category: "growth" },
+    // 6分野すべてに一度でも触れる（最初の一歩を促す軽い実績）
+    { id: "balance_touch", name: "ぜんぶ ためした！", desc: "6分野すべてで1問以上 正解する！", icon: "🎨", rewardPt: 800, rewardSp: 300, unlocked: touchedCategories >= 6, category: "growth" },
+
     // --- 累計解法数（鍛錬）---
     { id: "growth_solve_50", name: "修練の第一歩", desc: "カルテ累計50問正解を達成！", icon: "🎯", rewardPt: 1000, rewardSp: 400, unlocked: totalSolvedCount >= 50, category: "growth" },
     { id: "growth_solve_200", name: "鍛錬の結晶", desc: "カルテ累計200問正解を達成！", icon: "💎", rewardPt: 3000, rewardSp: 1200, unlocked: totalSolvedCount >= 200, category: "growth" },
@@ -113,6 +127,9 @@ export function getAchievements(userData: UserData, gradeBossLevel: number = 1):
     // ==========================================
     { id: "login_1", name: "継続は力なり", desc: "2日連続でログインする", icon: "🔥", rewardPt: 200, rewardSp: 100, unlocked: loginStreak >= 2, category: "login" },
     { id: "login_2", name: "習慣化の第一歩", desc: "3日連続でログインする", icon: "✨", rewardPt: 500, rewardSp: 200, unlocked: loginStreak >= 3, category: "login" },
+    // 3日の次が7日だと間隔が空きすぎて初週で心が折れやすいため、4日目・5日目にも刻みを置く
+    { id: "login_2b", name: "四日目の意地", desc: "4日連続でログインする", icon: "💪", rewardPt: 800, rewardSp: 300, unlocked: loginStreak >= 4, category: "login" },
+    { id: "login_2c", name: "五日連続の努力家", desc: "5日連続でログインする", icon: "🎯", rewardPt: 1000, rewardSp: 400, unlocked: loginStreak >= 5, category: "login" },
     { id: "login_3", name: "一週間の継続者", desc: "7日連続でログインする", icon: "🌟", rewardPt: 1500, rewardSp: 500, unlocked: loginStreak >= 7, category: "login" },
     { id: "login_4", name: "努力の鉄人", desc: "14日連続でログインする", icon: "🛡️", rewardPt: 3000, rewardSp: 1000, unlocked: loginStreak >= 14, category: "login" },
     { id: "login_5", name: "伝説の全勤賞", desc: "30日連続でログインする", icon: "🏆", rewardPt: 10000, rewardSp: 3000, unlocked: loginStreak >= 30, category: "login" },

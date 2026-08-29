@@ -14,7 +14,12 @@ interface GameResultScreenProps {
   finalXP: number;
   finalPT: number;
   ptWasCapped?: boolean;
+  /** きょうのミッションの分野で遊んだか（1日1回のボーナス） */
+  missionBonusApplied?: boolean;
   isSpSubject: boolean;
+  /** 未受け取りの実績の数。結果画面で気づかせないと大半の子が取り逃がしてしまう */
+  unclaimedAchievements?: number;
+  onGoAchievements?: () => void;
   onRetry: () => void;
   onGoHome: () => void;
 }
@@ -30,7 +35,10 @@ export function GameResultScreen({
   finalXP,
   finalPT,
   ptWasCapped,
+  missionBonusApplied,
   isSpSubject,
+  unclaimedAchievements = 0,
+  onGoAchievements,
   onRetry,
   onGoHome,
 }: GameResultScreenProps) {
@@ -81,6 +89,11 @@ export function GameResultScreen({
                 ⌨️ キーボードボーナス x3! ⌨️
               </div>
             )}
+            {missionBonusApplied && (
+              <div className="text-xl font-black text-lime-500 mb-4 animate-bounce">
+                🎯 きょうのミッション たっせい！ x1.5 🎯
+              </div>
+            )}
             {maxCombo > 2 && (
               <div className="text-lg font-bold text-amber-500 mb-2">
                 最大コンボ: {maxCombo} (倍率 x{(1 + maxCombo * 0.1).toFixed(1)})
@@ -105,6 +118,19 @@ export function GameResultScreen({
             <div className={`text-3xl font-black mb-10 drop-shadow-sm ${isSpSubject ? 'text-emerald-400' : 'text-amber-500'}`}>
               + {finalPT} {isSpSubject ? 'SP' : 'PT'}
             </div>
+
+            {/* 実績は解放されても「受け取り」に行かないと報酬が0のまま。
+                実測では半数以上の子が1つも受け取れていなかったため、
+                いちばん目にする結果画面から直接行けるようにしている。 */}
+            {unclaimedAchievements > 0 && onGoAchievements && (
+              <button
+                onClick={onGoAchievements}
+                className="w-full mb-3 p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 border-4 border-white text-slate-950 font-black shadow-[0_0_25px_rgba(251,191,36,0.6)] animate-pulse hover:scale-[1.02] active:scale-95 transition-transform"
+              >
+                <div className="text-2xl">🏆 じっせき {unclaimedAchievements}こ たっせい！</div>
+                <div className="text-sm mt-1">タップして ごほうびを うけとろう</div>
+              </button>
+            )}
 
             <Button size="lg" className="w-full text-2xl py-6" variant="fun" onClick={onGoHome}>
               ホームにもどる

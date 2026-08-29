@@ -22,6 +22,8 @@ export type SkillStat = {
   nextExp: number;     // Total questions needed to advance from current level to next
   questionsToNextLevel: number; // Remaining questions needed for next level-up
   progressPercent: number; // Overall progress towards 500 questions
+  star: number;              // Lv.99到達後の★の数（0〜5）
+  toNextStar: number;        // 次の★まであと何問か
   trainingUrl: string;
   trainingLabel: string;
 };
@@ -38,6 +40,26 @@ export type AdventurerArchetype = {
  * Cumulative questions required to reach a specific level (1 to 99).
  * Total questions across all 98 level-ups is exactly 500.
  */
+// Lv.99（500問）に到達したあとの「やりこみ」枠。
+// 実測では運用2日で漢字500問カンストが9人出ており、上限が近すぎて上位層の
+// 目標が消えてしまうため、Lv.99の先に★1〜★5を用意して伸びしろを残す。
+export const STAR_STEP_QUESTIONS = 250;   // ★1つあたり
+export const MAX_STAR = 5;
+export const MAX_TRACKED_QUESTIONS = 500 + STAR_STEP_QUESTIONS * MAX_STAR; // 1750問で★5（カンスト）
+
+/** Lv.99到達後の★の数（0〜5）を返す */
+export function getStarCount(totalSolved: number): number {
+  if (totalSolved < 500) return 0;
+  return Math.min(MAX_STAR, Math.floor((totalSolved - 500) / STAR_STEP_QUESTIONS));
+}
+
+/** 次の★まであと何問か（★5に到達済みなら0） */
+export function questionsToNextStar(totalSolved: number): number {
+  const star = getStarCount(totalSolved);
+  if (star >= MAX_STAR) return 0;
+  return 500 + STAR_STEP_QUESTIONS * (star + 1) - totalSolved;
+}
+
 export function getCumulativeQuestionsForLevel(level: number): number {
   if (level <= 1) return 0;
   if (level >= 99) return 500;
@@ -130,12 +152,12 @@ export function calculateAdventurerStats(userData: UserData | null): {
   const socialMasteredCount = SOCIAL_QUESTIONS.filter(q => masteredSet.has(q.id)).length;
   const mathMasteredCount = Array.from(masteredSet).filter(id => id.startsWith("math_") || id.startsWith("g")).length;
 
-  const kanjiSolved = Math.min(500, Math.max(catSolved.kanji || 0, masteredKanjiCount));
-  const calcSolved = Math.min(500, Math.max(catSolved.calc || 0, mathMasteredCount));
-  const logicSolved = Math.min(500, catSolved.logic || 0);
-  const geomSolved = Math.min(500, catSolved.geometry || 0);
-  const scienceSolved = Math.min(500, Math.max(catSolved.science || 0, scienceMasteredCount));
-  const socialSolved = Math.min(500, Math.max(catSolved.social || 0, socialMasteredCount));
+  const kanjiSolved = Math.min(MAX_TRACKED_QUESTIONS, Math.max(catSolved.kanji || 0, masteredKanjiCount));
+  const calcSolved = Math.min(MAX_TRACKED_QUESTIONS, Math.max(catSolved.calc || 0, mathMasteredCount));
+  const logicSolved = Math.min(MAX_TRACKED_QUESTIONS, catSolved.logic || 0);
+  const geomSolved = Math.min(MAX_TRACKED_QUESTIONS, catSolved.geometry || 0);
+  const scienceSolved = Math.min(MAX_TRACKED_QUESTIONS, Math.max(catSolved.science || 0, scienceMasteredCount));
+  const socialSolved = Math.min(MAX_TRACKED_QUESTIONS, Math.max(catSolved.social || 0, socialMasteredCount));
 
   const statConfigs: {
     key: StatCategoryKey;
@@ -242,6 +264,8 @@ export function calculateAdventurerStats(userData: UserData | null): {
       nextExp: info.nextExp,
       questionsToNextLevel: info.questionsToNextLevel,
       progressPercent: info.progressPercent,
+      star: getStarCount(c.solved),
+      toNextStar: questionsToNextStar(c.solved),
       trainingUrl: c.trainingUrl,
       trainingLabel: c.trainingLabel
     };

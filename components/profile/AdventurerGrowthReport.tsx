@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useUser } from "../../hooks/useUser";
-import { calculateAdventurerStats, StatCategoryKey, SkillStat } from "../../lib/userStatsLogic";
+import { calculateAdventurerStats, StatCategoryKey, SkillStat , MAX_STAR } from "../../lib/userStatsLogic";
 import { hasUnclaimedAchievements } from "../../lib/achievementLogic";
 import { AdventurerRadarChart } from "./AdventurerRadarChart";
 import { Button } from "../ui/Button";
@@ -202,8 +202,14 @@ export function AdventurerGrowthReport() {
               </div>
               <div className="text-right flex-shrink-0">
                 <div className="text-3xl font-black text-amber-400 leading-none">Lv.{activeStat.level}</div>
+                {/* Lv.99（500問）の先は★で伸びていく。上位層の目標が尽きないようにするため */}
+                {activeStat.level >= 99 && (
+                  <div className="text-lg leading-none mt-1 tracking-tight" title={`★${activeStat.star} / ${MAX_STAR}`}>
+                    {"★".repeat(activeStat.star)}<span className="text-slate-600">{"☆".repeat(MAX_STAR - activeStat.star)}</span>
+                  </div>
+                )}
                 <div className="text-[11px] font-bold text-cyan-300 mt-1">
-                  {activeStat.totalSolved} / 500問
+                  {activeStat.level >= 99 ? `${activeStat.totalSolved}問` : `${activeStat.totalSolved} / 500問`}
                 </div>
               </div>
             </div>
@@ -213,7 +219,11 @@ export function AdventurerGrowthReport() {
               <div className="flex justify-between items-center text-xs font-bold mb-1.5">
                 <span className="text-amber-300 flex items-center gap-1 font-black">
                   <span>✨</span>
-                  {activeStat.level >= 99 ? "最高レベル到達！(MAX)" : `あと ${activeStat.questionsToNextLevel}問正解 で Lv.${activeStat.level + 1} にUP！`}
+                  {activeStat.level >= 99
+                    ? (activeStat.star >= MAX_STAR
+                        ? "★5 かんぜんカンスト！"
+                        : `Lv.99到達！ あと ${activeStat.toNextStar}問正解 で ★${activeStat.star + 1} に！`)
+                    : `あと ${activeStat.questionsToNextLevel}問正解 で Lv.${activeStat.level + 1} にUP！`}
                 </span>
                 <span className="text-slate-200 font-bold">
                   {activeStat.currentExp} / {activeStat.nextExp} 問

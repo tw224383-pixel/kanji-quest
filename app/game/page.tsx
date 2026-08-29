@@ -13,6 +13,7 @@ import { storage } from "../../lib/storage";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, increment } from "firebase/firestore";
 import { useUser } from "../../hooks/useUser";
+import type { UserData } from "../../contexts/UserContext";
 import { Button } from "../../components/ui/Button";
 import { AnswerOptions } from "../../components/game/AnswerOptions";
 import { KeyboardInput } from "../../components/game/KeyboardInput";
@@ -22,6 +23,7 @@ import { soundManager } from "../../lib/soundManager";
 import { useToast } from "../../components/ui/Toast";
 import { GameResultScreen } from "../../components/game/GameResultScreen";
 import { safeLocalStorage } from "../../lib/safeLocalStorage";
+import { getDailyMission, matchesMission, markMissionCleared, isMissionCleared, MISSION_BONUS } from "../../lib/dailyMission";
 
 // キーボード入力モードで「単位を入れるべきか分からない」問題への対策。
 // 算数の正解に単位が含まれる場合、その単位を入力欄の横に表示し数字だけ打てば
@@ -113,6 +115,7 @@ export default function GamePage() {
   // 1日に稼げるPTには緩やかな上限がある（同じ計算問題の周回でのPT稼ぎ対策）。
   // 上限を超えたら awardedPt に実際に加算された（減額後の）PT を入れ、理由を画面に表示する。
   const [ptWasCapped, setPtWasCapped] = useState(false);
+  const [unclaimedAchievements, setUnclaimedAchievements] = useState(0);
   const [awardedPt, setAwardedPt] = useState<number | null>(null);
   
   // Review Mode & Boss Mode
@@ -121,6 +124,9 @@ export default function GamePage() {
   const [isTraining, setIsTraining] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10);
   const [bossLevel, setBossLevel] = useState(1);
+  // きょうのミッション対象のバトルか（報酬ボーナスの判定に使う）
+  const [isMissionTarget, setIsMissionTarget] = useState(false);
+  const [missionAlreadyCleared, setMissionAlreadyCleared] = useState(true);
 
   useEffect(() => {
     if (userData?.grade) {
@@ -250,6 +256,22 @@ export default function GamePage() {
     }
   }, [userData, questions.length, subjectType]);
 
+  // きょうのミッション対象かどうかは、出題が決まった時点で1度だけ確定させる。
+  // （プレイ後に達成済みフラグが立って、結果画面の倍率表示が揺れるのを防ぐ）
+  const missionResolvedRef = useRef(false);
+  useEffect(() => {
+    if (missionResolvedRef.current) return;
+    if (!userData || questions.length === 0) return;
+    missionResolvedRef.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const mission = getDailyMission(userData);
+    const cats = questions
+      .map(q => (q as { category?: string }).category)
+      .filter((c): c is string => !!c);
+    setIsMissionTarget(matchesMission(mission, subjectType, params.get("category"), cats));
+    setMissionAlreadyCleared(isMissionCleared());
+  }, [userData, questions, subjectType]);
+
   const isBossBattle = questions.length >= 5 && currentIndex === questions.length - 1 && !isRevenge;
 
   useEffect(() => {
@@ -266,6 +288,9 @@ export default function GamePage() {
   const multiplier = 1 + (maxCombo * 0.1);
   const revengeBonus = isRevenge ? 2.0 : 1.0;
   const keyboardBonus = (mode === "keyboard" && subjectType !== "science" && subjectType !== "social") ? 3.0 : 1.0;
+  // 「きょうのミッション」の分野で遊んだときのボーナス（1日1回だけ）。
+  // 苦手分野に足を向けさせて、カルテのレーダーの穴を埋めてもらうのが狙い。
+  const missionBonus = isMissionTarget && !missionAlreadyCleared ? MISSION_BONUS : 1.0;
 
   const { finalXP, finalPT, hasPenalty } = useMemo(() => {
     let baseXP = 0;
@@ -296,15 +321,17 @@ export default function GamePage() {
     const penaltyPT = totalMistakes * 2;
     
     return {
-      finalXP: Math.max(0, Math.floor((baseXP - penaltyXP) * multiplier * revengeBonus * keyboardBonus)),
-      finalPT: Math.max(0, Math.floor((basePT - penaltyPT) * multiplier * revengeBonus * keyboardBonus)),
+      finalXP: Math.max(0, Math.floor((baseXP - penaltyXP) * multiplier * revengeBonus * keyboardBonus * missionBonus)),
+      finalPT: Math.max(0, Math.floor((basePT - penaltyPT) * multiplier * revengeBonus * keyboardBonus * missionBonus)),
       hasPenalty: penalty
     };
-  }, [questions, isRevenge, isTraining, userData?.grade, totalMistakes, multiplier, revengeBonus, keyboardBonus, subjectType]);
+  }, [questions, isRevenge, isTraining, userData?.grade, totalMistakes, multiplier, revengeBonus, keyboardBonus, missionBonus, subjectType]);
 
   if (loading || questions.length === 0) return <div>ロード中...</div>;
 
-  const currentQ = questions[currentIndex];
+  // 何らかの理由で出題数を超えたインデックスになっても画面が真っ白に落ちないようにする
+  // （タブレットでの二重タップなど）。最後の問題を表示したまま結果保存に進める。
+  const currentQ = questions[Math.min(currentIndex, questions.length - 1)];
 
   // ふりがなモード：漢字の読みを教える「かんじ」科目自体では意味がないので対象外にする。
   const applyFurigana = furiganaMode && subjectType !== "kanji";
@@ -343,7 +370,9 @@ export default function GamePage() {
 
   const nextQuestion = () => {
     if (currentIndex + 1 < questions.length) {
-      setCurrentIndex(curr => curr + 1);
+      // タブレットでの二重タップ対策。curr+1 をそのまま入れると、素早く2回押されたときに
+      // 出題数を超えたインデックスになり currentQ が undefined になって画面が落ちていた。
+      setCurrentIndex(curr => Math.min(curr + 1, questions.length - 1));
       setIsReviewMode(false);
     } else {
       finishGame();
@@ -450,6 +479,7 @@ export default function GamePage() {
 
         let newlyMastered = false;
         let sessionPtWasCapped = false;
+        let userAfterSave: UserData | null = null;
         let sessionAwardedPt = finalPT;
 
         // 複数タブ・複数端末での同時プレイでXP/PT/苦手リスト等が上書き消失しないよう、
@@ -590,7 +620,7 @@ export default function GamePage() {
           Object.keys(stages).forEach(id => { if (!mistakeSet.has(id)) delete stages[id]; });
           Object.keys(nextReview).forEach(id => { if (!mistakeSet.has(id)) delete nextReview[id]; });
 
-          return {
+          const updates: Partial<UserData> = {
             xp: current.xp + finalXP,
             pt: isSpSubject ? current.pt : current.pt + earnedPt,
             sp: isSpSubject ? (current.sp || 0) + finalPT : (current.sp || 0),
@@ -611,6 +641,9 @@ export default function GamePage() {
             titles: Array.from(newTitles),
             avatars: Array.from(newAvatars),
           };
+          // 保存後の姿を控えておく（結果画面で未受け取り実績の数を数えるのに使う）
+          userAfterSave = { ...current, ...updates } as UserData;
+          return updates;
         });
 
         if (ok === false) {
@@ -627,6 +660,14 @@ export default function GamePage() {
           if (sessionPtWasCapped) {
             setPtWasCapped(true);
             showToast(`🌙 同じ系統の問題で今日はもうたくさんPTを稼いだから、今回は少なめの ${sessionAwardedPt}PT だよ！ちがう問題にも挑戦してみよう`);
+          }
+          // 未受け取りの実績を結果画面で知らせる（気づかず取り逃がす子が非常に多かったため）。
+          // 判定は手元のデータだけで行うので、Firestoreの読み書きは増えない。
+          try {
+            const { getUnclaimedAchievementsCount } = await import("../../lib/achievementLogic");
+            setUnclaimedAchievements(getUnclaimedAchievementsCount(userAfterSave ?? userData, bossLevel));
+          } catch (e) {
+            console.error("実績数の計算に失敗", e);
           }
         }
 
@@ -651,6 +692,7 @@ export default function GamePage() {
           }
         }
       }
+      if (isMissionTarget && !missionAlreadyCleared) markMissionCleared();
     } catch (err) {
       console.error("Failed to finish game and update data:", err);
       setSaveFailed(true);
@@ -689,7 +731,10 @@ export default function GamePage() {
         finalXP={finalXP}
         finalPT={awardedPt ?? finalPT}
         ptWasCapped={ptWasCapped}
+        missionBonusApplied={missionBonus > 1}
         isSpSubject={isSpSubject}
+        unclaimedAchievements={unclaimedAchievements}
+        onGoAchievements={() => router.push("/achievements")}
         onRetry={() => { setIsFinished(false); setSaveFailed(false); finishGame(); }}
         onGoHome={() => router.push("/home")}
       />

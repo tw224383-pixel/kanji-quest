@@ -7,6 +7,14 @@ export function UpdateNews() {
       <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-36 overflow-y-auto pr-2 custom-scrollbar">
         <li>
           <div className="text-xs text-amber-400 mb-0.5">2026/08/29 (最新)</div>
+          <div>🎯 <strong>「きょうのミッション」＆やりこみ要素が大量追加！</strong><br/>
+          毎日ひとつ、いま いちばん のびしろのある分野が ミッションとして とどきます。クリアすると XP・PTが <strong>1.5ばい</strong>！
+          さらに、バトルの けっか画面から <strong>じっせきの ごほうびを すぐ うけとれる</strong> ようになり、
+          カルテの Lv.99の さきには <strong>★ランク</strong>（★5まで）が 追加。
+          「ぜんぶの分野を そだてた人」「4日・5日 れんぞくログイン」などの じっせきも 新しくふえました！</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/29</div>
           <div>❓ <strong>「？？？？？？」</strong><br/>
           Lv10の アルティメットドラゴンを たおした学年だけが たどりつける <strong>なにか</strong> を、こっそり追加しました。
           もし たおすことが できたら…その学年の <strong>ぜんいん</strong> に、とんでもない ごほうびが とどくらしい。</div>

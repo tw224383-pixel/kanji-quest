@@ -172,6 +172,11 @@ export const achievementTitles: { id: string; rarity: Rarity; desc: string }[] =
   { id: "神域の賢王", rarity: "超激レア", desc: "成長カルテの平均レベルLv.50達成" },
   { id: "創世の神", rarity: "神レア", desc: "成長カルテの全分野Lv.99達成（神ランク極致）" },
 
+  // バランス実績（一番低い分野を基準にした、全分野の底上げ）
+  { id: "六道の探究者", rarity: "激レア", desc: "6分野すべてをLv.10以上にする" },
+  { id: "文武両道", rarity: "超激レア", desc: "6分野すべてをLv.20以上にする" },
+  { id: "全能の賢者", rarity: "神レア", desc: "6分野すべてをLv.40以上にする" },
+
   // 各分野特化
   { id: "語彙の達人", rarity: "激レア", desc: "漢字・語彙力レベルLv.30達成" },
   { id: "漢字マスター", rarity: "超激レア", desc: "漢字・語彙力レベルLv.50達成" },
