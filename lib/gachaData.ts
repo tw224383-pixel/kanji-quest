@@ -1,4 +1,5 @@
 import { equipmentList } from "./equipmentData";
+import { themeHasImage } from "./themeVisuals";
 
 export type Rarity = "ノーマル" | "レア" | "激レア" | "超激レア" | "神レア";
 
@@ -495,11 +496,15 @@ export const themeGachaRates = computeRates(allThemeGachaItems);
 // =======================================
 // 👑 レジェンドガチャ (Legend Gacha) — 1回 100,000 PT
 // =======================================
-// これまでの全ガチャに入っている「超激レア」「神レア」だけを集めた最上位ガチャ。
+// これまでの全ガチャに入っている「超激レア」「神レア」のうち、
+// 絵（イラスト）がある景品だけを集めた最上位ガチャ。
 // 排出は 超激レア 80% / 神レア 20% の2段だけ（ハズレなし）。
 //
+// 絵文字だけの景品（称号・エフェクト、SP装備ガチャの絵文字装備など）は入れない。
+// 10万PTを払って絵文字の称号が出ると、最上位ガチャとして見合わないため。
+//
 // 【重要】中身は各ガチャの定義から自動で集めている。
-// どこかに超激レア以上の景品を足せば、このガチャにも自動で入る。
+// どこかに絵つきの超激レア以上を足せば、このガチャにも自動で入る。
 // ここに景品リストを手で書き足すと二重管理になるので、絶対にしないこと。
 const LEGEND_SOURCES: GachaItem[][] = [
   allGachaItems,
@@ -517,11 +522,24 @@ const LEGEND_SOURCES: GachaItem[][] = [
 const LEGEND_KAMI_TOTAL = 11000;
 const LEGEND_CHOU_TOTAL = 44000;
 
+/**
+ * 「絵がある景品」かどうか。
+ *   - アバター・装備: アイコンが画像パスなら絵がある（絵文字だけのものは対象外）
+ *   - テーマ: 背景イラストを持つものだけ（コードで描く3種は対象外）
+ *   - 称号・エフェクト: 絵を持たないので常に対象外
+ */
+function hasArtwork(item: GachaItem): boolean {
+  if (item.type === "theme") return themeHasImage(item.id);
+  if (item.type === "avatar" || item.type === "equipment") return item.icon.startsWith("/");
+  return false;
+}
+
 function buildLegendItems(): GachaItem[] {
   const byId = new Map<string, GachaItem>();
   for (const src of LEGEND_SOURCES) {
     for (const item of src) {
       if (item.rarity !== "神レア" && item.rarity !== "超激レア") continue;
+      if (!hasArtwork(item)) continue;
       // 同じ景品が複数のガチャに入っている場合は1つにまとめる（当選確率が二重にならないように）
       if (!byId.has(item.id)) byId.set(item.id, item);
     }

@@ -218,8 +218,8 @@ export function GachaTab({
               <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">👑</span> レジェンドガチャ <span className="text-sm">(100000 PT)</span>
             </div>
             <div className="text-amber-100 font-bold text-xs mb-3 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
-              すべてのガチャの <strong>超激レア・神レアだけ</strong> を あつめた さいきょうのガチャ。<br />
-              超激レア 80% / <strong>神レア 20%</strong> — ハズレなし！
+              すべてのガチャの <strong>絵つきの 超激レア・神レアだけ</strong> を あつめた さいきょうのガチャ。<br />
+              アバター・そうび・テーマ の <strong>44種</strong>。超激レア 80% / <strong>神レア 20%</strong> — ハズレなし！
             </div>
             <Button
               variant="outline"
