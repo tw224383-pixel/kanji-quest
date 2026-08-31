@@ -7,6 +7,18 @@ export function UpdateNews() {
       <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-36 overflow-y-auto pr-2 custom-scrollbar">
         <li>
           <div className="text-xs text-amber-400 mb-0.5">2026/09/01 (最新)</div>
+          <div>🛠️ <strong>いくつかの不具合を直しました</strong><br/>
+          ・<strong>理科・社会の「きょうのふくしゅう」ボタン</strong>を追加しました（これまで出ていませんでした）<br/>
+          ・算数のふくしゅうが いつまでも おわらなかったのを修正。おなじ しゅるいの もんだいで
+          くりかえし せいかいすると、ちゃんと 苦手リストから そつぎょうできます<br/>
+          ・キーボードモードで「直角」「平行四辺形」のような <strong>ことばで答える算数</strong> は、
+          4たくボタンで出るようにしました（打てなくて 不正解になっていました）<br/>
+          ・「5にん」「60%」のように 数字だけ打つと まちがいになっていた もんだいを修正<br/>
+          ・ふりがなモードで 小2の理科・社会に 漢字が のこっていたのを修正。
+          「日本（にほん）」「お米（おこめ）」などの よみまちがいも直しました</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/09/01</div>
           <div>👑 <strong>ついに「レジェンドガチャ」が登場！（10万PT）</strong><br/>
           すべてのガチャの <strong>絵がついた 超激レア・神レアだけ</strong> を あつめた さいきょうのガチャ。
           アバター21・そうび13・テーマ10 の ぜんぶで <strong>44種</strong>、

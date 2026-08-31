@@ -25,8 +25,6 @@ import { storage } from "./storage";
  * この機能のためにFirestoreの読み取りが増えることはない。
  */
 
-const GUEST_CLAIMED_KEY = "kq_transcendent_claimed";
-
 /** ゲスト用：この端末で討伐済みの月（認証ユーザーの globalStats に相当） */
 function getGuestClearedMonths(grade: number): string[] {
   return (safeLocalStorage.getItem("kq_raid_transcendent_" + grade) || "").split(",").filter(Boolean);
@@ -83,9 +81,6 @@ export async function claimTranscendentRewards(
 
   if (!ok || awarded.length === 0) return none;
 
-  if (storage.isGuest()) {
-    safeLocalStorage.setItem(GUEST_CLAIMED_KEY, "1"); // 参考情報（実データは updateGuestData 側）
-  }
   return {
     claimedCount: awarded.length,
     totalPt: TRANSCENDENT_REWARD_PT * awarded.length,

@@ -9,8 +9,9 @@ const GUEST_GRADE = "kq_guest_grade";
 const XP_KEY = "kq_xp";
 const PT_KEY = "kq_pt";
 const EFFECTS_KEY = "kq_effects";
-const MODE_KEY = "kq_answer_mode";
-const FURIGANA_KEY = "kq_furigana_mode";
+// 学習の記録ではなく「この端末での好み」なので、アカウントを切り替えても残す
+const DEVICE_ANSWER_MODE_KEY = "kq_answer_mode";
+const DEVICE_FURIGANA_KEY = "kq_furigana_mode";
 const MATH_SKILLS_KEY = "kq_math_skills";
 
 export const storage = {
@@ -35,17 +36,24 @@ export const storage = {
   },
   clearGuest: () => {
     if (typeof window === "undefined") return;
-    const keysToRemove = [
-      GUEST_KEY, GUEST_NAME, GUEST_GRADE, XP_KEY, PT_KEY, "kq_sp",
-      EFFECTS_KEY, "kq_mistakes", "kq_mastered", "kq_titles", "kq_eq_title",
-      "kq_avatars", "kq_eq_avatar", "kq_equipments", "kq_eq_equipment",
-      "kq_theme", "kq_eq_effect", "kq_total_damage", "kq_weekly_xp",
-      "kq_last_week", "kq_monthly_damage", "kq_last_month",
-      "kq_claimed_achievements", "kq_last_login_date", "kq_login_streak",
-      "kq_user_cache", "kq_category_solved", "kq_mistake_stages", "kq_mistake_next_review",
-      "kq_best_weekly_hero_rank", "kq_best_damage_rank"
-    ];
-    keysToRemove.forEach(k => safeLocalStorage.removeItem(k));
+    // kq_ で始まるキーをまとめて消す。
+    //
+    // 以前は消すキーを1つずつ並べていたため、新しい保存項目を足すたびに
+    // 消し忘れが起き、学校のように端末を共有している場合に前の子のデータが
+    // 次の子へ引き継がれていた。実際に残っていたもの:
+    //   kq_daily_category_pt / kq_last_pt_earn_date … 1日のPT上限の消費状況
+    //   kq_claimed_transcendent            … 裏ボス報酬の受取済み記録
+    //                                        （前の子が受け取り済みだと次の子がもらえない）
+    //   kq_prev_weekly_xp ほか             … 先週・先月の成績
+    //   kq_daily_bonus                     … 「今日限定！」の対象分野
+    //   kq_raid_*                          … ゲストのレイドボス進行
+    // 一覧から消すのではなく「残すものだけ挙げる」方式にして、
+    // 今後キーを増やしても消し忘れが起きないようにする。
+    const keep = new Set<string>([DEVICE_ANSWER_MODE_KEY, DEVICE_FURIGANA_KEY]);
+    safeLocalStorage
+      .keys()
+      .filter(k => k.startsWith("kq_") && !keep.has(k))
+      .forEach(k => safeLocalStorage.removeItem(k));
   },
   getGuestData: () => {
     if (typeof window === "undefined") return null;
@@ -65,6 +73,9 @@ export const storage = {
       equipments: JSON.parse(safeLocalStorage.getItem("kq_equipments") || "[]"),
       equippedEquipment: safeLocalStorage.getItem("kq_eq_equipment") || "",
       theme: safeLocalStorage.getItem("kq_theme") || "default",
+      // ボスの見た目（リアル/キュート）の切り替え。保存していなかったため、
+      // ゲストが切り替えても再読み込みで元に戻ってしまっていた。
+      scaryMode: safeLocalStorage.getItem("kq_scary_mode") === "true",
       equippedEffect: safeLocalStorage.getItem("kq_eq_effect") || "",
       totalDamage: parseInt(safeLocalStorage.getItem("kq_total_damage") || "0", 10),
       weeklyXp: parseInt(safeLocalStorage.getItem("kq_weekly_xp") || "0", 10),
@@ -103,6 +114,9 @@ export const storage = {
     if (updates.equipments !== undefined) safeLocalStorage.setItem("kq_equipments", JSON.stringify(updates.equipments));
     if (updates.equippedEquipment !== undefined) safeLocalStorage.setItem("kq_eq_equipment", updates.equippedEquipment);
     if (updates.theme !== undefined) safeLocalStorage.setItem("kq_theme", updates.theme);
+    if (updates.scaryMode !== undefined) safeLocalStorage.setItem("kq_scary_mode", updates.scaryMode ? "true" : "false");
+    if (updates.name !== undefined) safeLocalStorage.setItem(GUEST_NAME, updates.name);
+    if (updates.grade !== undefined) safeLocalStorage.setItem(GUEST_GRADE, String(updates.grade));
     if (updates.equippedEffect !== undefined) safeLocalStorage.setItem("kq_eq_effect", updates.equippedEffect);
     if (updates.totalDamage !== undefined) safeLocalStorage.setItem("kq_total_damage", updates.totalDamage.toString());
     if (updates.weeklyXp !== undefined) safeLocalStorage.setItem("kq_weekly_xp", updates.weeklyXp.toString());
@@ -131,20 +145,20 @@ export const storage = {
   },
   getAnswerMode: () => {
     if (typeof window === "undefined") return "4choice";
-    return safeLocalStorage.getItem(MODE_KEY) || "4choice";
+    return safeLocalStorage.getItem(DEVICE_ANSWER_MODE_KEY) || "4choice";
   },
   setAnswerMode: (mode: "4choice" | "keyboard") => {
     if (typeof window === "undefined") return;
-    safeLocalStorage.setItem(MODE_KEY, mode);
+    safeLocalStorage.setItem(DEVICE_ANSWER_MODE_KEY, mode);
   },
   // ふりがなモード：算数・理科・社会の問題文と選択肢をひらがな表示にする（端末ごとの好み設定）。
   getFuriganaMode: () => {
     if (typeof window === "undefined") return false;
-    return safeLocalStorage.getItem(FURIGANA_KEY) === "true";
+    return safeLocalStorage.getItem(DEVICE_FURIGANA_KEY) === "true";
   },
   setFuriganaMode: (on: boolean) => {
     if (typeof window === "undefined") return;
-    safeLocalStorage.setItem(FURIGANA_KEY, on ? "true" : "false");
+    safeLocalStorage.setItem(DEVICE_FURIGANA_KEY, on ? "true" : "false");
   },
   getMathSkills: () => {
     if (typeof window === "undefined") return null;

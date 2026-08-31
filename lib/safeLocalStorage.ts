@@ -55,6 +55,17 @@ export const safeLocalStorage = {
     }
   },
 
+  /** 保存されているキーの一覧。読めない環境では空配列を返す */
+  keys(): string[] {
+    if (typeof window === "undefined") return [];
+    try {
+      return Object.keys(window.localStorage);
+    } catch (e) {
+      warnOnce(e);
+      return [];
+    }
+  },
+
   /** この端末で保存が使えるか（UIでの案内表示用） */
   isAvailable(): boolean {
     if (typeof window === "undefined") return false;

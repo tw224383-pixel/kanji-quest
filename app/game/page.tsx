@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getRandomQuestions, getRevengeQuestions, KanjiQuestion } from "../../lib/kanjiData";
-import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion } from "../../lib/mathData";
+import { getRandomMathQuestions, getRevengeMathQuestions, MathQuestion, MATH_SKILLS } from "../../lib/mathData";
 import { getRandomScienceQuestions, getRevengeScienceQuestions, ScienceQuestion } from "../../lib/scienceData";
 import { getRandomSocialQuestions, getRevengeSocialQuestions, SocialQuestion } from "../../lib/socialData";
 import { getRaidBossImagePath, getCurrentJSTMonth, getCurrentJSTWeekString, getSeasonalBossPresentation } from "../../lib/raidLogic";
@@ -29,12 +29,18 @@ import { getDailyBonusCategories, isDailyBonusTarget, DAILY_BONUS_MULTIPLIER } f
 // 算数の正解に単位が含まれる場合、その単位を入力欄の横に表示し数字だけ打てば
 // よいことが一目で分かるようにする（長い単位から先に判定し、cm² と cm の
 // 取り違えなどを防ぐ）。
+// 「にん」「ひき」などの助数詞も入れてある。低学年の答えは「5にん」「8ひき」のように
+// ひらがなの助数詞つきで、これが無いと数字だけ打った子が不正解になってしまうため。
+// 逆に「じ」「じはん」（4じ / 8じはん）はここに入れてはいけない。
+// ヒントとして単位を出すと「答えは◯時半だ」と分かってしまい、答えが漏れる。
+// そういう問題は下の isKeyboardAnswerable が false になり、4択で出題される。
 const MATH_UNITS = [
   "km/時", "km/h", "km²", "cm²", "m²", "cm³", "m³",
   "時速", "分速", "秒速", "まい", "通り", "時間", "分間", "秒間",
   "km", "mm", "kg", "dl", "ml", "cm", "ha",
+  "にん", "ひき", "ほん", "だい", "わ", "つ",
   "度", "こ", "個", "本", "人", "枚", "円", "日", "班", "倍", "点", "時", "分", "秒",
-  "a", "m", "g", "t", "l",
+  "%", "％", "a", "m", "g", "t", "l",
 ].sort((a, b) => b.length - a.length);
 
 function extractTrailingMathUnit(reading: string): string {
@@ -50,6 +56,55 @@ function extractTrailingMathUnit(reading: string): string {
     return unit;
   }
   return "";
+}
+
+/**
+ * その算数の答えが「キーボードで打てる」かどうか。
+ *
+ * 算数の答えには「直角」「平行四辺形」「直径 × 円周率」「午前11時5分」のような
+ * 文章のものや、「4じ」「1：2」「1mの ものさし」のように数字＋既知の単位では
+ * 表せないものがある。これらをキーボード入力で出すと、
+ *   - 漢字が打てない低学年には事実上ぜったいに正解できない
+ *   - 数字だけ打つと不正解になり、苦手リストにも入ってしまう
+ * という状態になる（実測で6年の図形は約9割が該当した）。
+ * そこで、こういう問題だけはキーボードモードでも4択で出題する。
+ * キーボードボーナス(3倍)はモードに対して付くので、報酬は変わらない。
+ */
+function isKeyboardAnswerable(reading: string): boolean {
+  const trimmed = reading.trim();
+  // 分数は分子・分母の専用入力があるのでそのまま打てる
+  if (/^\d+\/\d+$/.test(trimmed)) return true;
+  const unit = extractTrailingMathUnit(trimmed);
+  const rest = unit ? trimmed.slice(0, trimmed.length - unit.length) : trimmed;
+  return /^-?\d+(\.\d+)?$/.test(rest.trim());
+}
+
+/**
+ * 算数の問題IDをスキル単位のキーにそろえる（math_g3_add_ab12cd3 → math_g3_add）。
+ *
+ * 算数の問題は出題のたびに生成され、IDの末尾に7文字の乱数が付く。
+ * そのIDをそのまま苦手リストに入れると、まったく同じ問題は二度と出てこないため
+ *   - リベンジで正解しても「苦手リストにあるID」と一致せず、段階が進まない
+ *   - つまり永久に卒業できず、苦手リストが増える一方になる
+ * という状態だった（本番データで1人あたり最大143件、すべて乱数ID）。
+ * さらに masteredIds にも同じ乱数IDが溜まり続けていた（最大1,472件・80KB）。
+ *
+ * スキル単位にそろえることで「3桁のたしざんが苦手」という単位で復習・卒業できる。
+ * 末尾が乱数かどうかは、取り除いた結果が実在するスキルIDになるかで判定する
+ * （スキルIDにも _ が含まれるため、単純な分割では誤判定するので注意）。
+ */
+const MATH_SKILL_KEYS = new Set(MATH_SKILLS.map(s => `math_${s.id}`));
+const MATH_RANDOM_SUFFIX = /^[0-9a-z]{7}$/;
+function toMathSkillKey(id: string): string {
+  // 保存済みデータに文字列以外が混ざっていても落ちないようにする。
+  // ここで例外が出ると、保存処理（トランザクション）ごと失敗してしまうため。
+  if (typeof id !== "string") return id;
+  if (!id || !id.startsWith("math_")) return id;
+  if (MATH_SKILL_KEYS.has(id)) return id;
+  const parts = id.split("_");
+  if (parts.length < 3 || !MATH_RANDOM_SUFFIX.test(parts[parts.length - 1])) return id;
+  const candidate = parts.slice(0, -1).join("_");
+  return MATH_SKILL_KEYS.has(candidate) ? candidate : id;
 }
 
 // 同じ系統の問題ばかり周回してPTを稼ぎ続けるのを防ぐための、ゆるやかな1日のPT上限。
@@ -109,8 +164,16 @@ export default function GamePage() {
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
+  // masteredIds に保存するもの（漢字図鑑・カルテの集計に実際に使われるものだけ）
   const newMastered = useRef<Set<string>>(new Set());
+  // このセッションで正解した問題のキー。苦手リストの卒業判定にだけ使い、保存はしない。
+  // 算数を masteredIds に入れなくなったので、卒業判定用にこちらを分けている。
+  const newSolved = useRef<Set<string>>(new Set());
   const newMistakes = useRef<Set<string>>(new Set());
+  // カルテのカテゴリ別集計用。苦手リストのキーはスキル単位にまとめてしまうため、
+  // 「この問題を間違えたか」を1問ずつ判定するには、まとめる前の生のIDが必要になる
+  // （同じスキルの2問目を正解したのに未集計、といったズレを防ぐ）。
+  const newMistakeRawIds = useRef<Set<string>>(new Set());
   const [unlockedMastery, setUnlockedMastery] = useState(false);
   // 1日に稼げるPTには緩やかな上限がある（同じ計算問題の周回でのPT稼ぎ対策）。
   // 上限を超えたら awardedPt に実際に加算された（減額後の）PT を入れ、理由を画面に表示する。
@@ -179,7 +242,14 @@ export default function GamePage() {
         // 分散学習: 今日が復習日になっている苦手問題だけを出題する（覚えたてを何度も出さない）
         const todayStr = getCurrentJSTDateString();
         const nextReviewMap = userData.mistakeNextReview || {};
-        const dueMistakeIds = (userData.mistakeIds || []).filter(id => isDueForReview(nextReviewMap[id], todayStr));
+        // 算数の苦手はスキル単位にそろえてから重複を除く。
+        // 移行前のデータには同じスキルの乱数IDが何十件も入っているため、そのままだと
+        // リベンジが同じスキルばかり10問になってしまう。
+        const dueMistakeIds = Array.from(new Set(
+          (userData.mistakeIds || [])
+            .filter(id => isDueForReview(nextReviewMap[id], todayStr))
+            .map(toMathSkillKey)
+        ));
         const hasAnyMistakes = (userData.mistakeIds || []).length > 0;
         const notDueMessage = "今日ふくしゅうする もんだいは まだ ないよ！また あとで きてね";
 
@@ -385,7 +455,15 @@ export default function GamePage() {
     if (cleanUser === cleanTarget) return true;
 
     if (subjectType === "math") {
-      const strip = (s: string) => s.replace(/(km\/時|km\/h|km|m|cm|mm|kg|g|t|l|dl|ml|度|こ|個|本|人|まい|枚|円|日|班|倍|点|通り|km²|cm²|m²|ha|a|cm³|m³|時|分|秒|時速|分速|秒速)/g, '').trim();
+      // 単位は必ず「長いものから」並べること。正規表現の | は左から順に試すため、
+      // 以前は "cm" が "cm²" より先にあり、"16cm²" が "16²" にしかならず
+      // 面積・体積の答えで単位を打った子が不正解になっていた。
+      // MATH_UNITS と同じ内容を長さ順に並べたものを使う。
+      const stripRe = new RegExp(
+        "(" + MATH_UNITS.map(u => u.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|") + ")",
+        "g"
+      );
+      const strip = (s: string) => s.replace(stripRe, '').trim();
       const s1 = strip(cleanUser);
       const s2 = strip(cleanTarget);
       if (s1 && s2 && s1 === s2) return true;
@@ -409,18 +487,24 @@ export default function GamePage() {
       return;
     }
 
-    const questionIdentifier = ('id' in currentQ && currentQ.id) ? currentQ.id : currentQ.word;
+    const rawQuestionId = ('id' in currentQ && currentQ.id) ? currentQ.id : currentQ.word;
+    const questionIdentifier = toMathSkillKey(rawQuestionId);
 
     if (isCorrect) {
       const nextCombo = combo + 1;
       setCombo(nextCombo);
       setMaxCombo(c => Math.max(c, nextCombo));
-      newMastered.current.add(questionIdentifier);
-      // masteredIds は漢字図鑑の「マスター済み判定」専用（k.kanji と直接比較される）。
-      // 算数・理科・社会は currentQ.word が問題文そのもの（ほぼ一意）なので、
-      // ここに含めるとドキュメントが無制限に肥大化してしまう。漢字のみ追加する。
+      newSolved.current.add(questionIdentifier);
+      // masteredIds に入れるのは、あとで実際に照合されるものだけにする。
+      //   漢字         … 漢字図鑑と「◯年生マスター」の判定で k.kanji と直接比較される
+      //   理科・社会   … 問題IDが固定なのでカルテの集計に使える（各444問で頭打ち）
+      //   算数         … 出題のたびにIDが変わるため、入れると無限に増える。
+      //                   カルテの集計は categorySolved を使うのでここには入れない
+      //                   （実測で1人1,472件・80KBまで膨らんでいた）。
       if (subjectType === "kanji") {
         newMastered.current.add(currentQ.word);
+      } else if (subjectType === "science" || subjectType === "social") {
+        newMastered.current.add(questionIdentifier);
       }
       
       if (nextCombo >= 3) {
@@ -439,6 +523,7 @@ export default function GamePage() {
       setCombo(0);
       setTotalMistakes(m => m + 1);
       newMistakes.current.add(questionIdentifier);
+      newMistakeRawIds.current.add(rawQuestionId);
       setFeedback("incorrect");
       if (subjectType === "science" || subjectType === "social" || ('rationale' in currentQ && currentQ.rationale)) {
         setIsReviewMode(true);
@@ -451,10 +536,12 @@ export default function GamePage() {
   const handlePass = () => {
     if (isSubmittingRef.current || isFinishing) return;
     soundManager.playIncorrect();
-    const questionIdentifier = ('id' in currentQ && currentQ.id) ? currentQ.id : currentQ.word;
+    const rawQuestionId = ('id' in currentQ && currentQ.id) ? currentQ.id : currentQ.word;
+    const questionIdentifier = toMathSkillKey(rawQuestionId);
     setCombo(0);
     setTotalMistakes(m => m + 1);
     newMistakes.current.add(questionIdentifier);
+    newMistakeRawIds.current.add(rawQuestionId);
     setIsReviewMode(true);
   };
 
@@ -489,10 +576,26 @@ export default function GamePage() {
           // 分散学習（間隔反復）: 正解しても即座に苦手リストから消すのではなく、
           // 「1日後→3日後→7日後→14日後→30日後」と段階的に間隔を空けて再出題し、
           // 5回連続でリベンジモードに正解した問題だけを苦手リストから卒業させる。
-          const stages = { ...(current.mistakeStages || {}) };
-          const nextReview = { ...(current.mistakeNextReview || {}) };
+          // 既存データの移行：乱数つきの算数ID（math_g3_add_ab12cd3）をスキル単位へまとめる。
+          // 保存のたびに走るが、対象は数十件なので負荷は無視できる。書き込み回数も増えない。
+          // これをしないと、これまでに溜まった算数の苦手は永久に卒業できないままになる。
+          const mergeBySkillKey = <T,>(
+            src: Record<string, T>,
+            pick: (a: T, b: T) => T
+          ): Record<string, T> => {
+            const out: Record<string, T> = {};
+            for (const [key, value] of Object.entries(src)) {
+              const k = toMathSkillKey(key);
+              out[k] = k in out ? pick(out[k], value) : value;
+            }
+            return out;
+          };
+          // 復習の段階は「進みが遅いほう」、次回復習日は「早いほう」に寄せる（復習の機会を減らさない）
+          const stages = mergeBySkillKey<number>({ ...(current.mistakeStages || {}) }, (a, b) => Math.min(a, b));
+          const nextReview = mergeBySkillKey<string>({ ...(current.mistakeNextReview || {}) }, (a, b) => (a < b ? a : b));
           const todayStr = getCurrentJSTDateString();
           const graduated = new Set<string>();
+          const currentMistakeIds = Array.from(new Set((current.mistakeIds || []).map(toMathSkillKey)));
 
           newMistakes.current.forEach(id => {
             stages[id] = 0;
@@ -500,9 +603,9 @@ export default function GamePage() {
           });
 
           if (isRevenge) {
-            newMastered.current.forEach(id => {
+            newSolved.current.forEach(id => {
               if (newMistakes.current.has(id)) return; // 同一セッション内でまちがえ直したものは対象外
-              if (!(current.mistakeIds || []).includes(id)) return;
+              if (!currentMistakeIds.includes(id)) return;
               // 今回の成功「前」の段階を間隔テーブルのインデックスに使うことで、
               // 1回目の成功が REVIEW_INTERVALS_DAYS[0]（1日後）に正しく対応するようにする。
               // （nextStage をインデックスに使うと1日後の段階に永遠に到達しないバグがあった）
@@ -520,7 +623,7 @@ export default function GamePage() {
           }
 
           // 苦手リストから存在しない問題・卒業した問題を除外
-          let updatedMistakes = Array.from(new Set([...(current.mistakeIds || []), ...Array.from(newMistakes.current)]));
+          let updatedMistakes = Array.from(new Set([...currentMistakeIds, ...Array.from(newMistakes.current)]));
           updatedMistakes = updatedMistakes.filter(id => {
             if (!id || typeof id !== "string" || id.trim() === "") return false;
             if (graduated.has(id)) return false;
@@ -579,7 +682,7 @@ export default function GamePage() {
               questions.forEach(q => {
                 if (!('category' in q) || !q.category) return;
                 const qid = ('id' in q && q.id) ? q.id : q.word;
-                if (!newMistakes.current.has(qid)) {
+                if (!newMistakeRawIds.current.has(qid)) {
                   categoryDelta[q.category] = (categoryDelta[q.category] || 0) + 1;
                 }
               });
@@ -590,6 +693,19 @@ export default function GamePage() {
           Object.entries(categoryDelta).forEach(([cat, cnt]) => {
             updatedCategorySolved[cat] = (updatedCategorySolved[cat] || 0) + cnt;
           });
+
+          // 旧データの移行：以前は算数の正解も masteredIds に溜めており、カルテの「計算」は
+          // 「categorySolved.calc」と「masteredIds の算数の件数」の大きいほうを表示していた。
+          // 算数を masteredIds に入れるのをやめたため、そのままだと後者が止まり、
+          // 差が埋まるまでカルテの数字が動かなく見える子が出る（実測で109人・最大133問差）。
+          // ここで既存の件数を categorySolved.calc に畳み込んで、続きから伸びるようにする。
+          // 一度畳み込めば calc のほうが大きくなるので、次回以降は何も起きない。
+          const legacyMathMastered = (current.masteredIds || []).filter(
+            id => typeof id === "string" && (id.startsWith("math_") || id.startsWith("g"))
+          ).length;
+          if (legacyMathMastered > (updatedCategorySolved.calc || 0)) {
+            updatedCategorySolved.calc = legacyMathMastered;
+          }
 
           // 同じ系統の問題ばかり周回してPTを稼ぎ続けるのを防ぐための、系統別・1日ぶんの
           // 緩やかなPT上限。合計獲得PTそのものには上限を設けない（別の系統に切り替えれば
@@ -942,7 +1058,8 @@ export default function GamePage() {
 
           {/* 解答エリア */}
           <div className="w-full">
-            {mode === "4choice" || subjectType === "science" || subjectType === "social" ? (
+            {mode === "4choice" || subjectType === "science" || subjectType === "social"
+              || (subjectType === "math" && !isKeyboardAnswerable(currentQ.reading)) ? (
               <AnswerOptions
                 choices={currentQ.choices}
                 displayChoices={displayChoices}

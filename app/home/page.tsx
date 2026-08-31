@@ -442,18 +442,29 @@ export default function Home() {
             </Button>
             
                 {kanjiMistakes > 0 || mathMistakes > 0 || scienceMistakes > 0 || socialMistakes > 0 ? (
-              <div className="flex flex-col md:flex-row gap-4">
-                {kanjiMistakes > 0 ? (
-                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=kanji&revenge=true`)} className="flex-1 min-h-16 h-auto py-3 px-2 text-sm sm:text-md leading-tight animate-pulse shadow-red-500/30">
-                    🔥 漢字 きょうのふくしゅう ({kanjiMistakes})
-                  </Button>
-                ) : <div className="flex-1 hidden md:block"></div>}
-
-                {mathMistakes > 0 ? (
-                  <Button variant="danger" size="lg" onClick={() => router.push(`/game?subject=math&revenge=true`)} className="flex-1 min-h-16 h-auto py-3 px-2 text-sm sm:text-md leading-tight animate-pulse shadow-red-500/30">
-                    🔥 算数 きょうのふくしゅう ({mathMistakes})
-                  </Button>
-                ) : <div className="flex-1 hidden md:block"></div>}
+              // 理科・社会の復習ボタンが無く、その2科目の苦手だけが残っている子には
+              // ボタンも案内も出ない空白になっていた（実測で17人）。
+              // 出題側は ?subject=science&revenge=true に対応済みだったので、
+              // 4科目とも同じように出す。件数が0の科目は並べない。
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {([
+                  { key: "kanji", label: "漢字", count: kanjiMistakes },
+                  { key: "math", label: "算数", count: mathMistakes },
+                  { key: "science", label: "理科", count: scienceMistakes },
+                  { key: "social", label: "社会", count: socialMistakes },
+                ] as const)
+                  .filter(s => s.count > 0)
+                  .map(s => (
+                    <Button
+                      key={s.key}
+                      variant="danger"
+                      size="lg"
+                      onClick={() => router.push(`/game?subject=${s.key}&revenge=true`)}
+                      className="w-full min-h-16 h-auto py-3 px-2 text-sm sm:text-md leading-tight animate-pulse shadow-red-500/30"
+                    >
+                      🔥 {s.label} きょうのふくしゅう ({s.count})
+                    </Button>
+                  ))}
               </div>
             ) : hasAnyMistakesNotDue ? (
               <Button variant="ghost" size="lg" disabled className="min-h-16 h-auto py-3 px-3 text-xs sm:text-sm md:text-lg leading-tight bg-slate-200/50 text-slate-500 border-2 border-slate-300/50 opacity-80 cursor-not-allowed">
