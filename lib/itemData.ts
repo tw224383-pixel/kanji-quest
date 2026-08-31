@@ -1,10 +1,14 @@
-import { allGachaItems, allRichGachaItems, allRichGacha2Items, allRichLadiesGachaItems, Rarity } from './gachaData';
+import { allGachaItems, allRichGachaItems, allRichGacha2Items, allRichLadiesGachaItems, allThemeGachaItems, Rarity } from './gachaData';
 
 export const shopThemes = [
   { id: "default", name: "いつもの", price: 0, icon: "📄" },
   { id: "space", name: "うちゅう", price: 5000, icon: "🚀" },
   { id: "ninja", name: "にんじゃ", price: 7500, icon: "🥷" },
   { id: "cyber", name: "サイバー", price: 10000, icon: "⚡" },
+  // 恒常販売として追加した3種（2026/08/30）。ガチャに頼らずPTを貯めれば必ず手に入る。
+  { id: "sakura_road", name: "さくら並木", price: 6000, icon: "🌸" },
+  { id: "sunset_hill", name: "夕やけの丘", price: 8000, icon: "🌇" },
+  { id: "aurora_night", name: "オーロラの夜", price: 15000, icon: "🌌" },
 ];
 
 export const shopEffects = [
@@ -93,7 +97,30 @@ export const THEME_DESCRIPTIONS: Record<string, string> = {
   "cybercity": "ネオンと高層ビルが立ち並ぶ電脳都市テーマ。",
   "ocean": "光と波が交差する美しい深海テーマ。",
   "forest": "生命の息吹と光が差し込む神秘の森テーマ。",
-  "candy": "甘いお菓子とカラフルな夢が広がるテーマ。"
+  "candy": "甘いお菓子とカラフルな夢が広がるテーマ。",
+
+  // --- ショップ恒常（2026/08/30 追加）---
+  "sakura_road": "満開の桜がトンネルをつくる、春の並木道テーマ。花びらがひらひら舞う。",
+  "sunset_hill": "夕日が丘の向こうへ沈んでいく、あたたかいオレンジ色のテーマ。鳥の群れが横切る。",
+  "aurora_night": "凍てつく雪原の空に、緑と紫のオーロラがゆらめく極夜テーマ。",
+
+  // --- テーマガチャ 激レア ---
+  "moonlight_bamboo": "月あかりに照らされた静かな竹林。蛍がふわりと舞い上がるテーマ。",
+  "storm_sea": "荒れくるう大海原に稲妻が走る、荒々しい嵐のテーマ。",
+  "desert_night": "見わたすかぎりの砂丘に、天の川と流れ星がふりそそぐテーマ。",
+  "sky_railway": "雲海の上に敷かれたレールを、灯りをともした列車が走りぬけるテーマ。",
+  "neon_arcade": "ピンクとシアンのネオン看板がまたたく、雨あがりの電脳商店街テーマ。",
+  "snow_village": "しんしんと雪がふる夜の里。家々の灯りがぽつぽつと灯るテーマ。",
+
+  // --- テーマガチャ 超激レア ---
+  "crystal_palace": "そびえ立つ氷の柱が光を七色に屈折させる、氷晶の宮殿テーマ。",
+  "phoenix_sky": "燃えあがる茜色の空を、不死鳥が翼をひろげて舞う灼熱のテーマ。",
+  "dream_nebula": "極彩色の星雲と回転する銀河が広がる、夢のような宇宙テーマ。",
+  "golden_shrine": "金色の光がふりそそぐ参道に、鳥居がどこまでも連なる神殿テーマ。",
+
+  // --- テーマガチャ 神レア ---
+  "celestial_dragon": "星の海に浮かぶ竜宮の楼閣を、光の龍が天翔ける最高峰のテーマ。",
+  "origin_of_all": "すべてが生まれた瞬間の閃光と、渦巻く二重の極光。究極のテーマ。"
 };
 
 export function getThemeDescription(themeId: string): string {
@@ -121,16 +148,30 @@ export function getAllThemes(): UnifiedItem[] {
     rarity: i.rarity,
     gachaName: allRichGachaItems.some(x => x.id === i.id) ? "💎 リッチガチャ1" : "✨ リッチガチャ2"
   }));
+  const themeGachaThemes = allThemeGachaItems.filter(i => i.type === 'theme').map(i => ({
+    id: i.id,
+    name: i.name.replace('テーマ「', '').replace('」', ''),
+    price: null,
+    icon: i.icon,
+    isGachaOnly: true,
+    description: getThemeDescription(i.id),
+    rarity: i.rarity,
+    gachaName: "🖼️ テーマガチャ"
+  }));
   const shopThemeRarity: Record<string, Rarity> = {
     "default": "ノーマル",
     "space": "レア",
     "ninja": "激レア",
-    "cyber": "超激レア"
+    "cyber": "超激レア",
+    "sakura_road": "レア",
+    "sunset_hill": "レア",
+    "aurora_night": "激レア"
   };
   return [
     ...shopThemes.map(i => ({...i, isGachaOnly: false, description: getThemeDescription(i.id), rarity: shopThemeRarity[i.id] || "ノーマル", gachaName: "🛍️ ショップ"})),
     ...gachaThemes,
-    ...richGachaThemes
+    ...richGachaThemes,
+    ...themeGachaThemes
   ];
 }
 

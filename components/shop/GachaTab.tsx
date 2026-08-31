@@ -4,13 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   gachaRates, richGachaRates, richGacha2Rates, spEquipmentGachaRates,
   richEquipmentGachaRates, richLadiesGachaRates, richLadiesEquipmentGachaRates,
-  all3000GachaRates, all3000SpCombinedEquipmentRates
+  all3000GachaRates, all3000SpCombinedEquipmentRates, themeGachaRates
 } from "../../lib/gachaData";
 import { getAvatarImageProps, getAvatarThumbUrl } from "../../lib/itemData";
 import type { UserData } from "../../contexts/UserContext";
 import { Button } from "../ui/Button";
 
-type GachaType = "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment";
+type GachaType = "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha";
 type RatesKey = GachaType | "all_3000" | "all_sp" | null;
 
 export function GachaTab({
@@ -34,7 +34,7 @@ export function GachaTab({
     <div className="game-panel p-8 text-center max-w-2xl mx-auto relative overflow-hidden">
       <div className="text-6xl mb-6">🎁</div>
       <h2 className="text-2xl font-black text-amber-300 mb-2 drop-shadow-md">ランダム宝箱（ガチャ）</h2>
-      <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT（10連は1000PT）、リッチガチャは3000PT、豪華な装備ガチャは1000SPでまわせる！</p>
+      <p className="text-slate-300 font-bold mb-4">通常ガチャは100PT（10連は1000PT）、リッチガチャは3000PT、テーマガチャは10000PT、豪華な装備ガチャは1000SPでまわせる！</p>
 
       <div className="flex flex-col gap-6 justify-center mb-6 items-stretch max-w-md mx-auto">
         {/* --- PT Gachas --- */}
@@ -139,6 +139,54 @@ export function GachaTab({
             disabled={pullingType !== null || userData.pt < 3000}
           >
             {pullingType ? "..." : userData.pt < 3000 ? "PT不足" : "3000 PT でまわす"}
+          </button>
+        </div>
+
+        {/* --- テーマガチャ（背景テーマ専用・高額） --- */}
+        <div
+          className="flex-1 p-5 rounded-[2rem] border-[3px] border-violet-300/70 shadow-[0_0_28px_rgba(139,92,246,0.45)] flex flex-col justify-between relative overflow-hidden"
+          style={{ background: "linear-gradient(160deg,#1b0a3a 0%,#3b1266 42%,#6d28d9 78%,#c026d3 100%)" }}
+        >
+          {/* 中身がテーマ（＝背景）なので、パネル自体を夜空に見立てて星を散らしている */}
+          <div className="absolute inset-0 pointer-events-none opacity-70">
+            {[
+              [12, 18], [28, 9], [44, 24], [61, 12], [77, 21], [88, 8],
+              [19, 40], [37, 52], [55, 44], [70, 57], [84, 41], [8, 62],
+            ].map(([l, t], i) => (
+              <span
+                key={`tg-star-${i}`}
+                className="absolute rounded-full bg-white animate-pulse"
+                style={{
+                  left: `${l}%`, top: `${t}%`,
+                  width: i % 3 === 0 ? 3 : 2, height: i % 3 === 0 ? 3 : 2,
+                  boxShadow: "0 0 6px #fff",
+                  animationDuration: `${1.5 + (i % 4) * 0.6}s`,
+                }}
+              />
+            ))}
+          </div>
+          <div className="relative z-10 text-center">
+            <div className="text-violet-100 font-black text-xl mb-1 drop-shadow-md flex items-center justify-center gap-2">
+              <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">🖼️</span> テーマガチャ <span className="text-sm">(10000 PT)</span>
+            </div>
+            <div className="text-violet-200 font-bold text-xs mb-3">
+              背景テーマだけが出る特別なガチャ。12種すべてが激レア以上！
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-6"
+              onClick={() => setShowGachaRates(showGachaRates === "theme_gacha" ? null : "theme_gacha")}
+            >
+              🔍 中身を見る
+            </Button>
+          </div>
+          <button
+            className={`relative z-10 w-full py-4 text-xl md:text-2xl tracking-wide whitespace-nowrap rounded-xl font-black text-violet-950 bg-gradient-to-r from-violet-200 via-fuchsia-200 to-violet-200 border-2 border-white/70 shadow-[0_4px_0_0_#6d28d9] active:shadow-none active:translate-y-1 transition-all ${pullingType ? 'animate-pulse' : ''} ${pullingType !== null || userData.pt < 10000 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => handleRequestGacha("theme_gacha")}
+            disabled={pullingType !== null || userData.pt < 10000}
+          >
+            {pullingType ? "..." : userData.pt < 10000 ? "PT不足" : "10000 PT でまわす"}
           </button>
         </div>
 
@@ -255,6 +303,7 @@ export function GachaTab({
                showGachaRates === "all_sp" ? "🛡️ 3000SP装備ガチャ 全排出内容（レアリティ順）" :
                showGachaRates === "rich_ladies_equipment" ? "🎀 ふわふわ装備リッチガチャ♡ 提供割合 (3000 SP)" :
                showGachaRates === "rich_equipment" ? "🛡️ 装備品リッチガチャ 提供割合 (3000 SP)" :
+               showGachaRates === "theme_gacha" ? "🖼️ テーマガチャ 提供割合 (10000 PT)" :
                showGachaRates === "sp_equipment" ? "⚔️ SP装備ガチャ 提供割合 (1000 SP)" :
                "提供割合"}
             </h3>
@@ -267,6 +316,7 @@ export function GachaTab({
                 showGachaRates === "rich_ladies_equipment" ? richLadiesEquipmentGachaRates :
                 showGachaRates === "rich" ? richGachaRates :
                 showGachaRates === "rich2" ? richGacha2Rates :
+                showGachaRates === "theme_gacha" ? themeGachaRates :
                 gachaRates).map((tier, idx) => (
                 <div key={idx} className={`p-4 rounded-lg border ${tier.bg} shadow-inner`}>
                   <div className="flex justify-between items-center mb-3 border-b border-black/10 pb-2">

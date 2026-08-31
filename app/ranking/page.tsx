@@ -7,6 +7,7 @@ import { useUser } from "../../hooks/useUser";
 import { Button } from "../../components/ui/Button";
 import { RankPlate } from "../../components/ui/RankPlate";
 import { calculateLevel } from "../../lib/gameLogic";
+import { themeImageUrl, themeGradient } from "../../lib/themeVisuals";
 import { LoadingScreen } from "../../components/ui/LoadingScreen";
 import { AvatarPreviewModal } from "../../components/ui/AvatarPreviewModal";
 import { EquipmentPreviewModal } from "../../components/ui/EquipmentPreviewModal";
@@ -358,15 +359,16 @@ export default function RankingPage() {
     // 背景画像は全て .webp に統一されている（過去に .jpg から一括変換した）。
     // ここだけ .jpg のままだったため画像が404になり、テーマを設定している子でも
     // 背景が出ずに真っ暗なカードになっていた。ThemeBackground.tsx と同じ組み立て方にそろえる。
-    const isDefault = !user.theme || user.theme === "default";
-    const themeName = user.theme === "time_space" ? "space" : user.theme;
-    const bgUrl = isDefault ? "/images/ui/fantasy_bg.webp" : `/images/themes/bg_${themeName}.webp`;
+    // 画像を持たないテーマ（コードで絵を描くタイプ）では null が返るので、
+    // その場合は同じ色味のグラデーションで代用する。カードは小さくエフェクトも
+    // 出さないため、下地の色だけで十分見分けがつく。
+    const bgUrl = themeImageUrl(user.theme || "default");
 
     return (
       <div key={user.id} className="relative flex items-center gap-4 bg-slate-800/80 border-2 border-slate-500/50 p-4 rounded-2xl shadow-inner overflow-hidden">
         <div
           className={`absolute inset-0 bg-cover bg-center pointer-events-none opacity-40 mix-blend-screen ${user.theme === "time_space" ? "hue-rotate-180" : ""}`}
-          style={{ backgroundImage: `url('${bgUrl}')` }}
+          style={bgUrl ? { backgroundImage: `url('${bgUrl}')` } : { background: themeGradient(user.theme || "default") }}
         />
         <div className="absolute inset-0 bg-black/50 pointer-events-none" />
 

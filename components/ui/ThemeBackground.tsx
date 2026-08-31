@@ -2,28 +2,40 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { ThemeScenery } from "./ThemeScenery";
+import { themeHasImage } from "../../lib/themeVisuals";
 
 export function ThemeBackground({ theme }: { theme: string }) {
   const isDefault = !theme || theme === "default";
-  
+
   // AI-generated background image paths
+  // 背景画像を持つのは既存の10テーマ＋デフォルトのみ。
+  // 追加した15テーマは画像を持たず、ThemeScenery がコードで絵を描く
+  // （1枚0.2〜0.35MBの画像を増やすとHostingの無料枠を圧迫するため。
+  //   詳細は lib/themeVisuals.ts のコメント参照）。
+  const usesImage = themeHasImage(theme);
   const bgImageTheme = isDefault ? 'fantasy_bg' : (theme === 'time_space' ? 'space' : theme);
   const bgImageUrl = isDefault ? `/images/ui/fantasy_bg.webp` : `/images/themes/bg_${bgImageTheme}.webp`;
 
   return (
     <div className={`absolute inset-0 pointer-events-none overflow-hidden ${theme === 'time_space' ? 'hue-rotate-180' : ''}`}>
-      <Image 
-        src={bgImageUrl} 
-        alt="background" 
-        fill 
-        className="object-cover" 
-        quality={100} 
-        priority 
-        unoptimized
-      />
+      {usesImage ? (
+        <Image
+          src={bgImageUrl}
+          alt="background"
+          fill
+          className="object-cover"
+          quality={100}
+          priority
+          unoptimized
+        />
+      ) : (
+        <ThemeScenery theme={theme} />
+      )}
 
       {/* Darken/Lighten overlay to ensure contrast and blend with animations */}
-      <div className="absolute inset-0 bg-black/30" />
+      {/* コードで描くテーマは元から暗めに設計してあるので、暗幕は薄くして絵を潰さない */}
+      <div className={`absolute inset-0 ${usesImage ? 'bg-black/30' : 'bg-black/15'}`} />
 
       {/* ==== うちゅう (space) & 時空の支配者 (time_space) ==== */}
       {(theme === 'space' || theme === 'time_space') && (

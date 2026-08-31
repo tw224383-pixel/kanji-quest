@@ -408,3 +408,48 @@ export const all3000SpCombinedEquipmentRates = [
   { rarity: "ノーマル", rate: "ノーマル", color: "text-slate-500", bg: "bg-slate-200", items: all3000SpCombinedEquipmentItems.filter(i => i.rarity === "ノーマル") }
 ];
 
+
+// =======================================
+// 🖼️ テーマガチャ (Theme Gacha) — 1回 10,000 PT
+// =======================================
+// 「背景テーマだけが出る」ガチャ。排出割合はリッチガチャ第1弾に準じる
+//   神レア 0.8% / 超激レア 16.5% / 激レア 82.6%
+// （重み: 20×2 + 200×4 + 667×6 = 4,842）
+// レア度が上がるほど背景の層とエフェクトが豪華になる。
+// 中身は画像ではなくコードで描く背景なので、追加してもHostingの転送量は増えない
+// （設計は lib/themeVisuals.ts と components/ui/ThemeScenery.tsx を参照）。
+export const allThemeGachaItems: GachaItem[] = [
+  // --- 神レア (0.8%) ---
+  { id: "celestial_dragon", type: "theme", name: "テーマ「星海の竜宮」", icon: "🐉", rarity: "神レア", weight: 20 },
+  { id: "origin_of_all", type: "theme", name: "テーマ「万象の始まり」", icon: "🌠", rarity: "神レア", weight: 20 },
+
+  // --- 超激レア (16.5%) ---
+  { id: "crystal_palace", type: "theme", name: "テーマ「氷晶の宮殿」", icon: "❄️", rarity: "超激レア", weight: 200 },
+  { id: "phoenix_sky", type: "theme", name: "テーマ「不死鳥の空」", icon: "🔥", rarity: "超激レア", weight: 200 },
+  { id: "dream_nebula", type: "theme", name: "テーマ「夢幻の星雲」", icon: "💫", rarity: "超激レア", weight: 200 },
+  { id: "golden_shrine", type: "theme", name: "テーマ「黄金の神殿」", icon: "⛩️", rarity: "超激レア", weight: 200 },
+
+  // --- 激レア (82.6%) ---
+  { id: "moonlight_bamboo", type: "theme", name: "テーマ「月夜の竹林」", icon: "🎋", rarity: "激レア", weight: 667 },
+  { id: "storm_sea", type: "theme", name: "テーマ「嵐の大海原」", icon: "⛈️", rarity: "激レア", weight: 667 },
+  { id: "desert_night", type: "theme", name: "テーマ「砂漠の星夜」", icon: "🏜️", rarity: "激レア", weight: 667 },
+  { id: "sky_railway", type: "theme", name: "テーマ「天空鉄道」", icon: "🚂", rarity: "激レア", weight: 667 },
+  { id: "neon_arcade", type: "theme", name: "テーマ「ネオンアーケード」", icon: "🕹️", rarity: "激レア", weight: 667 },
+  { id: "snow_village", type: "theme", name: "テーマ「雪あかりの里」", icon: "🏮", rarity: "激レア", weight: 667 },
+];
+
+export function pullThemeGachaItem(): GachaItem {
+  const totalWeight = allThemeGachaItems.reduce((acc, item) => acc + item.weight, 0);
+  let random = Math.random() * totalWeight;
+  for (const item of allThemeGachaItems) {
+    if (random < item.weight) return item;
+    random -= item.weight;
+  }
+  return allThemeGachaItems[0];
+}
+
+export const themeGachaRates = [
+  { rarity: "神レア", rate: "0.8%", color: "text-purple-500", bg: "bg-purple-100", items: allThemeGachaItems.filter(i => i.rarity === "神レア") },
+  { rarity: "超激レア", rate: "16.5%", color: "text-red-500", bg: "bg-red-100", items: allThemeGachaItems.filter(i => i.rarity === "超激レア") },
+  { rarity: "激レア", rate: "82.6%", color: "text-amber-500", bg: "bg-amber-100", items: allThemeGachaItems.filter(i => i.rarity === "激レア") },
+];
