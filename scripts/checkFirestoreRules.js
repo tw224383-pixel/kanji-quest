@@ -47,6 +47,10 @@ const merge = o => Object.assign({}, BASE, o);
 const CASES = [
   ["normal game finish (+200xp,+100pt)", "ALLOW", merge({ xp: 1200, pt: 600, totalDamage: 1200, weeklyXp: 300, monthlyDamage: 700 })],
   ["claim all achievements (+543k pt)",   "ALLOW", merge({ pt: 500 + 543300, sp: 200 + 201100, claimedAchievements: ["a", "b"] })],
+  // 「今日限定！」3倍ボーナスの追加で、1セッションで稼げるXPが最大5,400まで伸びた
+  // （20問 × 10XP × コンボ3.0 × キーボード3.0 × 今日限定3.0）。
+  // 上限を超えると書き込みが丸ごと拒否され、その回の結果が保存できなくなるので必ず通ること。
+  ["legit: 20問キーボード満点＋今日限定3倍 (+5,400xp)", "ALLOW", merge({ xp: 1000 + 5400, pt: 500 + 2700, totalDamage: 1000 + 5400, weeklyXp: 100 + 5400, monthlyDamage: 500 + 5400 })],
   ["CHEAT: pt jump to 9,999,999",         "DENY",  merge({ pt: 9999999 })],
   ["CHEAT: xp jump to 500,000",           "DENY",  merge({ xp: 500000 })],
   ["CHEAT: sp jump to 5,000,000",         "DENY",  merge({ sp: 5000000 })],

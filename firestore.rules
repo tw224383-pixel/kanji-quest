@@ -140,15 +140,21 @@ service cloud.firestore {
             || newData.bestDamageRank <= numOr0(oldData, 'bestDamageRank'))
       ))
 
-      // xp / totalDamage: 通常プレイ由来のみ（1セッション最大 約3,600 相当）→ 更新は5,000まで。
-      && withinDelta(newData, oldData, 'xp', 5000, 1000000)
-      && withinDelta(newData, oldData, 'totalDamage', 5000, 1000000)
+      // xp / totalDamage: 通常プレイ由来のみ。1セッションの最大は
+      //   20問 × 10XP × コンボ3.0 × リベンジ2.0 × キーボード3.0 × 今日限定3.0 = 10,800
+      // なので、更新は12,000まで許す。
+      // 【重要】倍率を増やしたら必ずこの値も見直すこと。
+      // 2026/09/01に「今日限定！」3倍ボーナスを入れたとき、上限5,000のままだったため
+      // 20問キーボード満点(+5,400XP)の書き込みが丸ごと拒否され、
+      // まじめに遊んだ子ほど「けっかを保存できませんでした」になる状態だった。
+      && withinDelta(newData, oldData, 'xp', 12000, 1000000)
+      && withinDelta(newData, oldData, 'totalDamage', 12000, 1000000)
       // pt / sp: 「実績まとめ受け取り」で一度に大きく増える（全実績合計 約58.6万PT / 約21.8万SP）。
       // 実績を足すたびに上限に触れて全書き込みが拒否される事故を避けるため、余裕を持たせてある。
       && withinDelta(newData, oldData, 'pt', 900000, 900000)
       && withinDelta(newData, oldData, 'sp', 400000, 400000)
-      && withinPeriodDelta(newData, oldData, 'weeklyXp', 'lastWeekString', 5000)
-      && withinPeriodDelta(newData, oldData, 'monthlyDamage', 'lastMonthString', 5000)
+      && withinPeriodDelta(newData, oldData, 'weeklyXp', 'lastWeekString', 12000)
+      && withinPeriodDelta(newData, oldData, 'monthlyDamage', 'lastMonthString', 12000)
       // 系統別・1日のPT上限判定用の内部カウンタ（同じ系統の問題の周回でのPT稼ぎ対策）。
       // キーは算数30スキル＋漢字6学年の計36通りが上限で、しかも日付が変わるとリセット
       // されるため、余裕を見た件数だけ制限する。実際のPT不正増加は pt 自体の delta 上限
