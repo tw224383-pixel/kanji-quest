@@ -12,7 +12,7 @@ import { KanjiEffect } from "../../components/game/KanjiEffect";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems, richGachaRates, pullRichGacha2Item, richGacha2Rates, pullSpEquipmentGachaItem, spEquipmentGachaRates, pullRichEquipmentGachaItem, richEquipmentGachaRates, pullRichLadiesGachaItem, richLadiesGachaRates, all3000GachaRates, pullRichLadiesEquipmentGachaItem, richLadiesEquipmentGachaRates, all3000SpCombinedEquipmentRates, pullThemeGachaItem, themeGachaRates } from "../../lib/gachaData";
+import { pullGachaItem, gachaRates, pullRichGachaItem, allRichGachaItems, richGachaRates, pullRichGacha2Item, richGacha2Rates, pullSpEquipmentGachaItem, spEquipmentGachaRates, pullRichEquipmentGachaItem, richEquipmentGachaRates, pullRichLadiesGachaItem, richLadiesGachaRates, all3000GachaRates, pullRichLadiesEquipmentGachaItem, richLadiesEquipmentGachaRates, all3000SpCombinedEquipmentRates, pullThemeGachaItem, themeGachaRates, pullLegendGachaItem, legendGachaRates } from "../../lib/gachaData";
 import { getAllThemes, getAllEffects, getAllTitles, getAllAvatars, getAvatarInfo, getAvatarImageProps, getAvatarThumbUrl } from "../../lib/itemData";
 import { getAllEquipment } from "../../lib/equipmentData";
 import { avatarEncyclopediaList } from "../../lib/avatarEncyclopediaData";
@@ -42,10 +42,15 @@ const equipments = getAllEquipment();
 
 type Tab = "themes" | "effects" | "titles" | "avatars" | "equipments" | "gacha";
 
-// テーマガチャ：中身は背景テーマ12種だけの高額ガチャ。
+// テーマガチャ：中身は背景テーマ23種だけの高額ガチャ。
 // 1回10,000PTと高いぶん、かぶったときは半額を返す（3000PTガチャの1000PT返還と同じ感覚にするため）。
 const THEME_GACHA_COST = 10000;
 const THEME_GACHA_REFUND = 5000;
+
+// レジェンドガチャ：これまでの全ガチャの超激レア・神レアだけを集めた最上位ガチャ。
+// 1回10万PTなので、かぶったときの返還も他の高額ガチャと同じ「半額」にそろえてある。
+const LEGEND_GACHA_COST = 100000;
+const LEGEND_GACHA_REFUND = 50000;
 
 export default function ShopPage() {
   const { userData, updateUserData, updateUserDataAtomic, loading } = useUser();
@@ -60,19 +65,19 @@ export default function ShopPage() {
   const [previewEffect, setPreviewEffect] = useState<string | null>(null);
 
   // Gacha state
-  const [pullingType, setPullingType] = useState<"regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | null>(null);
-  const [lastPullType, setLastPullType] = useState<"regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | null>(null);
+  const [pullingType, setPullingType] = useState<"regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | "legend" | null>(null);
+  const [lastPullType, setLastPullType] = useState<"regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | "legend" | null>(null);
   const [gachaResult, setGachaResult] = useState<any>(null);
   const [pendingGachaResult, setPendingGachaResult] = useState<any>(null);
   const [gachaMultiResult, setGachaMultiResult] = useState<any[] | null>(null);
   const [pendingGachaMultiResult, setPendingGachaMultiResult] = useState<any[] | null>(null);
   const [gachaTargetStage, setGachaTargetStage] = useState(1);
-  const [showGachaRates, setShowGachaRates] = useState<"regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | "all_3000" | "all_sp" | null>(null);
+  const [showGachaRates, setShowGachaRates] = useState<"regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | "legend" | "all_3000" | "all_sp" | null>(null);
   const [previewingAvatar, setPreviewingAvatar] = useState<{url?: string, id?: string, name?: string} | null>(null);
   const [previewingEquipmentModal, setPreviewingEquipmentModal] = useState<string | null>(null);
   const [selectedRarity, setSelectedRarity] = useState<string>("all");
   const [confirmGacha, setConfirmGacha] = useState<{
-    type: "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha";
+    type: "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | "legend";
     name: string;
     cost: number;
     costType: "PT" | "SP";
@@ -121,7 +126,7 @@ export default function ShopPage() {
     else if (ok === null) showToast("ポイントが足りないか、すでに持っています");
   };
 
-  const handleRequestGacha = (type: "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha") => {
+  const handleRequestGacha = (type: "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | "legend") => {
     if (pullingType) return;
     const configs = {
       regular: { name: "ノーマルガチャ", cost: 100, costType: "PT" as const, icon: "⭐" },
@@ -133,6 +138,7 @@ export default function ShopPage() {
       rich_equipment: { name: "装備品リッチガチャ", cost: 3000, costType: "SP" as const, icon: "🛡️" },
       rich_ladies_equipment: { name: "ふわふわ装備ガチャ♡", cost: 3000, costType: "SP" as const, icon: "🎀" },
       theme_gacha: { name: "テーマガチャ", cost: THEME_GACHA_COST, costType: "PT" as const, icon: "🖼️" },
+      legend: { name: "レジェンドガチャ", cost: LEGEND_GACHA_COST, costType: "PT" as const, icon: "👑" },
     };
     const target = configs[type];
     if (!target) return;
@@ -144,7 +150,7 @@ export default function ShopPage() {
     setConfirmGacha({ type, ...target });
   };
 
-  const pullGacha = async (type: "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" = "regular") => {
+  const pullGacha = async (type: "regular" | "regular10" | "rich" | "rich2" | "rich_equipment" | "sp_equipment" | "rich_ladies" | "rich_ladies_equipment" | "theme_gacha" | "legend" = "regular") => {
     setLastPullType(type);
     soundManager.playGacha();
     // 装備系ガチャ（SP消費・装備リストに追加、重複時はSP一部返還）を共通処理する。
@@ -295,7 +301,10 @@ export default function ShopPage() {
       return;
     }
 
-    const cost = type === "regular" ? 100 : type === "theme_gacha" ? THEME_GACHA_COST : 3000;
+    const cost = type === "regular" ? 100
+      : type === "theme_gacha" ? THEME_GACHA_COST
+      : type === "legend" ? LEGEND_GACHA_COST
+      : 3000;
     if (userData.pt < cost || pullingType) return;
     setPullingType(type);
     setGachaResult(null);
@@ -312,6 +321,8 @@ export default function ShopPage() {
         result = { ...pullRichGacha2Item(), gachaName: "✨ リッチガチャ2" };
       } else if (type === "theme_gacha") {
         result = { ...pullThemeGachaItem(), gachaName: "🖼️ テーマガチャ" };
+      } else if (type === "legend") {
+        result = { ...pullLegendGachaItem(), gachaName: "👑 レジェンドガチャ" };
       } else {
         result = { ...pullGachaItem(), gachaName: "🎁 通常ガチャ" };
       }
@@ -332,10 +343,20 @@ export default function ShopPage() {
         const themeEffectId = `theme_${result.id}`;
         if (current.effects.includes(themeEffectId)) duplicated = true;
         else updates.effects = [...current.effects, themeEffectId];
+      } else if (result.type === 'equipment') {
+        // 装備はこれまでSP専用ガチャだけの景品だったが、レジェンドガチャにも入るので
+        // PT側のこの共通処理でも付与できるようにした。
+        const owned = current.equipments || [];
+        if (owned.includes(result.id)) duplicated = true;
+        else updates.equipments = [...owned, result.id];
       }
 
       if (duplicated || result.type === 'xp') {
-        if (type === "theme_gacha") {
+        if (type === "legend") {
+          updates.pt = current.pt - cost + LEGEND_GACHA_REFUND;
+          result.duplicated = true;
+          result.refund = `${LEGEND_GACHA_REFUND.toLocaleString()} PT`;
+        } else if (type === "theme_gacha") {
           // テーマガチャは1回10,000PTと高いので、かぶったときの返還も半額に合わせる
           // （3000PTガチャと同じ1000PT返還だと、かぶったときの損が大きすぎるため）。
           updates.pt = current.pt - cost + THEME_GACHA_REFUND;
@@ -381,7 +402,7 @@ export default function ShopPage() {
   return (
     <>
       {/* Gacha animation full screen */}
-      {(pullingType === "rich" || pullingType === "rich2" || pullingType === "theme_gacha" || pullingType === "rich_equipment" || pullingType === "rich_ladies" || pullingType === "rich_ladies_equipment" || pullingType === "sp_equipment") && pendingGachaResult && (
+      {(pullingType === "rich" || pullingType === "rich2" || pullingType === "theme_gacha" || pullingType === "legend" || pullingType === "rich_equipment" || pullingType === "rich_ladies" || pullingType === "rich_ladies_equipment" || pullingType === "sp_equipment") && pendingGachaResult && (
         <RichGachaAnimation
           targetStage={gachaTargetStage}
           rarity={pendingGachaResult?.rarity}

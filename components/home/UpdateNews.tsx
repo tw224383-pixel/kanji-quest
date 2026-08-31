@@ -6,7 +6,16 @@ export function UpdateNews() {
       </h3>
       <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-36 overflow-y-auto pr-2 custom-scrollbar">
         <li>
-          <div className="text-xs text-amber-400 mb-0.5">2026/08/31 (最新)</div>
+          <div className="text-xs text-amber-400 mb-0.5">2026/09/01 (最新)</div>
+          <div>👑 <strong>ついに「レジェンドガチャ」が登場！（10万PT）</strong><br/>
+          すべてのガチャの <strong>超激レア・神レアだけ</strong> を あつめた さいきょうのガチャ。
+          アバター・そうび・テーマ・称号・エフェクト ぜんぶ入りの <strong>62種</strong> で、
+          <strong>超激レア80% / 神レア20%</strong>、<strong>ハズレなし</strong>！
+          いままでSPでしか手に入らなかった そうびも ここから出るよ。
+          10万PTは とおい道のりだけど…みんなで 裏ボスを たおせば 一気に ちかづくかも！</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/31</div>
           <div>🔥 <strong>「今日限定！」でXP・PT・SPが3ばいに！</strong><br/>
           「きょうのミッション」を パワーアップ！ いま カルテのレベルが ひくい <strong>3つの分野</strong> が
           毎日えらばれて、そこで あそぶと <strong>XP・PT・SPが3ばい</strong>（1日1回ではなく、その日じゅう なんどでも！）。

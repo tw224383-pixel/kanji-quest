@@ -491,3 +491,62 @@ export function pullThemeGachaItem(): GachaItem {
 }
 
 export const themeGachaRates = computeRates(allThemeGachaItems);
+
+// =======================================
+// 👑 レジェンドガチャ (Legend Gacha) — 1回 100,000 PT
+// =======================================
+// これまでの全ガチャに入っている「超激レア」「神レア」だけを集めた最上位ガチャ。
+// 排出は 超激レア 80% / 神レア 20% の2段だけ（ハズレなし）。
+//
+// 【重要】中身は各ガチャの定義から自動で集めている。
+// どこかに超激レア以上の景品を足せば、このガチャにも自動で入る。
+// ここに景品リストを手で書き足すと二重管理になるので、絶対にしないこと。
+const LEGEND_SOURCES: GachaItem[][] = [
+  allGachaItems,
+  allRichGachaItems,
+  allRichGacha2Items,
+  allRichLadiesGachaItems,
+  allThemeGachaItems,
+  allSpEquipmentGachaItems,
+  allRichEquipmentGachaItems,
+  allRichLadiesEquipmentGachaItems,
+];
+
+// 神レア・超激レアそれぞれの取り分（合計55,000 → 20% / 80%）。
+// 段の中は均等な重みにする。景品数が増えても割り算し直すだけで割合は保たれる。
+const LEGEND_KAMI_TOTAL = 11000;
+const LEGEND_CHOU_TOTAL = 44000;
+
+function buildLegendItems(): GachaItem[] {
+  const byId = new Map<string, GachaItem>();
+  for (const src of LEGEND_SOURCES) {
+    for (const item of src) {
+      if (item.rarity !== "神レア" && item.rarity !== "超激レア") continue;
+      // 同じ景品が複数のガチャに入っている場合は1つにまとめる（当選確率が二重にならないように）
+      if (!byId.has(item.id)) byId.set(item.id, item);
+    }
+  }
+  const items = Array.from(byId.values());
+  const kami = items.filter(i => i.rarity === "神レア");
+  const chou = items.filter(i => i.rarity === "超激レア");
+  const kamiWeight = kami.length > 0 ? Math.round(LEGEND_KAMI_TOTAL / kami.length) : 0;
+  const chouWeight = chou.length > 0 ? Math.round(LEGEND_CHOU_TOTAL / chou.length) : 0;
+  return [
+    ...kami.map(i => ({ ...i, weight: kamiWeight })),
+    ...chou.map(i => ({ ...i, weight: chouWeight })),
+  ];
+}
+
+export const allLegendGachaItems: GachaItem[] = buildLegendItems();
+
+export function pullLegendGachaItem(): GachaItem {
+  const totalWeight = allLegendGachaItems.reduce((acc, item) => acc + item.weight, 0);
+  let random = Math.random() * totalWeight;
+  for (const item of allLegendGachaItems) {
+    if (random < item.weight) return item;
+    random -= item.weight;
+  }
+  return allLegendGachaItems[0];
+}
+
+export const legendGachaRates = computeRates(allLegendGachaItems);
