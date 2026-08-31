@@ -6,7 +6,22 @@ export function UpdateNews() {
       </h3>
       <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-36 overflow-y-auto pr-2 custom-scrollbar">
         <li>
-          <div className="text-xs text-amber-400 mb-0.5">2026/08/30 (最新)</div>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/31 (最新)</div>
+          <div>🔥 <strong>「今日限定！」でXP・PT・SPが3ばいに！</strong><br/>
+          「きょうのミッション」を パワーアップ！ いま カルテのレベルが ひくい <strong>3つの分野</strong> が
+          毎日えらばれて、そこで あそぶと <strong>XP・PT・SPが3ばい</strong>（1日1回ではなく、その日じゅう なんどでも！）。
+          にがてな ところを うめると、いっきに つよくなれるよ。</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/31</div>
+          <div>🖼️ <strong>きれいな絵のテーマは「テーマガチャ」だけに！</strong><br/>
+          「うちゅう」「にんじゃ」「サイバー」など、絵の背景テーマ11種を ショップと通常ガチャから
+          <strong>テーマガチャ</strong> へ引っこし。テーマガチャは ぜんぶで <strong>23種類</strong> になりました！
+          （もう持っているテーマは そのまま つかえます）<br/>
+          プロフィールの そうび一覧に「持っていない そうび」が ならんでしまうバグも直しました。</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/08/30</div>
           <div>🎨 <strong>テーマが15種類も増えた！さらに「テーマガチャ」が登場！</strong><br/>
           ショップに <strong>「さくら並木」「夕やけの丘」「オーロラの夜」</strong> の3つが なかまいり（PTをためれば かならず 買えるよ）。
           さらに <strong>🖼️ テーマガチャ（1回10000PT）</strong> を新しく追加！ぜんぶで12種類、すべて激レア以上で、

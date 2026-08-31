@@ -14,8 +14,8 @@ interface GameResultScreenProps {
   finalXP: number;
   finalPT: number;
   ptWasCapped?: boolean;
-  /** きょうのミッションの分野で遊んだか（1日1回のボーナス） */
-  missionBonusApplied?: boolean;
+  /** 「今日限定！」の分野で遊んだか（XP・PT・SPが3倍） */
+  dailyBonusApplied?: boolean;
   isSpSubject: boolean;
   /** 未受け取りの実績の数。結果画面で気づかせないと大半の子が取り逃がしてしまう */
   unclaimedAchievements?: number;
@@ -35,7 +35,7 @@ export function GameResultScreen({
   finalXP,
   finalPT,
   ptWasCapped,
-  missionBonusApplied,
+  dailyBonusApplied,
   isSpSubject,
   unclaimedAchievements = 0,
   onGoAchievements,
@@ -89,9 +89,9 @@ export function GameResultScreen({
                 ⌨️ キーボードボーナス x3! ⌨️
               </div>
             )}
-            {missionBonusApplied && (
+            {dailyBonusApplied && (
               <div className="text-xl font-black text-lime-500 mb-4 animate-bounce">
-                🎯 きょうのミッション たっせい！ x1.5 🎯
+                🔥 今日限定！ボーナス x3 🔥
               </div>
             )}
             {maxCombo > 2 && (

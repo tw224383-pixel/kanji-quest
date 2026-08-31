@@ -23,7 +23,7 @@ import { soundManager } from "../../lib/soundManager";
 import { useToast } from "../../components/ui/Toast";
 import { GameResultScreen } from "../../components/game/GameResultScreen";
 import { safeLocalStorage } from "../../lib/safeLocalStorage";
-import { getDailyMission, matchesMission, markMissionCleared, isMissionCleared, MISSION_BONUS } from "../../lib/dailyMission";
+import { getDailyBonusCategories, isDailyBonusTarget, DAILY_BONUS_MULTIPLIER } from "../../lib/dailyBonus";
 
 // キーボード入力モードで「単位を入れるべきか分からない」問題への対策。
 // 算数の正解に単位が含まれる場合、その単位を入力欄の横に表示し数字だけ打てば
@@ -124,9 +124,8 @@ export default function GamePage() {
   const [isTraining, setIsTraining] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10);
   const [bossLevel, setBossLevel] = useState(1);
-  // きょうのミッション対象のバトルか（報酬ボーナスの判定に使う）
-  const [isMissionTarget, setIsMissionTarget] = useState(false);
-  const [missionAlreadyCleared, setMissionAlreadyCleared] = useState(true);
+  // 「今日限定！」ボーナスの対象分野かどうか（報酬倍率の判定に使う）
+  const [isBonusTarget, setIsBonusTarget] = useState(false);
 
   useEffect(() => {
     if (userData?.grade) {
@@ -256,20 +255,19 @@ export default function GamePage() {
     }
   }, [userData, questions.length, subjectType]);
 
-  // きょうのミッション対象かどうかは、出題が決まった時点で1度だけ確定させる。
-  // （プレイ後に達成済みフラグが立って、結果画面の倍率表示が揺れるのを防ぐ）
-  const missionResolvedRef = useRef(false);
+  // ボーナス対象かどうかは、出題が決まった時点で1度だけ確定させる。
+  // （プレイ中にカルテのレベルが上がって対象から外れ、結果画面の倍率表示が揺れるのを防ぐ）
+  const bonusResolvedRef = useRef(false);
   useEffect(() => {
-    if (missionResolvedRef.current) return;
+    if (bonusResolvedRef.current) return;
     if (!userData || questions.length === 0) return;
-    missionResolvedRef.current = true;
+    bonusResolvedRef.current = true;
     const params = new URLSearchParams(window.location.search);
-    const mission = getDailyMission(userData);
+    const bonusList = getDailyBonusCategories(userData);
     const cats = questions
       .map(q => (q as { category?: string }).category)
       .filter((c): c is string => !!c);
-    setIsMissionTarget(matchesMission(mission, subjectType, params.get("category"), cats));
-    setMissionAlreadyCleared(isMissionCleared());
+    setIsBonusTarget(isDailyBonusTarget(bonusList, subjectType, params.get("category"), cats));
   }, [userData, questions, subjectType]);
 
   const isBossBattle = questions.length >= 5 && currentIndex === questions.length - 1 && !isRevenge;
@@ -288,9 +286,10 @@ export default function GamePage() {
   const multiplier = 1 + (maxCombo * 0.1);
   const revengeBonus = isRevenge ? 2.0 : 1.0;
   const keyboardBonus = (mode === "keyboard" && subjectType !== "science" && subjectType !== "social") ? 3.0 : 1.0;
-  // 「きょうのミッション」の分野で遊んだときのボーナス（1日1回だけ）。
-  // 苦手分野に足を向けさせて、カルテのレーダーの穴を埋めてもらうのが狙い。
-  const missionBonus = isMissionTarget && !missionAlreadyCleared ? MISSION_BONUS : 1.0;
+  // 「今日限定！」の分野で遊んだときのボーナス。回数制限はなく、その日じゅう3倍。
+  // 苦手分野に足を向けさせて、カルテのレーダーの穴を埋めてもらうのが狙い
+  // （PTの稼ぎすぎは系統ごとの1日のPT上限で別途おさえている）。
+  const dailyBonusMultiplier = isBonusTarget ? DAILY_BONUS_MULTIPLIER : 1.0;
 
   const { finalXP, finalPT, hasPenalty } = useMemo(() => {
     let baseXP = 0;
@@ -321,11 +320,11 @@ export default function GamePage() {
     const penaltyPT = totalMistakes * 2;
     
     return {
-      finalXP: Math.max(0, Math.floor((baseXP - penaltyXP) * multiplier * revengeBonus * keyboardBonus * missionBonus)),
-      finalPT: Math.max(0, Math.floor((basePT - penaltyPT) * multiplier * revengeBonus * keyboardBonus * missionBonus)),
+      finalXP: Math.max(0, Math.floor((baseXP - penaltyXP) * multiplier * revengeBonus * keyboardBonus * dailyBonusMultiplier)),
+      finalPT: Math.max(0, Math.floor((basePT - penaltyPT) * multiplier * revengeBonus * keyboardBonus * dailyBonusMultiplier)),
       hasPenalty: penalty
     };
-  }, [questions, isRevenge, isTraining, userData?.grade, totalMistakes, multiplier, revengeBonus, keyboardBonus, missionBonus, subjectType]);
+  }, [questions, isRevenge, isTraining, userData?.grade, totalMistakes, multiplier, revengeBonus, keyboardBonus, dailyBonusMultiplier, subjectType]);
 
   if (loading || questions.length === 0) return <div>ロード中...</div>;
 
@@ -692,7 +691,6 @@ export default function GamePage() {
           }
         }
       }
-      if (isMissionTarget && !missionAlreadyCleared) markMissionCleared();
     } catch (err) {
       console.error("Failed to finish game and update data:", err);
       setSaveFailed(true);
@@ -731,7 +729,7 @@ export default function GamePage() {
         finalXP={finalXP}
         finalPT={awardedPt ?? finalPT}
         ptWasCapped={ptWasCapped}
-        missionBonusApplied={missionBonus > 1}
+        dailyBonusApplied={dailyBonusMultiplier > 1}
         isSpSubject={isSpSubject}
         unclaimedAchievements={unclaimedAchievements}
         onGoAchievements={() => router.push("/achievements")}

@@ -18,7 +18,12 @@ interface EquipmentsTabProps {
 }
 
 export function EquipmentsTab({ userData, selectedRarity, previewEquipment, setPreviewEquipment, handleEquip, setPreviewingEquipmentModal }: EquipmentsTabProps) {
-  const list = allEquipments.filter(eq => selectedRarity === "all" || (eq.rarity || "ノーマル") === selectedRarity);
+  // プロフィールの設定画面は「持っているものを装備する」場所なので、所持品だけを並べる。
+  // 以前は全93種を並べて未所持を薄く表示していたため、持っていない装備がずらりと並び、
+  // 自分が何を持っているのか分からなくなっていた（未所持の一覧はショップと図鑑で見られる）。
+  const list = allEquipments
+    .filter(eq => (userData.equipments || []).includes(eq.id))
+    .filter(eq => selectedRarity === "all" || (eq.rarity || "ノーマル") === selectedRarity);
 
   return (
     <div className="space-y-4">
@@ -33,15 +38,17 @@ export function EquipmentsTab({ userData, selectedRarity, previewEquipment, setP
         {list.length === 0 ? (
           <div className="game-panel-light p-8 text-center col-span-full">
             <div className="text-4xl mb-2">🔍</div>
-            <div className="font-black text-slate-700 text-lg">「{selectedRarity}」のそうびはありません</div>
+            <div className="font-black text-slate-700 text-lg">
+              {selectedRarity === "all" ? "まだ そうびを もっていません" : `「${selectedRarity}」の所持そうびはありません`}
+            </div>
+            <div className="text-sm font-bold text-slate-500 mt-2">ショップの そうびガチャ（SP）で てに入れよう！</div>
           </div>
         ) : list.map(eq => {
-          const isOwned = (userData.equipments || []).includes(eq.id);
           const isEquipped = userData.equippedEquipment === eq.id;
           const isPreviewing = previewEquipment === eq.id;
 
           return (
-            <div key={eq.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isEquipped ? 'border-emerald-500 bg-emerald-50/90' : !isOwned ? 'opacity-85' : ''}`}>
+            <div key={eq.id} className={`game-panel-light p-4 flex flex-col justify-between gap-3 ${isEquipped ? 'border-emerald-500 bg-emerald-50/90' : ''}`}>
               <div className="flex items-center gap-4">
                 <div
                   className="text-5xl w-16 h-16 flex items-center justify-center bg-slate-900/80 rounded-2xl border-2 border-amber-300 shadow-md flex-shrink-0 cursor-pointer hover:scale-110 transition-transform overflow-hidden"
@@ -64,9 +71,6 @@ export function EquipmentsTab({ userData, selectedRarity, previewEquipment, setP
                     <GachaNameBadge gachaName={eq.gachaName} />
                   </div>
                   <div className="text-xs text-slate-600 font-bold mt-1">{eq.description}</div>
-                  {!isOwned && (
-                    <div className="text-[11px] font-bold text-indigo-600 mt-1">🔒 未所持 (ショップ/ガチャでGET)</div>
-                  )}
                 </div>
               </div>
               <div className="flex justify-between items-center border-t border-slate-200/50 pt-2">
@@ -82,12 +86,10 @@ export function EquipmentsTab({ userData, selectedRarity, previewEquipment, setP
                     <span className="text-emerald-600 font-black text-sm">✓ そうび中</span>
                     <Button size="sm" variant="outline" className="text-xs text-red-500 border-red-300 py-1 px-2" onClick={() => handleEquip("equipment", "")}>はずす</Button>
                   </div>
-                ) : isOwned ? (
+                ) : (
                   <Button variant="fun" size="sm" className="bg-emerald-500 hover:bg-emerald-600 border-emerald-700 text-white font-bold" onClick={() => handleEquip("equipment", eq.id)}>
                     ✅ そうびする
                   </Button>
-                ) : (
-                  <div className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">未所持</div>
                 )}
               </div>
             </div>

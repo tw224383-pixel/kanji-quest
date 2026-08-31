@@ -2,10 +2,12 @@ import { allGachaItems, allRichGachaItems, allRichGacha2Items, allRichLadiesGach
 
 export const shopThemes = [
   { id: "default", name: "いつもの", price: 0, icon: "📄" },
-  { id: "space", name: "うちゅう", price: 5000, icon: "🚀" },
-  { id: "ninja", name: "にんじゃ", price: 7500, icon: "🥷" },
-  { id: "cyber", name: "サイバー", price: 10000, icon: "⚡" },
-  // 恒常販売として追加した3種（2026/08/30）。ガチャに頼らずPTを貯めれば必ず手に入る。
+  // うちゅう・にんじゃ・サイバーは 2026/08/30 にテーマガチャへ移した。
+  // イラスト背景のテーマはテーマガチャ限定にする方針のため、ショップからは買えない。
+  // すでに持っている子の所持データ（effects の theme_xxx）はそのまま有効。
+  //
+  // 恒常販売として残す3種。イラストがなくコードで描くテーマなので、
+  // 「PTを貯めれば必ず手に入る」枠として引き続きショップに置いている。
   { id: "sakura_road", name: "さくら並木", price: 6000, icon: "🌸" },
   { id: "sunset_hill", name: "夕やけの丘", price: 8000, icon: "🌇" },
   { id: "aurora_night", name: "オーロラの夜", price: 15000, icon: "🌌" },
@@ -160,9 +162,6 @@ export function getAllThemes(): UnifiedItem[] {
   }));
   const shopThemeRarity: Record<string, Rarity> = {
     "default": "ノーマル",
-    "space": "レア",
-    "ninja": "激レア",
-    "cyber": "超激レア",
     "sakura_road": "レア",
     "sunset_hill": "レア",
     "aurora_night": "激レア"

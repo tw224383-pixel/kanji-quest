@@ -26,7 +26,7 @@ import { claimTranscendentRewards, type TranscendentClaimResult } from "../../li
 import { CategoryGradePicker } from "../../components/home/CategoryGradePicker";
 import { UpdateNews } from "../../components/home/UpdateNews";
 import { safeLocalStorage } from "../../lib/safeLocalStorage";
-import { getDailyMission, isMissionCleared, missionGameUrl, MISSION_BONUS, type DailyMission } from "../../lib/dailyMission";
+import { getDailyBonusCategories, dailyBonusGameUrl, DAILY_BONUS_MULTIPLIER, type DailyBonusCategory } from "../../lib/dailyBonus";
 
 export default function Home() {
   const { userData, updateUserData, updateUserDataAtomic, loading, isGuest } = useUser();
@@ -44,10 +44,9 @@ export default function Home() {
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [gradeBossLevel, setGradeBossLevel] = useState<number>(1);
   const [transcendentReward, setTranscendentReward] = useState<TranscendentClaimResult | null>(null);
-  // きょうのミッション（いちばんのびしろがある分野を1日1つだけ提案する）。
+  // 「今日限定！」ボーナス（いまカルテのレベルが低い3分野を毎日えらぶ）。
   // 実測で38%の子が漢字しか遊んでおらず、レーダーチャートが1本だけ尖っていたため。
-  const [mission, setMission] = useState<DailyMission | null>(null);
-  const [missionDone, setMissionDone] = useState(false);
+  const [bonusCategories, setBonusCategories] = useState<DailyBonusCategory[]>([]);
   // targetGrades の自動初期化は最初の1回だけ行う。userData 参照は裏の書き込み
   // （ログインストリーク更新など）のたびに変わるため、「初期値[1]のまま」を
   // 判定条件にすると、ユーザーが意図的に「1年のみ」を選んだ場合も毎回上書きされてしまう。
@@ -113,8 +112,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!userData) return;
-    setMission(getDailyMission(userData));
-    setMissionDone(isMissionCleared());
+    setBonusCategories(getDailyBonusCategories(userData));
   }, [userData]);
 
   useEffect(() => {
@@ -228,33 +226,33 @@ export default function Home() {
       >
         <RaidBoss />
 
-        {/* きょうのミッション：苦手分野へ足を向けてもらうための1日1回の誘導 */}
-        {mission && (
-          <div className={`game-panel p-5 border-2 ${missionDone ? "border-slate-600" : "border-lime-400/70 shadow-[0_0_25px_rgba(163,230,53,0.25)]"}`}>
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <h3 className="text-xl font-black text-lime-300 drop-shadow-md whitespace-nowrap">🎯 きょうのミッション</h3>
-              {missionDone && <span className="text-sm font-black text-lime-400 whitespace-nowrap">✅ たっせい！</span>}
+        {/* 今日限定！：カルテのレベルが低い分野へ足を向けてもらうための、その日じゅう有効なボーナス */}
+        {bonusCategories.length > 0 && (
+          <div className="game-panel p-5 border-2 border-lime-400/70 shadow-[0_0_25px_rgba(163,230,53,0.25)]">
+            <div className="flex items-center justify-between gap-3 mb-1 flex-wrap">
+              <h3 className="text-xl font-black text-lime-300 drop-shadow-md whitespace-nowrap">🔥 今日限定！</h3>
+              <span className="text-sm font-black text-amber-300 whitespace-nowrap">
+                XP・PT・SP が {DAILY_BONUS_MULTIPLIER}ばい
+              </span>
             </div>
-            <p className="text-slate-200 font-bold mb-4 leading-relaxed">
-              <span className="text-2xl">{mission.icon}</span>{" "}
-              <span className="text-amber-300 font-black text-xl">{mission.label}</span> に ちょうせん！
-              {!missionDone && (
-                <span className="block text-sm text-lime-300 mt-1">クリアすると もらえる XP・{mission.subject === "science" || mission.subject === "social" ? "SP" : "PT"} が {MISSION_BONUS} ばい（1日1回）</span>
-              )}
-              {missionDone && (
-                <span className="block text-sm text-slate-400 mt-1">きょうのボーナスは うけとりずみ。あしたも 新しいミッションが とどくよ！</span>
-              )}
+            <p className="text-sm text-slate-300 font-bold mb-4 leading-relaxed">
+              いま きみが のばせる分野だよ。ここで あそぶと きょう1日ずっと {DAILY_BONUS_MULTIPLIER}ばい！
             </p>
-            {!missionDone && (
-              <Button
-                variant="fun"
-                size="lg"
-                className="w-full text-lg py-4"
-                onClick={() => router.push(missionGameUrl(mission, userData.grade, questionCount))}
-              >
-                ミッションに いどむ！
-              </Button>
-            )}
+            <div className="flex flex-col gap-2">
+              {bonusCategories.map(b => (
+                <Button
+                  key={b.category}
+                  variant="fun"
+                  size="lg"
+                  className="w-full text-lg py-4 flex items-center justify-center gap-2"
+                  onClick={() => router.push(dailyBonusGameUrl(b, userData.grade, questionCount))}
+                >
+                  <span className="text-2xl">{b.icon}</span>
+                  <span>{b.label}</span>
+                  <span className="text-sm font-black text-amber-200">×{DAILY_BONUS_MULTIPLIER}</span>
+                </Button>
+              ))}
+            </div>
           </div>
         )}
 

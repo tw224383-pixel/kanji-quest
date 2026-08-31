@@ -170,7 +170,7 @@ export function GachaTab({
               <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,255,255,1)]">🖼️</span> テーマガチャ <span className="text-sm">(10000 PT)</span>
             </div>
             <div className="text-violet-200 font-bold text-xs mb-3">
-              背景テーマだけが出る特別なガチャ。12種すべてが激レア以上！
+              背景テーマだけが出る特別なガチャ。23種すべてが激レア以上！
             </div>
             <Button
               variant="outline"
