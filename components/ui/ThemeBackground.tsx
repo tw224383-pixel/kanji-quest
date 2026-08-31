@@ -3,16 +3,16 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { ThemeScenery } from "./ThemeScenery";
-import { themeHasImage } from "../../lib/themeVisuals";
+import { ThemeSceneryEffects } from "./ThemeSceneryEffects";
+import { themeHasImage, hasEffectOverlay } from "../../lib/themeVisuals";
 
 export function ThemeBackground({ theme }: { theme: string }) {
   const isDefault = !theme || theme === "default";
 
-  // AI-generated background image paths
-  // 背景画像を持つのは既存の10テーマ＋デフォルトのみ。
-  // 追加した15テーマは画像を持たず、ThemeScenery がコードで絵を描く
-  // （1枚0.2〜0.35MBの画像を増やすとHostingの無料枠を圧迫するため。
-  //   詳細は lib/themeVisuals.ts のコメント参照）。
+  // 背景イラストを持つテーマ（初期の10種＋テーマガチャの12種）は画像を敷く。
+  // ショップ恒常で追加した3種（さくら並木・夕やけの丘・オーロラの夜）だけは
+  // イラストがないので、ThemeScenery がコードで絵を描く。
+  // 詳細は lib/themeVisuals.ts のコメント参照。
   const usesImage = themeHasImage(theme);
   const bgImageTheme = isDefault ? 'fantasy_bg' : (theme === 'time_space' ? 'space' : theme);
   const bgImageUrl = isDefault ? `/images/ui/fantasy_bg.webp` : `/images/themes/bg_${bgImageTheme}.webp`;
@@ -36,6 +36,10 @@ export function ThemeBackground({ theme }: { theme: string }) {
       {/* Darken/Lighten overlay to ensure contrast and blend with animations */}
       {/* コードで描くテーマは元から暗めに設計してあるので、暗幕は薄くして絵を潰さない */}
       <div className={`absolute inset-0 ${usesImage ? 'bg-black/30' : 'bg-black/15'}`} />
+
+      {/* テーマガチャの12種はイラスト背景。絵に描かれていない「動き」だけを上に重ねる。
+          既存テーマの効果と同じく、暗幕より後ろに置いて光が沈まないようにする */}
+      {hasEffectOverlay(theme) && <ThemeSceneryEffects theme={theme} />}
 
       {/* ==== うちゅう (space) & 時空の支配者 (time_space) ==== */}
       {(theme === 'space' || theme === 'time_space') && (

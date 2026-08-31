@@ -1,14 +1,20 @@
 /**
  * テーマの見た目の定義（1か所にまとめた「絵の設計図」）。
  *
- * 既存の10テーマは AI生成の背景画像 `/images/themes/bg_{id}.webp` を使っている。
- * ただし1枚 0.2〜0.35MB あり、Firebase Hosting の無料枠（10GiB/月）を一度使い切った
- * 経緯があるため、今回追加する15テーマは「画像を使わず、コードで描く背景」にした。
- *   - 転送量ゼロ（グラデーション＋SVGのシルエット＋エフェクトだけで構成する）
- *   - レア度が上がるほど層とエフェクトを増やして豪華にする
+ * テーマの背景は2種類ある。
  *
- * あとから本物のイラストを用意したくなったら、`/images/themes/bg_{id}.webp` を置いて
- * このファイルの `hasImage` を true にするだけで画像版に切り替わる。
+ * (1) イラスト背景（22種）… `/images/themes/bg_{id}.webp` を敷く。
+ *     Firebase Hosting の無料枠（10GiB/月）を一度使い切った経緯があるため、
+ *     追加分は 1376px幅・WebP品質72 に圧縮してある（1枚 59〜207KB。
+ *     元は 2816x1536・3〜6MB。変換は scripts/convertThemeImages.js）。
+ *     絵に描かれていない「動き」だけを ThemeSceneryEffects が上に重ねる。
+ *
+ * (2) コードで描く背景（3種）… ショップ恒常の さくら並木・夕やけの丘・オーロラの夜。
+ *     イラストがないので ThemeScenery がグラデーション＋SVG＋エフェクトで組み立てる。
+ *     転送量はゼロ。
+ *
+ * あとから (2) にもイラストを用意したくなったら、`/images/themes/bg_{id}.webp` を置いて
+ * 下の IMAGE_THEMES にIDを足すだけで画像版に切り替わる。
  */
 
 export type ThemeVisual = {
@@ -22,11 +28,31 @@ export type ThemeVisual = {
   hasImage: boolean;
 };
 
-/** 画像を持っている既存テーマ（bg_{id}.webp が public に存在するもの） */
+/** 背景イラスト（bg_{id}.webp）を持つテーマ */
 export const IMAGE_THEMES = [
+  // 初期からある10種
   "space", "ninja", "cyber", "skycastle", "magma",
   "ruins", "cybercity", "ocean", "forest", "candy",
+  // テーマガチャの12種。あとからイラストを用意したので画像に差し替えた。
+  // 絵に描かれていない「動き」だけを ThemeSceneryEffects が上に重ねる。
+  "moonlight_bamboo", "storm_sea", "desert_night", "sky_railway",
+  "neon_arcade", "snow_village", "crystal_palace", "phoenix_sky",
+  "dream_nebula", "golden_shrine", "celestial_dragon", "origin_of_all",
 ] as const;
+
+/**
+ * イラストの上に効果だけを重ねるテーマ（＝テーマガチャの12種）。
+ * 初期からある10種は ThemeBackground 内に効果を直接書いてあるので対象外。
+ */
+export const EFFECT_OVERLAY_THEMES = [
+  "moonlight_bamboo", "storm_sea", "desert_night", "sky_railway",
+  "neon_arcade", "snow_village", "crystal_palace", "phoenix_sky",
+  "dream_nebula", "golden_shrine", "celestial_dragon", "origin_of_all",
+] as const;
+
+export function hasEffectOverlay(themeId: string): boolean {
+  return (EFFECT_OVERLAY_THEMES as readonly string[]).includes(themeId);
+}
 
 /**
  * コードで描くテーマの下地グラデーション。
