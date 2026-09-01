@@ -26,7 +26,7 @@ import { claimTranscendentRewards, type TranscendentClaimResult } from "../../li
 import { CategoryGradePicker } from "../../components/home/CategoryGradePicker";
 import { UpdateNews } from "../../components/home/UpdateNews";
 import { safeLocalStorage } from "../../lib/safeLocalStorage";
-import { getDailyBonusCategories, dailyBonusGameUrl, DAILY_BONUS_MULTIPLIER, type DailyBonusCategory } from "../../lib/dailyBonus";
+import { getDailyBonusCategories, DAILY_BONUS_MULTIPLIER, type DailyBonusCategory } from "../../lib/dailyBonus";
 
 export default function Home() {
   const { userData, updateUserData, updateUserDataAtomic, loading, isGuest } = useUser();
@@ -226,34 +226,36 @@ export default function Home() {
       >
         <RaidBoss />
 
-        {/* 今日限定！：カルテのレベルが低い分野へ足を向けてもらうための、その日じゅう有効なボーナス */}
+        {/* クエストへの導線。以前はここに3つのボタンを直接置いていたが、
+            学年ともんだい数をえらべず「自分の学年・5問」に固定されてしまっていたので、
+            えらべるクエストページ(/quest)へ誘導する形にした。
+            いちばん上の目立つ位置に置いて、まずここに目が行くようにしている。 */}
         {bonusCategories.length > 0 && (
-          <div className="game-panel p-5 border-2 border-lime-400/70 shadow-[0_0_25px_rgba(163,230,53,0.25)]">
+          <button
+            onClick={() => router.push("/quest")}
+            className="w-full text-left game-panel p-5 border-2 border-lime-400/70 shadow-[0_0_30px_rgba(163,230,53,0.35)] hover:scale-[1.01] active:scale-95 transition-transform animate-pulse-slow"
+          >
             <div className="flex items-center justify-between gap-3 mb-1 flex-wrap">
-              <h3 className="text-xl font-black text-lime-300 drop-shadow-md whitespace-nowrap">🔥 今日限定！</h3>
-              <span className="text-sm font-black text-amber-300 whitespace-nowrap">
+              <h3 className="text-2xl font-black text-lime-300 drop-shadow-md whitespace-nowrap">🔥 今日限定クエスト</h3>
+              <span className="text-sm font-black text-amber-300 whitespace-nowrap bg-amber-400/15 px-3 py-1 rounded-full border border-amber-400/40">
                 XP・PT・SP が {DAILY_BONUS_MULTIPLIER}ばい
               </span>
             </div>
-            <p className="text-sm text-slate-300 font-bold mb-4 leading-relaxed">
-              いま きみが のばせる分野だよ。ここで あそぶと きょう1日ずっと {DAILY_BONUS_MULTIPLIER}ばい！
-            </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap my-3">
               {bonusCategories.map(b => (
-                <Button
-                  key={b.category}
-                  variant="fun"
-                  size="lg"
-                  className="w-full text-lg py-4 flex items-center justify-center gap-2"
-                  onClick={() => router.push(dailyBonusGameUrl(b, userData.grade, questionCount))}
-                >
+                <span key={b.category} className="flex items-center gap-1 bg-slate-900/70 border border-lime-400/40 rounded-xl px-3 py-2">
                   <span className="text-2xl">{b.icon}</span>
-                  <span>{b.label}</span>
-                  <span className="text-sm font-black text-amber-200">×{DAILY_BONUS_MULTIPLIER}</span>
-                </Button>
+                  <span className="font-black text-amber-200">{b.label}</span>
+                </span>
               ))}
             </div>
-          </div>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <p className="text-sm text-slate-300 font-bold leading-relaxed">
+                きょう1日は なんど あそんでも {DAILY_BONUS_MULTIPLIER}ばい！がくねん・もんだい数も えらべるよ
+              </p>
+              <span className="font-black text-lime-300 whitespace-nowrap">クエストへ ➔</span>
+            </div>
+          </button>
         )}
 
         {/* 1. 学習エリア (最優先) */}
@@ -505,6 +507,10 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+                <button onClick={() => router.push("/quest")} className="game-panel-light flex justify-center items-center gap-1 px-2.5 py-1.5 rounded-xl hover:scale-105 transition-all border-2 border-lime-400/80 bg-lime-50/90 whitespace-nowrap shadow-sm">
+                  <span className="text-sm">🔥</span>
+                  <span className="font-black text-lime-900 text-xs sm:text-sm">クエスト</span>
+                </button>
                 <button onClick={() => router.push("/profile")} className="game-panel-light flex justify-center items-center gap-1 px-2.5 py-1.5 rounded-xl hover:scale-105 transition-all border-2 border-indigo-400/80 bg-indigo-50/90 whitespace-nowrap shadow-sm">
                   <span className="text-sm">📊</span>
                   <span className="font-black text-indigo-900 text-xs sm:text-sm">カルテ</span>

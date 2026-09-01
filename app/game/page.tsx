@@ -849,6 +849,7 @@ export default function GamePage() {
         isSpSubject={isSpSubject}
         unclaimedAchievements={unclaimedAchievements}
         onGoAchievements={() => router.push("/achievements")}
+        onGoQuest={() => router.push("/quest")}
         onRetry={() => { setIsFinished(false); setSaveFailed(false); finishGame(); }}
         onGoHome={() => router.push("/home")}
       />

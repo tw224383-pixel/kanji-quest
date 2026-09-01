@@ -15,6 +15,11 @@ export default function TopPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
+  // 送信中フラグ。これが無かったため、タブレットでボタンを連打した子のぶんだけ
+  // createUserWithEmailAndPassword が同時に走り、同じ名前のアカウントが大量に
+  // できていた（実測: 同一名で13件が10秒以内に作成、うち12件は中身が空）。
+  // 空のアカウントに入ってしまうと、それまでの記録が見えなくなる。
+  const [submitting, setSubmitting] = useState(false);
   const [grade, setGrade] = useState<number>(1);
   const [error, setError] = useState("");
   const [isLoginMode, setIsLoginMode] = useState(false); // 新規登録をデフォルトに
@@ -65,6 +70,7 @@ export default function TopPage() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return; // 連打でアカウントが二重にできるのを防ぐ
     setError("");
     if (!name || pin.length !== 4) {
       setError("なまえと、4ケタのすうじをいれてね！");
@@ -80,9 +86,13 @@ export default function TopPage() {
       }
     }
     
-    const dummyEmail = `${encodeURIComponent(name)}@kanjiquest.local`;
+    // 前後の空白は取り除いてから鍵にする。空白の有無だけで別アカウント扱いに
+    // なってしまうのを防ぐ（表示名も同じものにそろえる）。
+    const cleanName = name.trim();
+    const dummyEmail = `${encodeURIComponent(cleanName)}@kanjiquest.local`;
     const dummyPassword = `${pin}000`; 
 
+    setSubmitting(true);
     try {
       if (isLoginMode) {
         await signInWithEmailAndPassword(auth, dummyEmail, dummyPassword);
@@ -91,7 +101,7 @@ export default function TopPage() {
       } else {
         const userCred = await createUserWithEmailAndPassword(auth, dummyEmail, dummyPassword);
         await setDoc(doc(db, "users", userCred.user.uid), {
-          name: name,
+          name: cleanName,
           xp: 0,
           pt: 0,
           grade: grade, // 学年を保存
@@ -102,7 +112,25 @@ export default function TopPage() {
       }
     } catch (err: any) {
       console.error(err);
-      setError("エラーがおきました。なまえかすうじがちがうかも？");
+      // 何が起きたのか分かるように、よくある原因は個別に伝える。
+      // 以前はすべて同じ文言だったため、「もう登録ずみ」なのに気づかず
+      // 別の名前で作り直してしまい、それまでの記録を失う子がいた。
+      const code = err && err.code;
+      if (code === "auth/email-already-in-use") {
+        setError("そのなまえは とうろくずみだよ。「🔑 まえにあそんだ」から ログインしてね。");
+        setIsLoginMode(true);
+      } else if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+        setError("ひみつの すうじが ちがうみたい。もういちど たしかめてね。");
+      } else if (code === "auth/user-not-found") {
+        setError("そのなまえは まだ とうろくされていないよ。「🆕 初めてあそぶ」から はじめてね。");
+        setIsLoginMode(false);
+      } else if (code === "auth/network-request-failed") {
+        setError("つうしんが うまくいきませんでした。もういちど ためしてね。");
+      } else {
+        setError("エラーがおきました。なまえか すうじが ちがうかも？");
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -220,8 +248,8 @@ export default function TopPage() {
           
           {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 font-black text-center bg-red-50 border-2 border-red-200 p-2 rounded-xl">{error}</motion.p>}
           
-          <Button type="submit" variant="primary" size="lg" className="mt-2 w-full text-2xl py-4 h-auto shadow-lg shadow-blue-500/30">
-            {isLoginMode ? "冒険を つづける！" : "冒険を はじめる！"}
+          <Button type="submit" variant="primary" size="lg" disabled={submitting} className="mt-2 w-full text-2xl py-4 h-auto shadow-lg shadow-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed">
+            {submitting ? "しょうしょう おまちください…" : isLoginMode ? "冒険を つづける！" : "冒険を はじめる！"}
           </Button>
         </form>
 

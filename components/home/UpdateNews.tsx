@@ -7,6 +7,14 @@ export function UpdateNews() {
       <ul className="text-sm font-bold text-slate-200 space-y-3 max-h-36 overflow-y-auto pr-2 custom-scrollbar">
         <li>
           <div className="text-xs text-amber-400 mb-0.5">2026/09/01 (最新)</div>
+          <div>🔥 <strong>「クエスト」ページができました！</strong><br/>
+          ホームのいちばん上と、上の <strong>🔥クエスト</strong> ボタンから行けます。<br/>
+          ・<strong>がくねんを えらべる</strong>ようになりました（下の学年で ふくしゅうしたり、上の学年に ちょうせんしたり）<br/>
+          ・<strong>もんだい数も 5問・10問・20問から えらべます</strong>（これまで5問だけでした）<br/>
+          ・「きょうの ふくしゅう」も 同じページに まとめました</div>
+        </li>
+        <li>
+          <div className="text-xs text-amber-400 mb-0.5">2026/09/01</div>
           <div>🛠️ <strong>いくつかの不具合を直しました</strong><br/>
           ・<strong>理科・社会の「きょうのふくしゅう」ボタン</strong>を追加しました（これまで出ていませんでした）<br/>
           ・算数のふくしゅうが いつまでも おわらなかったのを修正。おなじ しゅるいの もんだいで

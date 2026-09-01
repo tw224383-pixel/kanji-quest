@@ -20,6 +20,8 @@ interface GameResultScreenProps {
   /** 未受け取りの実績の数。結果画面で気づかせないと大半の子が取り逃がしてしまう */
   unclaimedAchievements?: number;
   onGoAchievements?: () => void;
+  /** クエストページへ戻る。遊び終わった直後がいちばん次に進みやすいので導線を置く */
+  onGoQuest?: () => void;
   onRetry: () => void;
   onGoHome: () => void;
 }
@@ -39,6 +41,7 @@ export function GameResultScreen({
   isSpSubject,
   unclaimedAchievements = 0,
   onGoAchievements,
+  onGoQuest,
   onRetry,
   onGoHome,
 }: GameResultScreenProps) {
@@ -132,6 +135,14 @@ export function GameResultScreen({
               </button>
             )}
 
+            {onGoQuest && (
+              <button
+                onClick={onGoQuest}
+                className="w-full mb-3 py-4 rounded-2xl bg-gradient-to-r from-lime-500 to-emerald-500 border-4 border-white text-slate-950 font-black text-xl shadow-[0_0_20px_rgba(163,230,53,0.5)] hover:scale-[1.02] active:scale-95 transition-transform"
+              >
+                🔥 つぎの クエストへ
+              </button>
+            )}
             <Button size="lg" className="w-full text-2xl py-6" variant="fun" onClick={onGoHome}>
               ホームにもどる
             </Button>
