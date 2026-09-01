@@ -28,3 +28,6 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# アカウント削除時のバックアップ（児童の個人データなので追跡しない）
+scripts/banned-backup.json
